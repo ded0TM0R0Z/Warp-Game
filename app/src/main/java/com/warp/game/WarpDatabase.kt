@@ -83,13 +83,20 @@ class WarpDatabase(context: Context) : SQLiteOpenHelper(
             put(COLUMN_UPDATED_AT, game.updatedAt)
         }
 
-        writableDatabase.insertWithOnConflict(
-            TABLE_INSTALLED_GAMES,
-            null,
-            values,
-            SQLiteDatabase.CONFLICT_REPLACE
-        ).also { rowId ->
-            check(rowId != -1L) { "Could not save installed game" }
+        val database = writableDatabase
+        database.beginTransaction()
+        try {
+            database.insertWithOnConflict(
+                TABLE_INSTALLED_GAMES,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE
+            ).also { rowId ->
+                check(rowId != -1L) { "Could not save installed game" }
+            }
+            database.setTransactionSuccessful()
+        } finally {
+            database.endTransaction()
         }
     }
 
