@@ -257,7 +257,7 @@ class MainActivity : Activity() {
             13f, textMuted, false
         ).apply { setPadding(0, dp(7), 0, 0) })
         pageContent.addView(info)
-        pageContent.addView(label("WARP GAME  •  VERSION 0.1.0", 10f, textMuted, true).apply {
+        pageContent.addView(label("WARP GAME  •  VERSION 0.2.0", 10f, textMuted, true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(24), 0, dp(4))
         })
@@ -634,7 +634,7 @@ class MainActivity : Activity() {
         val appCard = panel()
         appCard.setPadding(dp(16), dp(16), dp(16), dp(16))
         appCard.addView(label("WARP GAME", 18f, textMain, true))
-        appCard.addView(label("Версия приложения: 0.1.0", 13f, textMuted, false).apply {
+        appCard.addView(label("Версия приложения: 0.2.0", 13f, textMuted, false).apply {
             setPadding(0, dp(8), 0, 0)
         })
         appCard.addView(label("Платформа: Android", 13f, textMuted, false).apply {
