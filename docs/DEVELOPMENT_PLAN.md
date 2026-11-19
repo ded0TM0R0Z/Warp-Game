@@ -1,6 +1,6 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.1  
+**Version:** 1.1.2  
 **Current stage:** 0 — Foundation and device validation
 
 ## Stage 0 — Foundation and validation
@@ -21,11 +21,12 @@
 
 ## Stage 1 — Android application shell
 
-- [ ] Create the main navigation structure.
-- [ ] Add initial catalog screen.
-- [ ] Add settings screen.
-- [ ] Add persistent local database foundation.
-- [ ] Add structured logging and error handling.
+- [x] Create the main navigation structure.
+- [x] Add initial catalog screen.
+- [x] Add settings screen.
+- [x] Add persistent SQLite database foundation for installed games.
+- [x] Add structured logging and initialization error handling.
+- [x] Create isolated internal storage directories for games, saves, cache and database.
 - [ ] Verify lifecycle and basic offline startup.
 
 **Exit condition:** A stable minimal app launches offline and navigates between initial screens.
