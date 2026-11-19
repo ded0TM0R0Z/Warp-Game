@@ -2,7 +2,7 @@
 
 WARP GAME — Android gaming platform with a game catalog, downloadable games, local installation and offline execution.
 
-The platform is designed to support both 2D and 3D games, with development and testing performed primarily from an Android phone.
+The platform targets modern mid-range Android phones and above, supports both 2D and 3D games, and scales graphics down for compatibility without imposing a low-end performance ceiling.
 
 ## Project status
 
@@ -12,6 +12,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 ## Documentation
 
 - [Technical standard](docs/TECHNICAL_STANDARD.md)
+- [Device targets and graphics scaling](docs/DEVICE_TARGETS.md)
 - [Project rules](docs/PROJECT_RULES.md)
 - [Task template for development chats](docs/CHAT_TASK_TEMPLATE.md)
 - [Phone development workflow](docs/PHONE_WORKFLOW.md)
