@@ -54,14 +54,20 @@ Artifact:
 - Output: `app/build/outputs/apk/debug/*.apk`
 - Retention: 7 days.
 
-## 4. First successful build
+## 4. Successful builds
 
+First successful build:
 - Workflow run: [Android Build #8](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44480683282)
 - Commit: `67ee53f6be6e953a85d389a6ff710abc988610a7`
+- Artifact size: 867,894 bytes.
+
+Latest successful build:
+- Workflow run: [Android Build #13](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44481143736)
+- Commit: `1a62a02697f40c428fae3e04beab56ac95da93ed`
 - Result: successful.
 - Artifact: `warp-game-debug-apk`
 - Artifact size: 867,894 bytes.
-- Artifact SHA-256: `4180415851b1d323073e73be2ad4b3c2bb089712c2a19759b700eb31d5999f1b`
+- Artifact SHA-256: `1ded965ae6aba722f9cd6cb2509cd7d0af6c3b3abefea39965c3d985b1ac714e`
 - Artifact expiry: 2026-11-26.
 
 The first workflow attempt exposed an obsolete Android SDK package request, which was removed. A later build was blocked by a temporary Maven Central HTTP 429 response; rerunning the same build succeeded. The Kotlin compiler configuration was also updated to the typed `compilerOptions` DSL.
