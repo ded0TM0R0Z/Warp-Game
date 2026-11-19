@@ -849,11 +849,21 @@
             if(this.mode!=="playing")return;this.mode="paused";this.physics.pause();this.playerWalkTween.pause();
             this.joy.active=false;this.joy.dx=0;this.joy.dy=0;this.hud.joyKnob.setPosition(0,0);
             this.panel("ПАУЗА","ЗАБЕГ ПРИОСТАНОВЛЕН");
-            this.addOverlay(this.add.text(W/2,H/2-53,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
-                "\nСЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(15,C.parchment,true)).setOrigin(.5).setAlign("center").setLineSpacing(7));
-            this.addOverlay(this.add.text(W/2,H/2+12,"ВЫБРАННЫЕ УСИЛЕНИЯ\n"+(this.selectedUpgrades.length?this.selectedUpgrades.join("\n"):"Пока нет выбранных усилений"),this.style(12,C.gold,true)).setOrigin(.5).setAlign("center").setLineSpacing(5));
-            this.makeButton(W/2,H/2+105,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},210);
-            this.makeButton(W/2,H/2+160,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},210);
+            this.addOverlay(this.add.text(W/2,H/2-111,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
+                "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
+            this.addOverlay(this.add.text(W/2,H/2-75,"УСИЛЕНИЯ, ВЫБРАННЫЕ ПРИ ПОВЫШЕНИИ УРОВНЯ",this.style(12,C.gold,true)).setOrigin(.5));
+            const recent = this.selectedUpgrades.slice(-6);
+            if (!recent.length) {
+                this.addOverlay(this.add.text(W/2,H/2+10,"Пока не выбрано ни одного усиления",this.style(13,C.muted,false)).setOrigin(.5));
+            } else {
+                recent.forEach((name,i)=>{
+                    const col=i%2,row=Math.floor(i/2),x=W/2-155+col*310,y=H/2-32+row*48;
+                    this.addOverlay(this.add.rectangle(x,y,286,38,0x3b3428,0.98).setStrokeStyle(1,0x8b744c,0.9));
+                    this.addOverlay(this.add.text(x,y,(this.selectedUpgrades.length-recent.length+i+1)+".  "+name,this.style(11,C.parchment,true)).setOrigin(.5));
+                });
+            }
+            this.makeButton(W/2,H/2+153,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},250);
+            this.makeButton(W/2,H/2+207,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},250);
         }
 
         addWaveNotice() {
