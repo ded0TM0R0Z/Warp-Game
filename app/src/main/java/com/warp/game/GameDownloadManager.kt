@@ -2,9 +2,66 @@ package com.warp.game
 
 import android.content.Context
 import java.io.FilterInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.net.URL
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.net.ssl.HttpsURLConnection
+
+class DownloadCancellationToken {
+    private val cancelled = AtomicBoolean(false)
+
+    @Volatile
+    private var activeConnection: HttpsURLConnection? = null
+
+    @Volatile
+    private var installing = false
+
+    val isCancelled: Boolean
+        get() = cancelled.get()
+
+    val isInstalling: Boolean
+        get() = installing
+
+    @Synchronized
+    fun cancel() {
+        if (installing) return
+        cancelled.set(true)
+        activeConnection?.disconnect()
+    }
+
+    @Synchronized
+    internal fun attach(connection: HttpsURLConnection) {
+        throwIfCancelled()
+        activeConnection = connection
+        if (cancelled.get()) {
+            connection.disconnect()
+            throw DownloadCancelledException()
+        }
+    }
+
+    @Synchronized
+    internal fun detach(connection: HttpsURLConnection) {
+        if (activeConnection === connection) {
+            activeConnection = null
+        }
+    }
+
+    @Synchronized
+    internal fun markInstalling() {
+        throwIfCancelled()
+        installing = true
+        activeConnection = null
+    }
+
+    fun throwIfCancelled() {
+        if (cancelled.get()) throw DownloadCancelledException()
+    }
+}
+
+class DownloadCancelledException : IOException("Game download was cancelled")
+
+class TransientDownloadException(message: String) : IOException(message)
 
 class GameDownloadManager(context: Context) {
     private val appContext = context.applicationContext
@@ -13,6 +70,8 @@ class GameDownloadManager(context: Context) {
 
     fun downloadAndInstall(
         game: CatalogGame,
+        cancellationToken: DownloadCancellationToken = DownloadCancellationToken(),
+        onInstallStarted: () -> Unit = {},
         onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit
     ): InstalledGame {
         storage.initialize()
@@ -21,6 +80,7 @@ class GameDownloadManager(context: Context) {
             var redirectCount = 0
 
             while (true) {
+                cancellationToken.throwIfCancelled()
                 validateDownloadUrl(currentUrl, redirectCount > 0)
                 val connection = currentUrl.openConnection() as HttpsURLConnection
                 connection.instanceFollowRedirects = false
@@ -31,6 +91,7 @@ class GameDownloadManager(context: Context) {
                 connection.setRequestProperty("User-Agent", "WarpGame-Android")
 
                 try {
+                    cancellationToken.attach(connection)
                     val responseCode = connection.responseCode
                     if (responseCode in REDIRECT_MIN..REDIRECT_MAX) {
                         if (redirectCount >= MAX_REDIRECTS) {
@@ -43,6 +104,14 @@ class GameDownloadManager(context: Context) {
                         continue
                     }
 
+                    if (responseCode == HTTP_TOO_MANY_REQUESTS ||
+                        responseCode == HTTP_REQUEST_TIMEOUT ||
+                        responseCode in HTTP_SERVER_ERROR_MIN..HTTP_SERVER_ERROR_MAX
+                    ) {
+                        throw TransientDownloadException(
+                            "Temporary package server error: HTTP $responseCode"
+                        )
+                    }
                     if (responseCode != HttpsURLConnection.HTTP_OK) {
                         throw IllegalStateException("Package server returned HTTP $responseCode")
                     }
@@ -52,12 +121,15 @@ class GameDownloadManager(context: Context) {
                         throw IllegalStateException("Downloaded package exceeds the size limit")
                     }
                     if (contentLength >= 0L && contentLength != game.packageSizeBytes) {
-                        throw IllegalStateException("Downloaded package size does not match catalog metadata")
+                        throw IllegalStateException(
+                            "Downloaded package size does not match catalog metadata"
+                        )
                     }
 
                     val progressInput = ProgressInputStream(
                         connection.inputStream,
                         game.packageSizeBytes,
+                        cancellationToken,
                         onProgress
                     )
                     progressInput.use { input ->
@@ -75,10 +147,18 @@ class GameDownloadManager(context: Context) {
                                 orientation = game.orientation,
                                 minimumPlatformVersion = game.minimumPlatformVersion,
                                 offlineSupported = game.offlineSupported
-                            )
+                            ),
+                            onPackageVerified = {
+                                cancellationToken.markInstalling()
+                                onInstallStarted()
+                            }
                         )
                     }
+                } catch (error: IOException) {
+                    cancellationToken.throwIfCancelled()
+                    throw error
                 } finally {
+                    cancellationToken.detach(connection)
                     connection.disconnect()
                 }
             }
@@ -107,23 +187,37 @@ class GameDownloadManager(context: Context) {
     private class ProgressInputStream(
         input: InputStream,
         private val expectedBytes: Long,
+        private val cancellationToken: DownloadCancellationToken,
         private val onProgress: (Long, Long) -> Unit
     ) : FilterInputStream(input) {
         private var downloadedBytes = 0L
 
         override fun read(): Int {
-            val value = super.read()
+            cancellationToken.throwIfCancelled()
+            val value = try {
+                super.read()
+            } catch (error: IOException) {
+                cancellationToken.throwIfCancelled()
+                throw error
+            }
             if (value >= 0) reportProgress(1)
             return value
         }
 
         override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
-            val count = super.read(buffer, offset, length)
+            cancellationToken.throwIfCancelled()
+            val count = try {
+                super.read(buffer, offset, length)
+            } catch (error: IOException) {
+                cancellationToken.throwIfCancelled()
+                throw error
+            }
             if (count > 0) reportProgress(count)
             return count
         }
 
         private fun reportProgress(count: Int) {
+            cancellationToken.throwIfCancelled()
             downloadedBytes += count
             if (downloadedBytes > expectedBytes || downloadedBytes > MAX_PACKAGE_BYTES) {
                 throw IllegalStateException("Downloaded package exceeds the expected size")
@@ -138,6 +232,10 @@ class GameDownloadManager(context: Context) {
         const val MAX_REDIRECTS = 5
         const val REDIRECT_MIN = 300
         const val REDIRECT_MAX = 399
+        const val HTTP_TOO_MANY_REQUESTS = 429
+        const val HTTP_REQUEST_TIMEOUT = 408
+        const val HTTP_SERVER_ERROR_MIN = 500
+        const val HTTP_SERVER_ERROR_MAX = 599
         const val MAX_PACKAGE_BYTES = 256L * 1024L * 1024L
 
         val RELEASE_CDN_HOSTS = setOf(
