@@ -1,6 +1,6 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.2  
+**Version:** 1.1.3  
 **Current stage:** 0 — Foundation and device validation
 
 ## Stage 0 — Foundation and validation
@@ -33,9 +33,9 @@
 
 ## Stage 2 — Game runtime proof of concept
 
-- [ ] Add AndroidX WebKit and use WebViewAssetLoader for local content.
-- [ ] Load one local HTML5 test game in a restricted WebView.
-- [ ] Verify touch input, screen adaptation and lifecycle behavior.
+- [x] Add pinned AndroidX WebKit 1.18.0 and use WebViewAssetLoader for local content.
+- [x] Add a local HTML5 canvas test game in a restricted WebView.
+- [ ] Verify touch input, screen adaptation and lifecycle behavior on the target phone.
 - [ ] Test SDK bridge restrictions.
 - [ ] Measure memory, frame rate and heat on target devices.
 
