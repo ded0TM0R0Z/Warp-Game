@@ -442,7 +442,7 @@
             this.fireClock = 250; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
-            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
+            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
             this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;this.runePower=1;
             this.worldChunks.forEach(items => items.forEach(obj => obj.destroy()));
@@ -561,7 +561,9 @@
                 bolt.body.setAllowGravity(false);
                 bolt.body.setVelocity(Math.cos(a) * this.stats.bulletSpeed, Math.sin(a) * this.stats.bulletSpeed);
                 bolt.body.setMaxSpeed(this.stats.bulletSpeed);
-                bolt.damage = this.stats.damage;
+                bolt.isCrit=Math.random()<this.stats.critChance;
+                bolt.damage = this.stats.damage*(bolt.isCrit?this.stats.critMultiplier:1);
+                if(bolt.isCrit)bolt.setTint(0xffd36a).setScale(1.9);
                 bolt.life = 1600;
                 bolt.setData("velocityX", Math.cos(a) * this.stats.bulletSpeed);
                 bolt.setData("velocityY", Math.sin(a) * this.stats.bulletSpeed);
@@ -573,6 +575,7 @@
             if(bolt.trail)bolt.trail.destroy();
             bolt.destroy();
             enemy.hp -= bolt.damage * (enemy.kind === "beetle" ? 0.78 : 1);
+            if(bolt.isCrit){const label=this.add.text(enemy.x,enemy.y-28,"КРИТ!",this.style(13,0xffdf79,true)).setOrigin(.5).setDepth(32);this.tweens.add({targets:label,y:label.y-22,alpha:0,duration:480,onComplete:()=>label.destroy()});}
             enemy.healthBack.setVisible(true);
             enemy.healthBar.setVisible(true);
             enemy.healthBar.width = Math.max(1, 28 * enemy.hp / enemy.maxHp);
@@ -652,7 +655,9 @@
                 { title: "ЗАЛП ИЗ ЛУКА", desc: "+1 стрела за атаку (максимум 5)", apply: () => { this.projectiles = Math.min(5,this.projectiles+1); } },
                 { title: "ЛЁГКИЕ САПОГИ", desc: "+12% скорость движения", apply: () => { this.stats.moveSpeed *= 1.12; } },
                 { title: "КРЕПКИЕ ДОСПЕХИ", desc: "+25 к максимуму здоровья и лечение", apply: () => { this.stats.maxHp += 25; this.stats.hp = Math.min(this.stats.maxHp,this.stats.hp+35); } },
-                { title: "МАГНИТ ЭССЕНЦИИ", desc: "Сильнее притягивает опыт", apply: () => { this.stats.magnet += 55; } }
+                { title: "МАГНИТ ЭССЕНЦИИ", desc: "Сильнее притягивает опыт", apply: () => { this.stats.magnet += 55; } },
+                { title: "ТОЧНЫЙ ВЫСТРЕЛ", desc: "+7% шанс критического попадания", apply: () => { this.stats.critChance=Math.min(0.5,this.stats.critChance+0.07); } },
+                { title: "КАЗНЯЩАЯ СТРЕЛА", desc: "+0.35x множитель критического урона", apply: () => { this.stats.critMultiplier+=0.35; } }
             ];
             if(!this.stats.earthUnlocked) all.push({title:"ЗЕМЛЯНОЙ РАЗЛОМ",desc:"Открывает круговую волну земли вокруг героя",apply:()=>{this.stats.earthUnlocked=true;this.stats.earthClock=0;}});
             else {
