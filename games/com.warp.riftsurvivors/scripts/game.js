@@ -112,6 +112,9 @@
                 g.fillStyle(0xe3c36d); g.fillRect(10, 13, 4, 3);
                 g.fillStyle(0xddd7c6); g.fillRect(18, 10, 3, 13);
                 g.fillStyle(0x8e9699); g.fillRect(19, 5, 2, 7);
+                g.fillStyle(0xf4f0df);g.fillRect(6,6,3,5);g.fillRect(15,6,3,5);g.fillStyle(0x343b45);g.fillRect(8,10,8,2);
+                g.fillStyle(0x9b7b48);g.fillRect(5,17,14,2);g.fillRect(9,19,6,3);g.fillStyle(0x5e7484);g.fillRect(6,20,12,3);
+                g.fillStyle(0xe8c56f);g.fillRect(10,16,4,2);g.fillStyle(0x6c7479);g.fillRect(3,11,3,7);g.fillRect(18,11,3,7);
             });
             make("heroLeg", 10, 15, g => {
                 g.fillStyle(0x443a32); g.fillRect(2, 0, 6, 10);
@@ -128,6 +131,8 @@
                 g.fillStyle(0x34302b); g.fillRect(6, 2, 12, 4);
                 g.fillStyle(0xd8d0b9); g.fillRect(7, 5, 10, 9); g.fillRect(5, 14, 14, 8);
                 g.fillStyle(0x26231f); g.fillRect(8, 8, 3, 3); g.fillRect(14, 8, 3, 3);
+                g.fillStyle(0xf1e8d1);g.fillRect(10,6,2,1);g.fillRect(15,6,2,1);g.fillStyle(0x756d5e);g.fillRect(8,14,8,2);
+                g.fillStyle(0xe4d9c1);g.fillRect(8,18,2,3);g.fillRect(14,18,2,3);g.fillRect(10,20,4,2);
                 g.fillStyle(0xa99f89); g.fillRect(7, 15, 10, 3);
                 g.fillStyle(0xd8d0b9); g.fillRect(6, 22, 4, 5); g.fillRect(14, 22, 4, 5);
                 g.fillStyle(0x6d6251); g.fillRect(3, 12, 3, 9); g.fillRect(18, 12, 3, 9);
@@ -147,6 +152,8 @@
                 g.fillStyle(0x382b25); g.fillRect(9, 10, 4, 4); g.fillRect(19, 10, 4, 4);
                 g.fillStyle(0xb9a27b); g.fillRect(9, 18, 14, 5);
                 g.fillStyle(0x59402f); g.fillRect(2, 22, 7, 9); g.fillRect(23, 22, 7, 9);
+                g.fillStyle(0xd0a77a);g.fillRect(7,5,4,3);g.fillRect(21,5,4,3);g.fillStyle(0x6a4938);g.fillRect(8,14,16,3);
+                g.fillStyle(0xd7b88b);g.fillRect(10,18,4,3);g.fillRect(18,18,4,3);g.fillStyle(0x30241f);g.fillRect(13,24,6,4);
             });
             make("bolt", 12, 8, g => {
                 g.fillStyle(0x4a3828); g.fillRect(1, 3, 9, 2);
@@ -191,28 +198,37 @@
                 g.fillStyle(0x18333b); g.fillRect(8,4,12,19); g.fillRect(4,12,20,12); g.fillRect(6,22,5,8); g.fillRect(17,22,5,8);
                 g.fillStyle(0x397f83); g.fillRect(7,7,14,15); g.fillRect(3,13,22,7); g.fillRect(9,22,10,6);
                 g.fillStyle(0x9bf5df); g.fillRect(9,10,4,4); g.fillRect(17,10,4,4); g.fillStyle(0x14272d); g.fillRect(10,11,2,2); g.fillRect(18,11,2,2);
+                g.fillStyle(0x65b5a7);g.fillRect(8,5,12,2);g.fillRect(7,20,14,2);g.fillStyle(0x14292f);g.fillRect(12,24,4,5);g.fillStyle(0xb6fff0);g.fillRect(4,14,2,5);g.fillRect(22,14,2,5);
             });
             make("beetle", 32, 28, g => {
                 g.fillStyle(0x33251d); g.fillRect(7,8,18,15); g.fillRect(2,11,7,4); g.fillRect(23,11,7,4); g.fillRect(6,21,5,6); g.fillRect(21,21,5,6);
                 g.fillStyle(0x9b4932); g.fillRect(8,5,16,17); g.fillRect(12,2,8,7); g.fillStyle(0xd77a43); g.fillRect(11,7,5,10); g.fillRect(18,7,4,10);
                 g.fillStyle(0xffd28a); g.fillRect(13,4,2,3); g.fillRect(18,4,2,3); g.fillStyle(0x271b18); g.fillRect(12,10,3,3); g.fillRect(19,10,3,3);
+                g.fillStyle(0xf0a46a);g.fillRect(9,7,3,2);g.fillRect(20,7,3,2);g.fillStyle(0x5b3028);g.fillRect(14,12,4,8);g.fillStyle(0xffc78a);g.fillRect(15,13,2,6);
             });
             make("bossRift", 56, 60, g => {
                 g.fillStyle(0x172c2b); g.fillRect(10,12,36,40); g.fillRect(4,22,48,22); g.fillRect(15,4,26,12);
                 g.fillStyle(0x397b68); g.fillRect(12,14,32,34); g.fillRect(7,24,42,15); g.fillRect(18,7,20,10);
                 g.fillStyle(0x9cf4c5); g.fillRect(16,19,7,7); g.fillRect(34,19,7,7); g.fillStyle(0x18241e); g.fillRect(18,21,3,3); g.fillRect(36,21,3,3);
                 g.fillStyle(0xd8f7b0); g.fillRect(23,33,10,4); g.fillStyle(0x71533b); g.fillRect(6,44,44,8);
+                g.fillStyle(0x244b42);g.fillRect(8,13,5,5);g.fillRect(43,13,5,5);g.fillStyle(0x70b89a);g.fillRect(13,11,5,3);g.fillRect(38,11,5,3);
+                g.fillStyle(0x182e2c);g.fillRect(24,25,8,3);g.fillRect(18,42,20,3);g.fillStyle(0xc4f8c8);g.fillRect(26,31,4,2);g.fillRect(25,47,6,2);
             });
             make("bossBone", 56, 60, g => {
                 g.fillStyle(0x272321); g.fillRect(12,6,32,46); g.fillRect(5,18,46,27); g.fillStyle(0xcfc4a7); g.fillRect(15,8,26,15); g.fillRect(9,22,38,22); g.fillRect(14,43,9,9); g.fillRect(33,43,9,9);
                 g.fillStyle(0x6d2d2a); g.fillRect(18,14,6,6); g.fillRect(33,14,6,6); g.fillStyle(0x171515); g.fillRect(19,15,4,4); g.fillRect(34,15,4,4);
                 g.fillStyle(0x8c3e36); g.fillRect(24,29,8,5); g.fillStyle(0xe7dcc0); g.fillRect(5,24,7,17); g.fillRect(44,24,7,17);
+                g.fillStyle(0xf4e8ca);g.fillRect(16,25,5,3);g.fillRect(35,25,5,3);g.fillRect(18,35,20,3);g.fillRect(21,40,14,3);
+                g.fillStyle(0x5b3c36);g.fillRect(12,32,4,7);g.fillRect(40,32,4,7);g.fillStyle(0xa77c69);g.fillRect(25,11,6,2);g.fillRect(26,17,4,2);
             });
             make("bossColossus", 64, 68, g => {
                 g.fillStyle(0x292332); g.fillRect(10,13,44,47); g.fillRect(2,25,60,29); g.fillRect(16,5,32,14);
                 g.fillStyle(0x66527e); g.fillRect(12,15,40,40); g.fillRect(5,28,54,20); g.fillRect(19,8,26,12);
                 g.fillStyle(0xc29be8); g.fillRect(18,23,9,8); g.fillRect(37,23,9,8); g.fillStyle(0x251c32); g.fillRect(20,25,5,4); g.fillRect(39,25,5,4);
                 g.fillStyle(0xe4c9ff); g.fillRect(27,38,10,5); g.fillStyle(0x9884a7); g.fillRect(4,49,56,8);
+                g.fillStyle(0x43364f);g.fillRect(14,19,8,6);g.fillRect(42,19,8,6);g.fillStyle(0x9b82b2);g.fillRect(9,28,7,5);g.fillRect(48,28,7,5);
+                g.fillStyle(0x34283f);g.fillRect(25,14,14,3);g.fillRect(24,49,16,4);g.fillStyle(0xdcbaff);g.fillRect(29,29,6,6);g.fillRect(30,40,4,3);
+                g.fillStyle(0xb6a1c8);g.fillRect(16,54,8,4);g.fillRect(40,54,8,4);
             });
             make("rubble", 28, 22, g => {
                 g.fillStyle(0x514f49); g.fillRect(2,10,9,8); g.fillRect(12,5,10,12); g.fillRect(21,12,6,7);
@@ -554,6 +570,9 @@
             const x=enemy.x,y=enemy.y,value=enemy.xpValue;
             if(enemy.isBoss){if(this.bossBar){this.bossBar.destroy();this.bossBar=null;}if(this.bossLabel){this.bossLabel.destroy();this.bossLabel=null;}this.score+=250*this.wave;this.stats.hp=Math.min(this.stats.maxHp,this.stats.hp+35);this.cameras.main.flash(220,255,205,110);this.dropLoot(x,y,"rune");this.dropLoot(x+22,y,"potion");}
             else if(enemy.kind==="brute"||enemy.kind==="beetle"||Math.random()<0.035)this.dropLoot(x,y,"potion");
+            const burst=this.add.circle(x,y,enemy.isBoss?18:8,enemy.isBoss?0xc58cff:enemy.kind==="wraith"?0x83fff0:0xffd58a,0.72).setDepth(30);
+            this.tweens.add({targets:burst,scale:enemy.isBoss?5:2.8,alpha:0,duration:enemy.isBoss?520:260,onComplete:()=>burst.destroy()});
+            for(let i=0;i<(enemy.isBoss?12:5);i++){const spark=this.add.rectangle(x,y,enemy.isBoss?5:3,enemy.isBoss?5:3,enemy.isBoss?0xdab6ff:0xffdf9b).setDepth(30);const a=(Math.PI*2*i/(enemy.isBoss?12:5))+Math.random()*0.3;this.tweens.add({targets:spark,x:x+Math.cos(a)*(enemy.isBoss?65:24),y:y+Math.sin(a)*(enemy.isBoss?65:24),alpha:0,duration:enemy.isBoss?500:280,onComplete:()=>spark.destroy()});}
             enemy.destroy();
             this.kills++;
             this.score += 10 * this.wave;
@@ -689,7 +708,7 @@
                 enemy.skillClock=3600;const tx=this.player.x,ty=this.player.y;
                 const bolt=this.add.circle(enemy.x,enemy.y,8,0x9d6cff,0.95).setStrokeStyle(2,0xe5caff).setDepth(28);
                 this.tweens.add({targets:bolt,x:tx,y:ty,scale:0.55,duration:850,ease:"Cubic.In",onComplete:()=>{
-                    if(this.mode==="playing"&&Phaser.Math.Distance.Between(this.player.x,this.player.y,tx,ty)<42&&this.invulnerable<=0){this.stats.hp-=enemy.damage;this.invulnerable=520;this.cameras.main.flash(90,135,75,190);if(this.stats.hp<=0)this.endRun();this.refreshHud();}
+                    if(enemy.active&&this.mode==="playing"&&Phaser.Math.Distance.Between(this.player.x,this.player.y,tx,ty)<42&&this.invulnerable<=0){this.stats.hp-=enemy.damage;this.invulnerable=520;this.cameras.main.flash(90,135,75,190);if(this.stats.hp<=0)this.endRun();this.refreshHud();}
                     bolt.destroy();
                 }});
             }
@@ -851,7 +870,7 @@
                     if(Phaser.Math.Distance.Between(px,py,x,y)<155)continue;
                     const roll=rand();
                     if(roll<0.11){
-                        const obj=this.add.image(px,py,"dirt").setDepth(-5).setScale(1.25+rand()*0.65).setAlpha(0.98).setRotation(0);objs.push(obj);
+                        const obj=this.add.image(px,py,"dirt").setDepth(-5).setScale(1.7+rand()*0.8).setAlpha(0.98).setRotation(0);objs.push(obj);
                     }else if(roll<0.20){
                         const obj=this.add.image(px,py,"rubble").setDepth(3+py/100000).setScale(0.7+rand()*0.8).setRotation(rand()*0.8);objs.push(obj);
                     }else if(roll<0.26){
