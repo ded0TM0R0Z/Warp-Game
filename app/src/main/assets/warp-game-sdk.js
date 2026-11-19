@@ -23,9 +23,8 @@
         },
 
         saveData(key, value) {
-            const serialized = typeof value === "string"
-                ? value
-                : JSON.stringify(value);
+            const serialized = JSON.stringify(value);
+            if (typeof serialized !== "string") return false;
             return nativeBridge.saveData(String(key), serialized);
         },
 
