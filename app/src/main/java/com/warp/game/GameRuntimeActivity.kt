@@ -1,6 +1,7 @@
 package com.warp.game
 
 import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -23,10 +24,6 @@ class GameRuntimeActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = Color.rgb(10, 12, 19)
-        window.navigationBarColor = Color.rgb(10, 12, 19)
-        applyImmersiveMode()
-
         val gameId = intent.getStringExtra(EXTRA_GAME_ID)
         if (gameId.isNullOrBlank()) {
             showError("Не указана игра для запуска")
@@ -39,6 +36,15 @@ class GameRuntimeActivity : Activity() {
             database = WarpDatabase(this)
             val game = database.getInstalledGame(gameId)
                 ?: throw GamePackageException("Игра не найдена в библиотеке")
+
+            requestedOrientation = when (game.orientation.lowercase()) {
+                "landscape" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                "portrait" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+            window.statusBarColor = Color.rgb(10, 12, 19)
+            window.navigationBarColor = Color.rgb(10, 12, 19)
+            applyImmersiveMode()
 
             val gameDirectory = storage.gameDirectory(game.gameId)
             val entryFile = FilePathResolver.resolve(gameDirectory, game.entryPoint)
@@ -185,8 +191,8 @@ class GameRuntimeActivity : Activity() {
     private fun applyImmersiveMode() {
         window.decorView.systemUiVisibility =
             android.view.View.SYSTEM_UI_FLAG_FULLSCREEN or
-            android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-            android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

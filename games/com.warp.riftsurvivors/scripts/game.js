@@ -1,14 +1,14 @@
 (function () {
     "use strict";
 
-    const W = 960;
-    const H = 540;
+    const W = 960, H = 540;
     const sdk = window.WarpGameSDK || null;
     const STORAGE_KEY = "rift-survivors-save";
-    const COLORS = {
-        bg: 0x080b14, grid: 0x182139, cyan: 0x59e0d0,
-        violet: 0x9b7cff, red: 0xff637d, gold: 0xffd36a,
-        white: 0xf3f5ff, muted: 0x9ba8c7, green: 0x73e6a5
+    const C = {
+        ink: 0x1b1714, parchment: 0xe8d6a8, gold: 0xd7a84f,
+        grass: 0x477344, grass2: 0x365e3d, stone: 0x77756e,
+        red: 0xb94d43, blue: 0x527ca5, green: 0x8cc56b,
+        white: 0xf5edda, muted: 0xb9ad91, hp: 0x9c3935
     };
 
     function readSave() {
@@ -30,9 +30,10 @@
             this.mode = "menu";
             this.enemies = null;
             this.bullets = null;
-            this.xpOrbs = null;
+            this.orbs = null;
             this.player = null;
-            this.joystick = { active: false, pointerId: null, x: 0, y: 0, dx: 0, dy: 0 };
+            this.playerSprite = null;
+            this.joy = { active: false, pointerId: null, baseX: 100, baseY: 420, dx: 0, dy: 0, radius: 66 };
             this.stats = null;
             this.wave = 1;
             this.waveClock = 0;
@@ -42,95 +43,200 @@
             this.invulnerable = 0;
             this.level = 1;
             this.xp = 0;
-            this.xpNext = 8;
+            this.xpNext = 7;
             this.kills = 0;
             this.score = 0;
             this.best = Number(readSave().best || 0);
-            this.upgrades = { damage: 1, fireRate: 1, speed: 1, maxHp: 0, magnet: 0, projectile: 1 };
+            this.projectiles = 1;
             this.hud = {};
             this.overlay = [];
-            this.lastAim = { x: 1, y: 0 };
+            this.target = null;
+            this.targetMark = null;
+            this.aimLine = null;
             this.dashButton = null;
+            this.lastMoveX = 1;
+            this.lastMoveY = 0;
         }
 
         create() {
             this.physics.world.setBounds(0, 0, W, H);
-            this.add.rectangle(W / 2, H / 2, W, H, COLORS.bg);
-            const grid = this.add.graphics();
-            grid.lineStyle(1, COLORS.grid, 0.45);
-            for (let x = 0; x <= W; x += 48) grid.lineBetween(x, 0, x, H);
-            for (let y = 0; y <= H; y += 48) grid.lineBetween(0, y, W, y);
-            this.add.circle(W / 2, H / 2, 180, 0x12172b, 0.26);
+            this.createTextures();
+            this.createWorld();
             this.enemies = this.physics.add.group({ runChildUpdate: true });
             this.bullets = this.physics.add.group();
-            this.xpOrbs = this.physics.add.group();
-            this.createHud();
+            this.orbs = this.physics.add.group();
             this.createPlayer();
+            this.createHud();
             this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
             this.physics.add.overlap(this.player, this.enemies, this.hitPlayer, null, this);
-            this.physics.add.overlap(this.player, this.xpOrbs, this.collectXp, null, this);
+            this.physics.add.overlap(this.player, this.orbs, this.collectXp, null, this);
             this.input.on("pointerdown", this.pointerDown, this);
             this.input.on("pointermove", this.pointerMove, this);
             this.input.on("pointerup", this.pointerUp, this);
             this.input.on("pointerupoutside", this.pointerUp, this);
             this.showMenu();
-            this.scale.on("resize", () => this.layoutHud());
+        }
+
+        createTextures() {
+            const make = (key, width, height, draw) => {
+                const g = this.make.graphics({ x: 0, y: 0, add: false });
+                draw(g);
+                g.generateTexture(key, width, height);
+                g.destroy();
+            };
+            make("ground", 32, 32, g => {
+                g.fillStyle(0x426b3e); g.fillRect(0, 0, 32, 32);
+                g.fillStyle(0x4e7946); g.fillRect(2, 3, 5, 3); g.fillRect(18, 8, 4, 3);
+                g.fillStyle(0x365d38); g.fillRect(10, 17, 5, 2); g.fillRect(25, 25, 4, 3);
+                g.fillStyle(0x6b8a4b); g.fillRect(24, 2, 2, 2); g.fillRect(5, 25, 2, 2);
+            });
+            make("hero", 24, 28, g => {
+                g.fillStyle(0x302b28); g.fillRect(6, 2, 12, 5);
+                g.fillStyle(0xc6c6bb); g.fillRect(5, 6, 14, 12); g.fillRect(7, 4, 10, 3);
+                g.fillStyle(0x596b78); g.fillRect(7, 9, 10, 8);
+                g.fillStyle(0xd9b98a); g.fillRect(9, 7, 6, 5);
+                g.fillStyle(0x443a32); g.fillRect(5, 18, 6, 8); g.fillRect(13, 18, 6, 8);
+                g.fillStyle(0x8a5838); g.fillRect(4, 25, 8, 3); g.fillRect(12, 25, 8, 3);
+                g.fillStyle(0xe3c36d); g.fillRect(10, 13, 4, 3);
+                g.fillStyle(0xddd7c6); g.fillRect(18, 10, 3, 13);
+                g.fillStyle(0x8e9699); g.fillRect(19, 5, 2, 7);
+            });
+            make("slime", 22, 20, g => {
+                g.fillStyle(0x253b2c); g.fillRect(4, 16, 14, 3);
+                g.fillStyle(0x76ad55); g.fillRect(3, 9, 16, 8); g.fillRect(6, 5, 10, 5);
+                g.fillStyle(0xa7d878); g.fillRect(6, 6, 5, 3);
+                g.fillStyle(0x18251d); g.fillRect(7, 11, 2, 3); g.fillRect(14, 11, 2, 3);
+            });
+            make("skeleton", 24, 28, g => {
+                g.fillStyle(0x34302b); g.fillRect(6, 2, 12, 4);
+                g.fillStyle(0xd8d0b9); g.fillRect(7, 5, 10, 9); g.fillRect(5, 14, 14, 8);
+                g.fillStyle(0x26231f); g.fillRect(8, 8, 3, 3); g.fillRect(14, 8, 3, 3);
+                g.fillStyle(0xa99f89); g.fillRect(7, 15, 10, 3);
+                g.fillStyle(0xd8d0b9); g.fillRect(6, 22, 4, 5); g.fillRect(14, 22, 4, 5);
+                g.fillStyle(0x6d6251); g.fillRect(3, 12, 3, 9); g.fillRect(18, 12, 3, 9);
+            });
+            make("brute", 32, 34, g => {
+                g.fillStyle(0x302923); g.fillRect(6, 5, 20, 25);
+                g.fillStyle(0x88634a); g.fillRect(4, 8, 24, 18);
+                g.fillStyle(0xb08a63); g.fillRect(8, 4, 16, 8);
+                g.fillStyle(0x382b25); g.fillRect(9, 10, 4, 4); g.fillRect(19, 10, 4, 4);
+                g.fillStyle(0xb9a27b); g.fillRect(9, 18, 14, 5);
+                g.fillStyle(0x59402f); g.fillRect(2, 22, 7, 9); g.fillRect(23, 22, 7, 9);
+            });
+            make("bolt", 12, 8, g => {
+                g.fillStyle(0x4a3828); g.fillRect(1, 3, 9, 2);
+                g.fillStyle(0xf0d18a); g.fillRect(7, 1, 4, 6);
+                g.fillStyle(0xffffff); g.fillRect(9, 2, 2, 2);
+            });
+            make("orb", 12, 12, g => {
+                g.fillStyle(0x426a37); g.fillRect(3, 1, 6, 10);
+                g.fillStyle(0x9ddc72); g.fillRect(2, 2, 8, 8);
+                g.fillStyle(0xeaffb0); g.fillRect(4, 3, 3, 3);
+            });
+            make("tree", 38, 48, g => {
+                g.fillStyle(0x49352a); g.fillRect(15, 24, 9, 23);
+                g.fillStyle(0x24452d); g.fillRect(6, 13, 26, 23);
+                g.fillStyle(0x376d3d); g.fillRect(3, 9, 30, 19); g.fillRect(9, 3, 19, 15);
+                g.fillStyle(0x5b8747); g.fillRect(9, 7, 8, 6); g.fillRect(22, 15, 7, 5);
+                g.fillStyle(0x1d3a29); g.fillRect(5, 26, 8, 7); g.fillRect(26, 24, 7, 7);
+            });
+            make("ruin", 44, 50, g => {
+                g.fillStyle(0x55534d); g.fillRect(3, 7, 38, 40);
+                g.fillStyle(0x858176); g.fillRect(7, 4, 30, 8);
+                g.fillStyle(0x393a38); g.fillRect(14, 20, 16, 27);
+                g.fillStyle(0xa29b88); g.fillRect(7, 15, 8, 5); g.fillRect(29, 15, 8, 5);
+                g.fillStyle(0x68665d); g.fillRect(3, 34, 38, 5);
+            });
+            make("torch", 12, 22, g => {
+                g.fillStyle(0x62452e); g.fillRect(5, 7, 3, 15);
+                g.fillStyle(0xb45c2d); g.fillRect(3, 4, 7, 7);
+                g.fillStyle(0xf3c45d); g.fillRect(4, 1, 5, 6);
+                g.fillStyle(0xffed9b); g.fillRect(5, 2, 2, 3);
+            });
+        }
+
+        createWorld() {
+            this.add.tileSprite(W / 2, H / 2, W, H, "ground").setDepth(-20);
+            const deco = this.add.graphics().setDepth(-10);
+            for (let i = 0; i < 210; i++) {
+                const x = Phaser.Math.Between(8, W - 8), y = Phaser.Math.Between(8, H - 8);
+                if (x > 100 && x < W - 100 && y > 80 && y < H - 75) continue;
+                deco.fillStyle(Math.random() > 0.5 ? 0x2d5435 : 0x6d8245, 0.8);
+                deco.fillRect(x, y, 3, 3);
+            }
+            const placements = [
+                [36, 48, "tree"], [104, 35, "tree"], [200, 22, "ruin"],
+                [760, 25, "ruin"], [865, 45, "tree"], [925, 115, "tree"],
+                [24, 425, "tree"], [150, 490, "tree"], [795, 490, "tree"],
+                [920, 420, "tree"], [310, 25, "tree"], [650, 20, "tree"]
+            ];
+            placements.forEach(p => this.add.image(p[0], p[1], p[2]).setDepth(p[1] + 1));
+            this.add.image(72, 220, "torch").setDepth(5);
+            this.add.image(888, 260, "torch").setDepth(5);
+            const vignette = this.add.graphics().setDepth(10);
+            vignette.fillStyle(0x182017, 0.08);
+            vignette.fillRect(0, 0, W, 8); vignette.fillRect(0, H - 8, W, 8);
         }
 
         createPlayer() {
-            this.player = this.add.container(W / 2, H / 2);
-            const glow = this.add.circle(0, 0, 26, COLORS.violet, 0.12);
-            const body = this.add.circle(0, 0, 15, COLORS.violet);
-            body.setStrokeStyle(3, 0xe3dcff, 0.95);
-            const core = this.add.circle(0, 0, 5, COLORS.white);
-            this.player.add([glow, body, core]);
+            this.player = this.add.container(W / 2, H / 2).setDepth(15);
+            this.playerSprite = this.add.image(0, 0, "hero").setOrigin(0.5);
+            this.player.add(this.playerSprite);
             this.physics.add.existing(this.player);
-            this.player.body.setCircle(15, -15, -15);
+            this.player.body.setSize(16, 20).setOffset(-8, -10);
             this.player.body.setCollideWorldBounds(true);
             this.player.body.setDamping(true);
-            this.player.body.setDrag(900);
-            this.player.body.setMaxVelocity(620);
+            this.player.body.setDrag(1150);
+            this.player.body.setMaxVelocity(235);
         }
 
         createHud() {
-            this.hud.top = this.add.container(0, 0).setDepth(20);
-            this.hud.wave = this.add.text(22, 18, "ВОЛНА 1", this.textStyle(17, COLORS.white, true));
-            this.hud.level = this.add.text(22, 43, "УР. 1", this.textStyle(12, COLORS.cyan, true));
-            this.hud.score = this.add.text(W - 22, 18, "0", this.textStyle(18, COLORS.gold, true)).setOrigin(1, 0);
-            this.hud.hpBack = this.add.rectangle(W / 2, 25, 220, 12, 0x252b40).setOrigin(0.5);
-            this.hud.hp = this.add.rectangle(W / 2 - 108, 25, 216, 6, COLORS.green).setOrigin(0, 0.5);
-            this.hud.xpBack = this.add.rectangle(W / 2, 47, 220, 5, 0x252b40);
-            this.hud.xp = this.add.rectangle(W / 2 - 108, 47, 1, 3, COLORS.cyan).setOrigin(0, 0.5);
-            this.hud.top.add([this.hud.wave, this.hud.level, this.hud.score, this.hud.hpBack, this.hud.hp, this.hud.xpBack, this.hud.xp]);
-            this.hud.dash = this.add.container(W - 76, H - 76).setDepth(30);
-            const dashCircle = this.add.circle(0, 0, 34, 0x27304b, 0.9).setStrokeStyle(2, COLORS.cyan, 0.9);
-            const dashText = this.add.text(0, 0, "РЫВОК", this.textStyle(11, COLORS.white, true)).setOrigin(0.5);
-            this.dashButton = this.add.circle(0, 0, 38, 0xffffff, 0.001).setInteractive();
-            this.dashButton.on("pointerdown", () => this.dash());
-            this.hud.dash.add([dashCircle, dashText, this.dashButton]);
-            this.hud.joy = this.add.container(92, H - 86).setDepth(25);
-            this.hud.joyBase = this.add.circle(0, 0, 48, 0x27304b, 0.42).setStrokeStyle(2, 0x7784a8, 0.45);
-            this.hud.joyKnob = this.add.circle(0, 0, 20, COLORS.cyan, 0.55).setStrokeStyle(2, 0xc9fff8, 0.8);
-            this.hud.joy.add([this.hud.joyBase, this.hud.joyKnob]);
-            this.hud.bottom = this.add.text(W / 2, H - 17, "АТАКА АВТОМАТИЧЕСКАЯ", this.textStyle(10, 0x71809f, true)).setOrigin(0.5, 1);
-            this.layoutHud();
+            this.hud.top = this.add.container(0, 0).setDepth(40);
+            const plate = this.add.rectangle(W / 2, 28, 360, 48, 0x29251f, 0.94).setStrokeStyle(2, 0xb79a5e, 0.95);
+            this.hud.wave = this.add.text(28, 16, "ВОЛНА 1", this.style(16, C.parchment, true));
+            this.hud.level = this.add.text(28, 39, "УР. 1", this.style(11, C.gold, true));
+            this.hud.score = this.add.text(W - 25, 17, "0", this.style(17, C.gold, true)).setOrigin(1, 0);
+            this.hud.hpBack = this.add.rectangle(W / 2, 19, 150, 9, 0x4b302a);
+            this.hud.hp = this.add.rectangle(W / 2 - 73, 19, 146, 5, 0x9c3935).setOrigin(0, 0.5);
+            this.hud.xpBack = this.add.rectangle(W / 2, 37, 150, 5, 0x51452f);
+            this.hud.xp = this.add.rectangle(W / 2 - 73, 37, 1, 3, 0xd7b65f).setOrigin(0, 0.5);
+            this.hud.top.add([plate, this.hud.wave, this.hud.level, this.hud.score, this.hud.hpBack, this.hud.hp, this.hud.xpBack, this.hud.xp]);
+
+            this.hud.joy = this.add.container(100, 420).setDepth(50);
+            this.hud.joyBase = this.add.circle(0, 0, 66, 0x242d20, 0.55).setStrokeStyle(3, 0xcab77f, 0.78);
+            this.hud.joyInner = this.add.circle(0, 0, 43, 0x536344, 0.28).setStrokeStyle(1, 0xe3d4a9, 0.35);
+            this.hud.joyKnob = this.add.circle(0, 0, 25, 0xc3ad78, 0.8).setStrokeStyle(3, 0xf1e2bb, 0.95);
+            this.hud.joy.add([this.hud.joyBase, this.hud.joyInner, this.hud.joyKnob]);
+
+            this.hud.dash = this.add.container(W - 92, H - 88).setDepth(50);
+            const dashBase = this.add.circle(0, 0, 43, 0x493b2a, 0.94).setStrokeStyle(3, C.gold, 0.95);
+            const dashLabel = this.add.text(0, -2, "РЫВОК", this.style(12, C.parchment, true)).setOrigin(0.5);
+            this.dashButton = this.add.circle(0, 0, 46, 0xffffff, 0.001).setInteractive();
+            this.dashButton.on("pointerdown", pointer => { pointer.event.stopPropagation(); this.dash(); });
+            this.hud.dash.add([dashBase, dashLabel, this.dashButton]);
+
+            this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40);
             this.hud.top.setVisible(false);
-            this.hud.dash.setVisible(false);
             this.hud.joy.setVisible(false);
-            this.hud.bottom.setVisible(false);
+            this.hud.dash.setVisible(false);
+            this.hud.help.setVisible(false);
+            this.layoutJoystick();
         }
 
-        layoutHud() {
-            if (!this.hud.top) return;
-            this.hud.score.setPosition(W - 22, 18);
-            this.hud.hpBack.setPosition(W / 2, 25);
-            this.hud.hp.setPosition(W / 2 - 108, 25);
-            this.hud.xpBack.setPosition(W / 2, 47);
-            this.hud.xp.setPosition(W / 2 - 108, 47);
+        layoutJoystick() {
+            if (!this.hud.joy) return;
+            this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
         }
 
-        textStyle(size, color, bold) {
-            return { fontFamily: "system-ui, sans-serif", fontSize: size + "px", color: "#" + color.toString(16).padStart(6, "0"), fontStyle: bold ? "bold" : "normal" };
+        style(size, color, bold) {
+            return {
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontSize: size + "px",
+                color: "#" + color.toString(16).padStart(6, "0"),
+                fontStyle: bold ? "bold" : "normal",
+                stroke: "#211b16",
+                strokeThickness: 2
+            };
         }
 
         clearOverlay() {
@@ -141,18 +247,17 @@
 
         panel(title, subtitle) {
             this.clearOverlay();
-            const shade = this.add.rectangle(W / 2, H / 2, W, H, 0x050711, 0.84);
-            this.addOverlay(shade);
-            const box = this.add.rectangle(W / 2, H / 2, 520, 330, 0x11182b, 0.98).setStrokeStyle(2, 0x394568, 0.9);
-            this.addOverlay(box);
-            this.addOverlay(this.add.text(W / 2, H / 2 - 120, title, this.textStyle(30, COLORS.white, true)).setOrigin(0.5));
-            if (subtitle) this.addOverlay(this.add.text(W / 2, H / 2 - 78, subtitle, this.textStyle(14, COLORS.muted, false)).setOrigin(0.5));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, W, H, 0x10150f, 0.78));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 540, 360, 0x29251e, 0.98).setStrokeStyle(4, 0xc3a46a, 1));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 526, 346, 0x403628, 0.24).setStrokeStyle(1, 0x796442, 0.9));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 135, title, this.style(30, C.parchment, true)).setOrigin(0.5));
+            if (subtitle) this.addOverlay(this.add.text(W / 2, H / 2 - 92, subtitle, this.style(14, C.gold, true)).setOrigin(0.5));
         }
 
         makeButton(x, y, label, callback, width) {
-            const w = width || 230;
-            const bg = this.add.rectangle(x, y, w, 48, 0x6551b8).setStrokeStyle(1, 0xb5a4ff, 0.8).setInteractive({ useHandCursor: true });
-            const text = this.add.text(x, y, label, this.textStyle(16, COLORS.white, true)).setOrigin(0.5);
+            const w = width || 250;
+            const bg = this.add.rectangle(x, y, w, 48, 0x665032).setStrokeStyle(2, 0xd0b174, 1).setInteractive({ useHandCursor: true });
+            const text = this.add.text(x, y, label, this.style(16, C.parchment, true)).setOrigin(0.5);
             bg.on("pointerdown", callback);
             this.addOverlay(bg); this.addOverlay(text);
         }
@@ -160,11 +265,15 @@
         showMenu() {
             this.mode = "menu";
             this.physics.pause();
-            this.panel("RIFT SURVIVORS", "АРЕНА НЕ ПРОЩАЕТ ОШИБОК");
-            this.addOverlay(this.add.text(W / 2, H / 2 - 25, "Выдержи волны существ из разлома.\nСобирай энергию и усиливай оружие.", this.textStyle(15, COLORS.muted, false)).setOrigin(0.5).setAlign("center"));
-            this.addOverlay(this.add.text(W / 2, H / 2 + 35, "РЕКОРД: " + this.best, this.textStyle(14, COLORS.gold, true)).setOrigin(0.5));
-            this.makeButton(W / 2, H / 2 + 100, "НАЧАТЬ ЗАБЕГ", () => this.startRun());
-            this.addOverlay(this.add.text(W / 2, H - 24, "Левый стик — движение   •   Рывок — уклонение", this.textStyle(11, 0x8390ae, false)).setOrigin(0.5));
+            this.panel("RIFT SURVIVORS", "ПРОКЛЯТЫЕ РУИНЫ");
+            this.addOverlay(this.add.text(W / 2, H / 2 - 30,
+                "Ты — последний рыцарь у древнего разлома.\nОтбивайся от тварей, собирай эссенцию и усиливай клинок.",
+                this.style(15, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(8));
+            this.addOverlay(this.add.text(W / 2, H / 2 + 35, "РЕКОРД: " + this.best, this.style(14, C.gold, true)).setOrigin(0.5));
+            this.makeButton(W / 2, H / 2 + 105, "НАЧАТЬ ЗАБЕГ", () => this.startRun());
+            this.addOverlay(this.add.text(W / 2, H - 24,
+                "Левый стик — движение   •   Рыцарь сам атакует ближайшего врага",
+                this.style(11, C.muted, false)).setOrigin(0.5));
         }
 
         startRun() {
@@ -173,92 +282,102 @@
             this.physics.resume();
             this.enemies.clear(true, true);
             this.bullets.clear(true, true);
-            this.xpOrbs.clear(true, true);
+            this.orbs.clear(true, true);
             this.player.setPosition(W / 2, H / 2);
             this.player.body.setVelocity(0, 0);
+            this.player.body.setAcceleration(0, 0);
             this.wave = 1; this.waveClock = 0; this.spawnClock = 0;
-            this.fireClock = 0; this.dashCooldown = 0; this.invulnerable = 0;
-            this.level = 1; this.xp = 0; this.xpNext = 8; this.kills = 0; this.score = 0;
-            this.upgrades = { damage: 1, fireRate: 1, speed: 1, maxHp: 0, magnet: 0, projectile: 1 };
-            this.stats = { hp: 100, maxHp: 100, damage: 18, fireDelay: 520, moveSpeed: 190, bulletSpeed: 430, magnet: 90 };
-            this.joystick.dx = 0; this.joystick.dy = 0; this.joystick.active = false;
-            this.hud.top.setVisible(true); this.hud.dash.setVisible(true);
-            this.hud.joy.setVisible(true); this.hud.bottom.setVisible(true);
+            this.fireClock = 250; this.dashCooldown = 0; this.invulnerable = 0;
+            this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
+            this.projectiles = 1;
+            this.stats = { hp: 100, maxHp: 100, damage: 28, fireDelay: 650, moveSpeed: 220, bulletSpeed: 520, magnet: 105 };
+            this.joy.active = false; this.joy.pointerId = null; this.joy.dx = 0; this.joy.dy = 0;
+            this.joy.baseX = 100; this.joy.baseY = H - 120;
+            this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
+            this.hud.joyKnob.setPosition(0, 0);
+            this.hud.top.setVisible(true); this.hud.joy.setVisible(true);
+            this.hud.dash.setVisible(true); this.hud.help.setVisible(true);
             this.refreshHud();
-            this.spawnEnemy();
-            this.spawnEnemy();
+            this.spawnEnemy("slime"); this.spawnEnemy("slime"); this.spawnEnemy("skeleton");
         }
 
         pointerDown(pointer) {
-            if (this.mode !== "playing" || this.joystick.active) return;
-            if (pointer.x < W * 0.43 && pointer.y > H * 0.48) {
-                this.joystick.active = true;
-                this.joystick.pointerId = pointer.id;
-                this.joystick.x = 92; this.joystick.y = H - 86;
+            if (this.mode !== "playing" || this.joy.active) return;
+            if (pointer.x < W * 0.56 && pointer.y > 58) {
+                this.joy.active = true;
+                this.joy.pointerId = pointer.id;
+                this.joy.baseX = Phaser.Math.Clamp(pointer.x, 76, 250);
+                this.joy.baseY = Phaser.Math.Clamp(pointer.y, 95, H - 85);
+                this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
                 this.updateJoystick(pointer);
             }
         }
         pointerMove(pointer) {
-            if (this.mode === "playing" && this.joystick.active && pointer.id === this.joystick.pointerId) this.updateJoystick(pointer);
+            if (this.mode === "playing" && this.joy.active && pointer.id === this.joy.pointerId) this.updateJoystick(pointer);
         }
         pointerUp(pointer) {
-            if (this.joystick.active && pointer.id === this.joystick.pointerId) {
-                this.joystick.active = false; this.joystick.pointerId = null;
-                this.joystick.dx = 0; this.joystick.dy = 0;
+            if (this.joy.active && pointer.id === this.joy.pointerId) {
+                this.joy.active = false; this.joy.pointerId = null;
+                this.joy.dx = 0; this.joy.dy = 0;
                 this.hud.joyKnob.setPosition(0, 0);
+                this.joy.baseX = 100; this.joy.baseY = H - 120;
+                this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             }
         }
         updateJoystick(pointer) {
-            const dx = pointer.x - this.joystick.x;
-            const dy = pointer.y - this.joystick.y;
+            const dx = pointer.x - this.joy.baseX;
+            const dy = pointer.y - this.joy.baseY;
             const length = Math.max(1, Math.hypot(dx, dy));
-            const scale = Math.min(1, 42 / length);
-            this.joystick.dx = dx / length * scale;
-            this.joystick.dy = dy / length * scale;
-            this.hud.joyKnob.setPosition(this.joystick.dx * 34, this.joystick.dy * 34);
+            const amount = Math.min(1, length / this.joy.radius);
+            this.joy.dx = dx / length * amount;
+            this.joy.dy = dy / length * amount;
+            this.hud.joyKnob.setPosition(this.joy.dx * 39, this.joy.dy * 39);
         }
 
         dash() {
             if (this.mode !== "playing" || this.dashCooldown > 0) return;
-            let dx = this.joystick.dx, dy = this.joystick.dy;
+            let dx = this.joy.dx, dy = this.joy.dy;
             if (Math.hypot(dx, dy) < 0.15) {
-                const target = this.nearestEnemy();
-                if (target) {
-                    dx = this.player.x - target.x; dy = this.player.y - target.y;
-                    const len = Math.max(1, Math.hypot(dx, dy)); dx /= len; dy /= len;
-                } else { dx = 1; dy = 0; }
+                const enemy = this.nearestEnemy();
+                if (enemy) {
+                    dx = this.player.x - enemy.x; dy = this.player.y - enemy.y;
+                    const length = Math.max(1, Math.hypot(dx, dy));
+                    dx /= length; dy /= length;
+                } else { dx = this.lastMoveX; dy = this.lastMoveY; }
             }
             this.player.body.setVelocity(dx * 590, dy * 590);
-            this.invulnerable = 420;
-            this.dashCooldown = 3200;
-            this.cameras.main.shake(100, 0.003);
+            this.invulnerable = 430;
+            this.dashCooldown = 2600;
+            this.cameras.main.shake(100, 0.0025);
             if (sdk) sdk.vibrate(35);
         }
 
-        spawnEnemy() {
-            if (this.mode !== "playing" || this.enemies.countActive(true) >= 75) return;
+        spawnEnemy(type) {
+            if (this.mode !== "playing" || this.enemies.countActive(true) >= 65) return;
             const side = Phaser.Math.Between(0, 3);
-            const x = side === 0 ? -20 : side === 1 ? W + 20 : Phaser.Math.Between(20, W - 20);
-            const y = side === 2 ? -20 : side === 3 ? H + 20 : Phaser.Math.Between(70, H - 30);
-            const heavy = this.wave >= 3 && Math.random() < Math.min(0.32, 0.08 + this.wave * 0.012);
-            const fast = !heavy && this.wave >= 2 && Math.random() < 0.24;
-            const radius = heavy ? 22 : fast ? 11 : 15;
-            const color = heavy ? COLORS.gold : fast ? COLORS.red : 0x4d8cff;
-            const enemy = this.add.container(x, y);
-            const aura = this.add.circle(0, 0, radius + 8, color, 0.13);
-            const shape = this.add.circle(0, 0, radius, color).setStrokeStyle(2, 0xffffff, 0.45);
-            const eye = this.add.circle(radius * 0.28, -radius * 0.12, Math.max(2, radius * 0.18), 0xffffff);
-            enemy.add([aura, shape, eye]);
+            const x = side === 0 ? -24 : side === 1 ? W + 24 : Phaser.Math.Between(25, W - 25);
+            const y = side === 2 ? -24 : side === 3 ? H + 24 : Phaser.Math.Between(75, H - 30);
+            const kind = type || (this.wave >= 4 && Math.random() < 0.12 ? "brute" : this.wave >= 2 && Math.random() < 0.34 ? "skeleton" : "slime");
+            const key = kind === "brute" ? "brute" : kind === "skeleton" ? "skeleton" : "slime";
+            const scale = kind === "brute" ? 1.45 : kind === "skeleton" ? 1.15 : 1.2;
+            const enemy = this.add.container(x, y).setDepth(12);
+            enemy.sprite = this.add.image(0, 0, key).setScale(scale);
+            enemy.add(enemy.sprite);
             this.physics.add.existing(enemy);
+            const radius = kind === "brute" ? 17 : kind === "skeleton" ? 12 : 11;
             enemy.body.setCircle(radius, -radius, -radius);
             enemy.body.setCollideWorldBounds(false);
-            enemy.hp = heavy ? 95 + this.wave * 8 : fast ? 20 + this.wave * 2 : 36 + this.wave * 4;
+            enemy.kind = kind;
+            enemy.hp = kind === "brute" ? 125 + this.wave * 10 : kind === "skeleton" ? 58 + this.wave * 5 : 38 + this.wave * 4;
             enemy.maxHp = enemy.hp;
-            enemy.speed = heavy ? 48 + this.wave * 1.5 : fast ? 105 + this.wave * 2 : 68 + this.wave * 2;
-            enemy.damage = heavy ? 22 : 12;
-            enemy.xpValue = heavy ? 4 : fast ? 2 : 1;
+            enemy.speed = kind === "brute" ? 47 + this.wave : kind === "skeleton" ? 78 + this.wave * 1.5 : 65 + this.wave * 1.5;
+            enemy.damage = kind === "brute" ? 24 : 13;
+            enemy.xpValue = kind === "brute" ? 5 : kind === "skeleton" ? 2 : 1;
             enemy.radius = radius;
-            enemy.lastHit = 0;
+            enemy.hitFlash = 0;
+            enemy.healthBack = this.add.rectangle(0, -22, 28, 4, 0x33251f).setOrigin(0.5).setVisible(false);
+            enemy.healthBar = this.add.rectangle(-14, -22, 28, 2, 0xb84c3e).setOrigin(0, 0.5).setVisible(false);
+            enemy.add([enemy.healthBack, enemy.healthBar]);
             this.enemies.add(enemy);
         }
 
@@ -269,36 +388,49 @@
                 const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
                 if (d < bestDistance) { bestDistance = d; best = enemy; }
             });
-            return best;
+            return bestDistance < 620 ? best : null;
         }
 
         fire() {
             const target = this.nearestEnemy();
+            this.target = target;
             if (!target) return;
             const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
-            this.lastAim.x = Math.cos(angle); this.lastAim.y = Math.sin(angle);
-            const count = this.upgrades.projectile;
-            for (let i = 0; i < count; i++) {
-                const spread = (i - (count - 1) / 2) * 0.13;
+            this.playerSprite.setFlipX(target.x < this.player.x);
+            for (let i = 0; i < this.projectiles; i++) {
+                const spread = (i - (this.projectiles - 1) / 2) * 0.11;
                 const a = angle + spread;
-                const bullet = this.add.circle(this.player.x + Math.cos(a) * 20, this.player.y + Math.sin(a) * 20, 5, COLORS.cyan);
-                bullet.setStrokeStyle(1, 0xffffff, 0.8);
-                this.physics.add.existing(bullet);
-                bullet.body.setCircle(5);
-                bullet.body.setVelocity(Math.cos(a) * this.stats.bulletSpeed, Math.sin(a) * this.stats.bulletSpeed);
-                bullet.body.setAllowGravity(false);
-                bullet.damage = this.stats.damage;
-                bullet.life = 1050;
-                this.bullets.add(bullet);
+                const bolt = this.add.image(this.player.x + Math.cos(a) * 17, this.player.y + Math.sin(a) * 17, "bolt").setDepth(18).setRotation(a);
+                this.physics.add.existing(bolt);
+                bolt.body.setAllowGravity(false);
+                bolt.body.setVelocity(Math.cos(a) * this.stats.bulletSpeed, Math.sin(a) * this.stats.bulletSpeed);
+                bolt.damage = this.stats.damage;
+                bolt.life = 1300;
+                this.bullets.add(bolt);
             }
+            this.showTarget(target);
         }
 
-        hitEnemy(bullet, enemy) {
-            if (!bullet.active || !enemy.active) return;
-            bullet.destroy();
-            enemy.hp -= bullet.damage;
-            enemy.setAlpha(0.62);
-            this.time.delayedCall(65, () => { if (enemy.active) enemy.setAlpha(1); });
+        showTarget(target) {
+            if (!this.targetMark || !this.targetMark.active) {
+                this.targetMark = this.add.graphics().setDepth(30);
+            }
+            this.targetMark.clear();
+            this.targetMark.lineStyle(2, 0xffe18a, 0.9);
+            this.targetMark.strokeCircle(target.x, target.y, 20);
+            this.targetMark.lineBetween(target.x - 25, target.y, target.x - 16, target.y);
+            this.targetMark.lineBetween(target.x + 16, target.y, target.x + 25, target.y);
+        }
+
+        hitEnemy(bolt, enemy) {
+            if (!bolt.active || !enemy.active) return;
+            bolt.destroy();
+            enemy.hp -= bolt.damage;
+            enemy.healthBack.setVisible(true);
+            enemy.healthBar.setVisible(true);
+            enemy.healthBar.width = Math.max(1, 28 * enemy.hp / enemy.maxHp);
+            enemy.sprite.setTint(0xffffff);
+            this.time.delayedCall(75, () => { if (enemy.active) enemy.sprite.clearTint(); });
             if (enemy.hp <= 0) this.killEnemy(enemy);
         }
 
@@ -309,48 +441,48 @@
             this.kills++;
             this.score += 10 * this.wave;
             this.hud.score.setText(this.score.toLocaleString("ru-RU"));
-            const orb = this.add.circle(x, y, 6 + value, COLORS.green).setStrokeStyle(2, 0xe5fff0, 0.7);
+            const orb = this.add.image(x, y, "orb").setDepth(14).setScale(1.25);
             this.physics.add.existing(orb);
-            orb.body.setCircle(7 + value);
+            orb.body.setCircle(7);
+            orb.body.setAllowGravity(false);
             orb.value = value;
-            this.xpOrbs.add(orb);
-            this.tweens.add({ targets: orb, scale: 1.35, duration: 400, yoyo: true, repeat: -1 });
-            this.cameras.main.shake(45, 0.0015);
+            this.orbs.add(orb);
+            this.tweens.add({ targets: orb, y: y - 5, duration: 350, yoyo: true, repeat: -1 });
+            this.cameras.main.shake(45, 0.0012);
         }
 
         hitPlayer(player, enemy) {
             if (this.mode !== "playing" || this.invulnerable > 0 || !enemy.active) return;
             this.stats.hp -= enemy.damage;
-            this.invulnerable = 650;
-            this.cameras.main.flash(100, 255, 70, 100, false);
+            this.invulnerable = 720;
+            this.cameras.main.flash(100, 180, 55, 45, false);
             const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
-            player.body.setVelocity(Math.cos(angle) * 240, Math.sin(angle) * 240);
+            player.body.setVelocity(Math.cos(angle) * 260, Math.sin(angle) * 260);
             if (this.stats.hp <= 0) this.endRun();
             this.refreshHud();
         }
 
         collectXp(player, orb) {
-            if (!orb.active) return;
+            if (!orb.active || this.mode !== "playing") return;
             this.xp += orb.value;
             orb.destroy();
-            while (this.xp >= this.xpNext) {
+            if (this.xp >= this.xpNext) {
                 this.xp -= this.xpNext;
                 this.level++;
-                this.xpNext = Math.floor(this.xpNext * 1.32 + 3);
+                this.xpNext = Math.floor(this.xpNext * 1.3 + 3);
                 this.openUpgrade();
-                break;
             }
             this.refreshHud();
         }
 
         upgradeOptions() {
             const all = [
-                { id: "damage", title: "СИЛЬНЫЙ ВЫСТРЕЛ", desc: "+35% урон снарядов", apply: () => { this.stats.damage *= 1.35; } },
-                { id: "fireRate", title: "БЫСТРЫЙ СПУСК", desc: "Атака на 18% быстрее", apply: () => { this.stats.fireDelay *= 0.82; } },
-                { id: "speed", title: "ЛЁГКИЕ НОГИ", desc: "+12% скорость движения", apply: () => { this.stats.moveSpeed *= 1.12; } },
-                { id: "maxHp", title: "ЖИВОЙ ЩИТ", desc: "+25 к максимуму здоровья", apply: () => { this.stats.maxHp += 25; this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + 35); } },
-                { id: "magnet", title: "ЭНЕРГОМАГНИТ", desc: "Дальше притягивает опыт", apply: () => { this.stats.magnet += 55; } },
-                { id: "projectile", title: "ДВОЙНОЙ ИМПУЛЬС", desc: "+1 снаряд за выстрел", apply: () => { this.upgrades.projectile = Math.min(5, this.upgrades.projectile + 1); } }
+                { title: "ЗАТОЧЕННЫЙ КЛИНОК", desc: "+35% урон снарядов", apply: () => { this.stats.damage *= 1.35; } },
+                { title: "БЫСТРАЯ РУКА", desc: "Атака на 18% быстрее", apply: () => { this.stats.fireDelay *= 0.82; } },
+                { title: "ЛЁГКИЕ САПОГИ", desc: "+14% скорость движения", apply: () => { this.stats.moveSpeed *= 1.14; } },
+                { title: "КРЕПКИЕ ДОСПЕХИ", desc: "+25 к максимуму здоровья и лечение", apply: () => { this.stats.maxHp += 25; this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + 35); } },
+                { title: "МАГНИТ ЭССЕНЦИИ", desc: "Сильнее притягивает опыт", apply: () => { this.stats.magnet += 65; } },
+                { title: "ЗАЛП ИЗ АРБАЛЕТА", desc: "+1 снаряд за атаку", apply: () => { this.projectiles = Math.min(5, this.projectiles + 1); } }
             ];
             return Phaser.Utils.Array.Shuffle(all).slice(0, 3);
         }
@@ -360,13 +492,12 @@
             this.mode = "upgrade";
             this.physics.pause();
             this.panel("НОВЫЙ УРОВЕНЬ", "ВЫБЕРИ ОДНО УЛУЧШЕНИЕ");
-            this.addOverlay(this.add.text(W / 2, H / 2 - 35, "УРОВЕНЬ " + this.level, this.textStyle(13, COLORS.cyan, true)).setOrigin(0.5));
-            const options = this.upgradeOptions();
-            options.forEach((option, index) => {
+            this.addOverlay(this.add.text(W / 2, H / 2 - 40, "УРОВЕНЬ " + this.level, this.style(13, C.gold, true)).setOrigin(0.5));
+            this.upgradeOptions().forEach((option, index) => {
                 const y = H / 2 + 20 + index * 67;
-                const bg = this.add.rectangle(W / 2, y, 390, 56, 0x202b46).setStrokeStyle(1, 0x56658d, 0.8).setInteractive();
-                const title = this.add.text(W / 2 - 165, y - 9, option.title, this.textStyle(13, COLORS.white, true));
-                const desc = this.add.text(W / 2 - 165, y + 12, option.desc, this.textStyle(11, COLORS.muted, false));
+                const bg = this.add.rectangle(W / 2, y, 410, 56, 0x493a29).setStrokeStyle(2, 0xb99a62, 0.95).setInteractive();
+                const title = this.add.text(W / 2 - 180, y - 9, option.title, this.style(13, C.parchment, true));
+                const desc = this.add.text(W / 2 - 180, y + 12, option.desc, this.style(11, C.muted, false));
                 bg.on("pointerdown", () => {
                     option.apply();
                     this.mode = "playing";
@@ -382,49 +513,64 @@
             if (!this.stats) return;
             this.hud.wave.setText("ВОЛНА " + this.wave);
             this.hud.level.setText("УР. " + this.level);
-            this.hud.hp.width = Math.max(0, 216 * this.stats.hp / this.stats.maxHp);
-            this.hud.hp.fillColor = this.stats.hp / this.stats.maxHp < 0.3 ? COLORS.red : COLORS.green;
-            this.hud.xp.width = Math.max(1, 216 * this.xp / this.xpNext);
+            this.hud.hp.width = Math.max(0, 146 * this.stats.hp / this.stats.maxHp);
+            this.hud.xp.width = Math.max(1, 146 * this.xp / this.xpNext);
         }
 
         endRun() {
             this.mode = "gameover";
             this.physics.pause();
-            this.joystick.active = false;
+            this.joy.active = false;
             this.best = Math.max(this.best, this.score);
             writeSave({ best: this.best, lastScore: this.score, bestWave: Math.max(Number(readSave().bestWave || 0), this.wave) });
-            this.hud.top.setVisible(false); this.hud.dash.setVisible(false);
-            this.hud.joy.setVisible(false); this.hud.bottom.setVisible(false);
-            this.panel("ЗАБЕГ ОКОНЧЕН", "ТВОЯ ЭНЕРГИЯ ИСЧЕРПАНА");
-            this.addOverlay(this.add.text(W / 2, H / 2 - 25, "СЧЁТ  " + this.score.toLocaleString("ru-RU") + "\nВОЛНА  " + this.wave + "     УРОВЕНЬ  " + this.level, this.textStyle(18, COLORS.white, true)).setOrigin(0.5).setAlign("center"));
-            this.addOverlay(this.add.text(W / 2, H / 2 + 45, "ЛУЧШИЙ РЕЗУЛЬТАТ  " + this.best, this.textStyle(13, COLORS.gold, true)).setOrigin(0.5));
-            this.makeButton(W / 2, H / 2 + 105, "ЕЩЁ ОДИН ЗАБЕГ", () => this.startRun());
+            this.hideHud();
+            this.panel("ЗАБЕГ ОКОНЧЕН", "РУИНЫ СНОВА ПОГЛОТИЛИ РЫЦАРЯ");
+            this.addOverlay(this.add.text(W / 2, H / 2 - 22,
+                "СЧЁТ  " + this.score.toLocaleString("ru-RU") + "\nВОЛНА  " + this.wave + "     УРОВЕНЬ  " + this.level,
+                this.style(18, C.parchment, true)).setOrigin(0.5).setAlign("center").setLineSpacing(8));
+            this.addOverlay(this.add.text(W / 2, H / 2 + 48, "ЛУЧШИЙ РЕЗУЛЬТАТ  " + this.best, this.style(13, C.gold, true)).setOrigin(0.5));
+            this.makeButton(W / 2, H / 2 + 108, "ЕЩЁ ОДИН ЗАБЕГ", () => this.startRun());
             if (sdk) sdk.vibrate(120);
+        }
+
+        hideHud() {
+            this.hud.top.setVisible(false);
+            this.hud.joy.setVisible(false);
+            this.hud.dash.setVisible(false);
+            this.hud.help.setVisible(false);
         }
 
         update(_, delta) {
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
-            this.waveClock += dt; this.spawnClock += dt; this.fireClock += dt;
+            this.waveClock += dt;
+            this.spawnClock += dt;
+            this.fireClock += dt;
             this.dashCooldown = Math.max(0, this.dashCooldown - dt);
             this.invulnerable = Math.max(0, this.invulnerable - dt);
-            this.player.setAlpha(this.invulnerable > 0 && Math.floor(this.time.now / 70) % 2 ? 0.45 : 1);
+            this.player.setAlpha(this.invulnerable > 0 && Math.floor(this.time.now / 75) % 2 ? 0.48 : 1);
 
-            const dx = this.joystick.dx, dy = this.joystick.dy;
-            this.player.body.setAcceleration(dx * this.stats.moveSpeed * 7, dy * this.stats.moveSpeed * 7);
-            if (Math.hypot(dx, dy) < 0.05) this.player.body.setAcceleration(0, 0);
+            const moving = Math.hypot(this.joy.dx, this.joy.dy) > 0.08;
+            if (moving) {
+                this.lastMoveX = this.joy.dx;
+                this.lastMoveY = this.joy.dy;
+                this.player.body.setVelocity(this.joy.dx * this.stats.moveSpeed, this.joy.dy * this.stats.moveSpeed);
+            } else {
+                this.player.body.setVelocity(this.player.body.velocity.x * 0.82, this.player.body.velocity.y * 0.82);
+            }
 
-            if (this.spawnClock > Math.max(330, 1150 - this.wave * 45)) {
+            if (this.spawnClock > Math.max(390, 1500 - this.wave * 48)) {
                 this.spawnClock = 0;
-                const count = Math.min(3, 1 + Math.floor(this.wave / 5));
+                const count = Math.min(4, 1 + Math.floor(this.wave / 4));
                 for (let i = 0; i < count; i++) this.spawnEnemy();
             }
             if (this.fireClock >= this.stats.fireDelay) {
                 this.fireClock = 0;
                 this.fire();
             }
-            if (this.waveClock >= 30000) {
-                this.waveClock = 0; this.wave++;
+            if (this.waveClock >= 28000) {
+                this.waveClock = 0;
+                this.wave++;
                 this.refreshHud();
                 this.addWaveNotice();
             }
@@ -434,25 +580,27 @@
                 const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
                 enemy.body.setVelocity(Math.cos(angle) * enemy.speed, Math.sin(angle) * enemy.speed);
             });
-            this.xpOrbs.children.iterate(orb => {
+            this.orbs.children.iterate(orb => {
                 if (!orb || !orb.active) return;
                 const d = Phaser.Math.Distance.Between(orb.x, orb.y, this.player.x, this.player.y);
                 if (d < this.stats.magnet) {
                     const angle = Phaser.Math.Angle.Between(orb.x, orb.y, this.player.x, this.player.y);
-                    orb.body.setVelocity(Math.cos(angle) * 230, Math.sin(angle) * 230);
+                    orb.body.setVelocity(Math.cos(angle) * 250, Math.sin(angle) * 250);
                 } else orb.body.setVelocity(0, 0);
             });
-            this.bullets.children.iterate(bullet => {
-                if (!bullet || !bullet.active) return;
-                bullet.life -= dt;
-                if (bullet.life <= 0 || bullet.x < -20 || bullet.x > W + 20 || bullet.y < -20 || bullet.y > H + 20) bullet.destroy();
+            this.bullets.children.iterate(bolt => {
+                if (!bolt || !bolt.active) return;
+                bolt.life -= dt;
+                if (bolt.life <= 0 || bolt.x < -25 || bolt.x > W + 25 || bolt.y < -25 || bolt.y > H + 25) bolt.destroy();
             });
-            if (this.dashCooldown <= 0) this.hud.dash.getAt(0).setFillStyle(0x27304b, 0.95);
-            else this.hud.dash.first.setFillStyle(0x20253a, 0.65);
+            if (this.dashButton && this.hud.dash) {
+                const base = this.hud.dash.getAt(0);
+                base.setFillStyle(this.dashCooldown <= 0 ? 0x493b2a : 0x29251f, 0.94);
+            }
         }
 
         addWaveNotice() {
-            const label = this.add.text(W / 2, H / 2 - 110, "ВОЛНА " + this.wave, this.textStyle(26, COLORS.gold, true)).setOrigin(0.5).setDepth(50);
+            const label = this.add.text(W / 2, H / 2 - 105, "ВОЛНА " + this.wave, this.style(27, C.gold, true)).setOrigin(0.5).setDepth(60);
             this.tweens.add({ targets: label, alpha: 0, y: label.y - 35, duration: 1200, onComplete: () => label.destroy() });
             if (sdk) sdk.vibrate(22);
         }
@@ -463,11 +611,11 @@
         parent: "game",
         width: W,
         height: H,
-        backgroundColor: "#080b14",
+        backgroundColor: "#426b3e",
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
         physics: { default: "arcade", arcade: { debug: false } },
         input: { activePointers: 3 },
-        render: { antialias: true, pixelArt: false, powerPreference: "low-power" },
+        render: { antialias: false, pixelArt: true, roundPixels: true, powerPreference: "low-power" },
         fps: { target: 60, forceSetTimeOut: false },
         scene: [Arena]
     });
