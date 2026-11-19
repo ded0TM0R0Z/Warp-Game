@@ -32,7 +32,6 @@ class MainActivity : Activity() {
     private lateinit var navSettings: TextView
 
     private var currentPage = "home"
-    private val pageHistory = mutableListOf<String>()
     private lateinit var platformStorage: PlatformStorage
     private lateinit var warpDatabase: WarpDatabase
     private lateinit var gameManager: GameManager
@@ -150,23 +149,19 @@ class MainActivity : Activity() {
 
     private fun navigateTo(page: String) {
         if (page == currentPage) return
-        pageHistory.add(currentPage)
         currentPage = page
         renderPage(true)
     }
 
     private fun goBack() {
-        if (pageHistory.isNotEmpty()) {
-            currentPage = pageHistory.removeAt(pageHistory.lastIndex)
-        } else {
-            currentPage = "home"
-        }
+        if (currentPage == "home") return
+        currentPage = "home"
         renderPage(true)
     }
 
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        if (currentPage != "home" || pageHistory.isNotEmpty()) {
+        if (currentPage != "home") {
             goBack()
         } else {
             super.onBackPressed()

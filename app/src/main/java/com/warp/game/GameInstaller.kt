@@ -313,6 +313,7 @@ class GameInstaller(
         val manifest = GamePackageManifestParser.parse(
             manifestFile.readText(Charsets.UTF_8)
         )
+        GameEngineRegistry.validatePackage(manifest, root)
         val entryPoint = resolveInside(root, manifest.entryPoint)
         if (!entryPoint.isFile) {
             throw GamePackageException("Manifest entry_point does not exist")

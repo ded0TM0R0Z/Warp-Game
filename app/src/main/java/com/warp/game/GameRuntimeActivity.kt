@@ -190,12 +190,11 @@ class GameRuntimeActivity : Activity() {
         super.onPause()
     }
 
+    @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        if (runtimeInitialized && webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            finish()
-        }
+        // Never navigate through a game's internal WebView history.
+        // Closing the runtime returns the user to Warp Game's main menu.
+        finish()
     }
 
     override fun onDestroy() {

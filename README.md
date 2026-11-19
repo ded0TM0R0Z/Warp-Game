@@ -6,8 +6,8 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Stage:** Catalog, package manager, runtime and Game SDK implemented  
-**Current priority:** Validate installation, offline launch and SDK behavior on the target phone.
+**Stage:** Catalog, package manager, Game SDK and initial 2D/3D engine registry implemented  
+**Current priority:** Verify the engine registry build, then validate Phaser/Babylon rendering, touch and SDK behavior on the target phone.
 
 ## Documentation
 
@@ -20,6 +20,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 - [Game package specification](docs/GAME_PACKAGE_SPEC.md)
 - [Catalog backend](docs/CATALOG_BACKEND.md)
 - [Game SDK](docs/GAME_SDK_SPEC.md)
+- [Engine support](docs/ENGINE_SUPPORT.md)
 
 ## Build
 
