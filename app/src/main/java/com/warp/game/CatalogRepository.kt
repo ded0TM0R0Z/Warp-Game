@@ -179,19 +179,34 @@ class CatalogRepository(context: Context) {
 
     private fun saveCache(bytes: ByteArray) {
         val temporaryFile = File(storage.cacheDirectory, CATALOG_CACHE_FILE + ".tmp")
+        val backupFile = File(storage.cacheDirectory, CATALOG_CACHE_FILE + ".bak")
         try {
+            if (!cacheFile.exists() && backupFile.exists()) {
+                backupFile.renameTo(cacheFile)
+            } else if (backupFile.exists()) {
+                backupFile.delete()
+            }
+
             FileOutputStream(temporaryFile).use { output ->
                 output.write(bytes)
                 output.fd.sync()
             }
-            if (cacheFile.exists() && !cacheFile.delete()) {
-                throw IllegalStateException("Could not replace catalog cache")
+
+            if (cacheFile.exists() && !cacheFile.renameTo(backupFile)) {
+                throw IllegalStateException("Could not preserve previous catalog cache")
             }
             if (!temporaryFile.renameTo(cacheFile)) {
+                if (backupFile.exists()) backupFile.renameTo(cacheFile)
                 throw IllegalStateException("Could not save catalog cache")
+            }
+            if (backupFile.exists() && !backupFile.delete()) {
+                WarpLogger.warning("Catalog", "Old catalog cache backup could not be removed")
             }
         } catch (error: Exception) {
             temporaryFile.delete()
+            if (!cacheFile.exists() && backupFile.exists()) {
+                backupFile.renameTo(cacheFile)
+            }
             WarpLogger.warning("Catalog", "Could not cache the latest catalog", error)
         }
     }
