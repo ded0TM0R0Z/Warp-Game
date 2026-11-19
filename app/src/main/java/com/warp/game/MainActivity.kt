@@ -147,6 +147,15 @@ class MainActivity : Activity() {
         setContentView(root)
     }
 
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_RETURN_HOME, false)) {
+            currentPage = "home"
+            if (::pageContent.isInitialized) renderPage(true)
+        }
+    }
+
     private fun navigateTo(page: String) {
         if (page == currentPage) return
         currentPage = page
@@ -837,6 +846,10 @@ class MainActivity : Activity() {
             warpDatabase.close()
         }
         super.onDestroy()
+    }
+
+    internal companion object {
+        const val EXTRA_RETURN_HOME = "com.warp.game.extra.RETURN_HOME"
     }
 
     private fun dp(value: Int): Int =
