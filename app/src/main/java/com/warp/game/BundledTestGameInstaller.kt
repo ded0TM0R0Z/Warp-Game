@@ -40,8 +40,18 @@ class BundledTestGameInstaller(context: Context) {
         ZipOutputStream(output).use { zip ->
             files.forEach { (packagePath, assetPath) ->
                 zip.putNextEntry(ZipEntry(packagePath))
-                appContext.assets.open(assetPath).use { input ->
-                    input.copyTo(zip)
+                if (packagePath == "index.html") {
+                    val html = appContext.assets.open(assetPath).bufferedReader().use { it.readText() }
+                    val sdkScript = "<script src=\"/sdk/warp-game-sdk.js\"></script>\\n    "
+                    val packagedHtml = html.replace(
+                        "<script src=\"game.js\"></script>",
+                        sdkScript + "<script src=\"game.js\"></script>"
+                    )
+                    zip.write(packagedHtml.toByteArray(Charsets.UTF_8))
+                } else {
+                    appContext.assets.open(assetPath).use { input ->
+                        input.copyTo(zip)
+                    }
                 }
                 zip.closeEntry()
             }
