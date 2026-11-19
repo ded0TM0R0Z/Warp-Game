@@ -1,6 +1,6 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.4  
+**Version:** 1.1.5  
 **Current stage:** 0 — Foundation and device validation
 
 ## Stage 0 — Foundation and validation
@@ -50,6 +50,8 @@
 - [x] Register installed games in local storage.
 - [x] Implement launch and removal.
 - [x] Keep saves separate from installation files.
+- [x] Add a bundled test package that exercises installation and runtime launch.
+- [ ] Verify install, update, launch, removal and save preservation on the target phone.
 
 **Exit condition:** A test package can be safely installed, launched, removed and reinstalled without accidental save deletion.
 
