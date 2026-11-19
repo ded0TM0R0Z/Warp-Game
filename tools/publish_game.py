@@ -6,9 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import re
-import sys
 import zipfile
 from pathlib import Path, PurePosixPath
 
@@ -44,7 +42,7 @@ def read_manifest(game_dir: Path, expected_id: str, expected_version: str) -> di
     required = (
         "game_id", "name", "description", "version", "engine",
         "engine_version", "game_type", "entry_point", "orientation",
-        "offline_supported", "minimum_platform_version",
+        "minimum_platform_version",
     )
     for key in required:
         if not isinstance(manifest.get(key), str) or not manifest[key].strip():
@@ -81,9 +79,9 @@ def safe_relative_path(value: str) -> PurePosixPath:
     if (
         not value
         or path.is_absolute()
-        or "\\\\" in value
+        or "\\" in value
         or ":" in value
-        or any(part in {"", ".", ".."} for part in path.parts)
+        or any(part in {"", ".", ".."} for part in value.split("/"))
         or any(ord(char) < 32 for char in value)
         or len(value) > 1024
         or any(len(part) > 240 for part in path.parts)
