@@ -52,6 +52,9 @@
             this.overlay = [];
             this.target = null;
             this.targetMark = null;
+            this.elapsedMs = 0; this.lastBossMinute = 0; this.selectedUpgrades = [];
+            this.worldChunks = new Map(); this.ground = null; this.bossBar = null; this.bossLabel = null;
+            this.magicClock = 0; this.lightningClock = 0; this.pauseButton = null;
             this.aimLine = null;
             this.dashButton = null;
             this.lastMoveX = 1;
@@ -59,7 +62,7 @@
         }
 
         create() {
-            this.physics.world.setBounds(0, 0, W, H);
+            this.physics.world.setBounds(-100000, -100000, 200000, 200000);
             this.createTextures();
             this.createWorld();
             this.enemies = this.physics.add.group({ runChildUpdate: true });
@@ -128,6 +131,7 @@
                 g.fillStyle(0xf0d18a); g.fillRect(7, 1, 4, 6);
                 g.fillStyle(0xffffff); g.fillRect(9, 2, 2, 2);
             });
+            make("fireball", 18, 18, g => { g.fillStyle(0x9c351f); g.fillCircle(9,9,8); g.fillStyle(0xe85d24); g.fillCircle(9,9,6); g.fillStyle(0xffc45c); g.fillCircle(8,8,3); g.fillStyle(0xffefb0); g.fillRect(7,5,3,3); });
             make("orb", 12, 12, g => {
                 g.fillStyle(0x426a37); g.fillRect(3, 1, 6, 10);
                 g.fillStyle(0x9ddc72); g.fillRect(2, 2, 8, 8);
@@ -156,7 +160,7 @@
         }
 
         createWorld() {
-            this.add.tileSprite(W / 2, H / 2, W, H, "ground").setDepth(-20);
+            this.ground = this.add.tileSprite(W / 2, H / 2, 2200, 1400, "ground").setDepth(-20);
             const deco = this.add.graphics().setDepth(-10);
             for (let i = 0; i < 210; i++) {
                 const x = Phaser.Math.Between(8, W - 8), y = Phaser.Math.Between(8, H - 8);
@@ -187,7 +191,11 @@
             this.player.body.setCollideWorldBounds(true);
             this.player.body.setDamping(true);
             this.player.body.setDrag(1150);
-            this.player.body.setMaxVelocity(235);
+            this.player.body.setMaxVelocity(180);
+            this.cameras.main.setBounds(-100000,-100000,200000,200000);
+            this.cameras.main.startFollow(this.player,true,0.085,0.085);
+            this.cameras.main.setDeadzone(170,100);
+            this.playerWalkTween=this.tweens.add({targets:this.playerSprite,y:1.5,duration:150,yoyo:true,repeat:-1,paused:true});
         }
 
         createHud() {
@@ -200,7 +208,11 @@
             this.hud.hp = this.add.rectangle(W / 2 - 73, 19, 146, 5, 0x9c3935).setOrigin(0, 0.5);
             this.hud.xpBack = this.add.rectangle(W / 2, 37, 150, 5, 0x51452f);
             this.hud.xp = this.add.rectangle(W / 2 - 73, 37, 1, 3, 0xd7b65f).setOrigin(0, 0.5);
-            this.hud.top.add([plate, this.hud.wave, this.hud.level, this.hud.score, this.hud.hpBack, this.hud.hp, this.hud.xpBack, this.hud.xp]);
+            this.hud.timer=this.add.text(W/2,48,"00:00",this.style(10,C.gold,true)).setOrigin(0.5,0);
+            this.hud.pauseBg=this.add.circle(W-28,28,20,0x493b2a,0.96).setStrokeStyle(2,C.gold,1).setInteractive();
+            this.hud.pauseText=this.add.text(W-28,28,"Ⅱ",this.style(17,C.parchment,true)).setOrigin(0.5);
+            this.hud.pauseBg.on("pointerdown",()=>this.pauseRun()); this.pauseButton=this.hud.pauseBg;
+            this.hud.top.add([plate,this.hud.wave,this.hud.level,this.hud.score,this.hud.hpBack,this.hud.hp,this.hud.xpBack,this.hud.xp,this.hud.timer,this.hud.pauseBg,this.hud.pauseText]);
 
             this.hud.joy = this.add.container(100, 420).setDepth(50);
             this.hud.joyBase = this.add.circle(0, 0, 66, 0x242d20, 0.55).setStrokeStyle(3, 0xcab77f, 0.78);
@@ -290,7 +302,10 @@
             this.fireClock = 250; this.dashCooldown = 0; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
-            this.stats = { hp: 100, maxHp: 100, damage: 28, fireDelay: 650, moveSpeed: 220, bulletSpeed: 520, magnet: 105 };
+            this.stats = { hp:100,maxHp:100,damage:24,fireDelay:720,moveSpeed:145,bulletSpeed:590,magnet:115 };
+            this.elapsedMs=0; this.lastBossMinute=0; this.magicClock=0; this.lightningClock=0; this.selectedUpgrades=[];
+            this.worldChunks.clear(); this.cameras.main.stopFollow(); this.cameras.main.startFollow(this.player,true,0.085,0.085);
+            this.player.body.setMaxVelocity(180); this.playerWalkTween.pause(); this.playerSprite.setPosition(0,0).setAngle(0);
             this.joy.active = false; this.joy.pointerId = null; this.joy.dx = 0; this.joy.dy = 0;
             this.joy.baseX = 100; this.joy.baseY = H - 120;
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
@@ -367,6 +382,8 @@
             const radius = kind === "brute" ? 17 : kind === "skeleton" ? 12 : 11;
             enemy.body.setCircle(radius, -radius, -radius);
             enemy.body.setCollideWorldBounds(false);
+            enemy.animTween=this.tweens.add({targets:enemy.sprite,y:2,duration:kind==="brute"?260:190,yoyo:true,repeat:-1});
+            enemy.isBoss=false; enemy.bossName="";
             enemy.kind = kind;
             enemy.hp = kind === "brute" ? 125 + this.wave * 10 : kind === "skeleton" ? 58 + this.wave * 5 : 38 + this.wave * 4;
             enemy.maxHp = enemy.hp;
@@ -436,7 +453,8 @@
 
         killEnemy(enemy) {
             if (!enemy.active) return;
-            const x = enemy.x, y = enemy.y, value = enemy.xpValue;
+            const x=enemy.x,y=enemy.y,value=enemy.xpValue;
+            if(enemy.isBoss){if(this.bossBar){this.bossBar.destroy();this.bossBar=null;}if(this.bossLabel){this.bossLabel.destroy();this.bossLabel=null;}this.score+=250*this.wave;this.stats.hp=Math.min(this.stats.maxHp,this.stats.hp+35);this.cameras.main.flash(220,255,205,110);}
             enemy.destroy();
             this.kills++;
             this.score += 10 * this.wave;
@@ -482,7 +500,9 @@
                 { title: "ЛЁГКИЕ САПОГИ", desc: "+14% скорость движения", apply: () => { this.stats.moveSpeed *= 1.14; } },
                 { title: "КРЕПКИЕ ДОСПЕХИ", desc: "+25 к максимуму здоровья и лечение", apply: () => { this.stats.maxHp += 25; this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + 35); } },
                 { title: "МАГНИТ ЭССЕНЦИИ", desc: "Сильнее притягивает опыт", apply: () => { this.stats.magnet += 65; } },
-                { title: "ЗАЛП ИЗ АРБАЛЕТА", desc: "+1 снаряд за атаку", apply: () => { this.projectiles = Math.min(5, this.projectiles + 1); } }
+                { title: "ЗАЛП ИЗ АРБАЛЕТА", desc: "+1 снаряд за атаку", apply: () => { this.projectiles = Math.min(5, this.projectiles + 1); } },
+                {title:"ОГНЕННЫЙ ШАР",desc:"Усилить магический огненный шар",apply:()=>{this.stats.fireDamage=(this.stats.fireDamage||45)*1.35;}},
+                {title:"ГРОЗОВОЙ РАЗРЯД",desc:"Усилить молнию и ускорить перезарядку",apply:()=>{this.stats.lightningDamage=(this.stats.lightningDamage||34)*1.35;this.stats.lightningDelay=Math.max(2600,(this.stats.lightningDelay||6500)*0.88);}}
             ];
             return Phaser.Utils.Array.Shuffle(all).slice(0, 3);
         }
@@ -499,7 +519,7 @@
                 const title = this.add.text(W / 2 - 180, y - 9, option.title, this.style(13, C.parchment, true));
                 const desc = this.add.text(W / 2 - 180, y + 12, option.desc, this.style(11, C.muted, false));
                 bg.on("pointerdown", () => {
-                    option.apply();
+                    option.apply(); this.selectedUpgrades.push(option.title);
                     this.mode = "playing";
                     this.clearOverlay();
                     this.physics.resume();
@@ -512,13 +532,16 @@
         refreshHud() {
             if (!this.stats) return;
             this.hud.wave.setText("ВОЛНА " + this.wave);
+            this.hud.timer.setText(this.formatTime(this.elapsedMs));
             this.hud.level.setText("УР. " + this.level);
             this.hud.hp.width = Math.max(0, 146 * this.stats.hp / this.stats.maxHp);
-            this.hud.xp.width = Math.max(1, 146 * this.xp / this.xpNext);
+            this.hud.xp.width=Math.max(1,146*this.xp/this.xpNext);
+            if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
+            else if(this.bossBar){this.bossBar.destroy();this.bossBar=null;if(this.bossLabel){this.bossLabel.destroy();this.bossLabel=null;}}
         }
 
         endRun() {
-            this.mode = "gameover";
+            this.mode = "gameover"; this.playerWalkTween.pause();
             this.physics.pause();
             this.joy.active = false;
             this.best = Math.max(this.best, this.score);
@@ -543,7 +566,8 @@
         update(_, delta) {
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
-            this.waveClock += dt;
+            this.elapsedMs+=dt; this.waveClock+=dt; this.magicClock+=dt; this.lightningClock+=dt;
+            this.updateWorldChunks(this.player.x,this.player.y);
             this.spawnClock += dt;
             this.fireClock += dt;
             this.dashCooldown = Math.max(0, this.dashCooldown - dt);
@@ -555,11 +579,13 @@
 
             const moving = Math.hypot(this.joy.dx, this.joy.dy) > 0.08;
             if (moving) {
+                this.playerWalkTween.resume(); this.playerSprite.setAngle(Phaser.Math.Clamp(this.joy.dx*0.08,-0.08,0.08));
                 this.lastMoveX = this.joy.dx;
                 this.lastMoveY = this.joy.dy;
                 this.player.body.setVelocity(this.joy.dx * this.stats.moveSpeed, this.joy.dy * this.stats.moveSpeed);
             } else {
-                this.player.body.setVelocity(this.player.body.velocity.x * 0.82, this.player.body.velocity.y * 0.82);
+                this.playerWalkTween.pause(); this.playerSprite.y=0; this.playerSprite.angle=0;
+                this.player.body.setVelocity(this.player.body.velocity.x*0.82,this.player.body.velocity.y*0.82);
             }
 
             if (this.spawnClock > Math.max(390, 1500 - this.wave * 48)) {
@@ -567,6 +593,9 @@
                 const count = Math.min(4, 1 + Math.floor(this.wave / 4));
                 for (let i = 0; i < count; i++) this.spawnEnemy();
             }
+            if(this.elapsedMs>=180000 && Math.floor(this.elapsedMs/180000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/180000);this.spawnBoss(this.lastBossMinute);}
+            if(this.magicClock>=4200){this.magicClock=0;this.castFireball();}
+            if(this.lightningClock>=(this.stats.lightningDelay||6500)){this.lightningClock=0;this.castLightning();}
             if (this.fireClock >= this.stats.fireDelay) {
                 this.fireClock = 0;
                 this.fire();
@@ -580,8 +609,9 @@
 
             this.enemies.children.iterate(enemy => {
                 if (!enemy || !enemy.active) return;
-                const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-                enemy.body.setVelocity(Math.cos(angle) * enemy.speed, Math.sin(angle) * enemy.speed);
+                const angle=Phaser.Math.Angle.Between(enemy.x,enemy.y,this.player.x,this.player.y);
+                enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
+                if(enemy.sprite)enemy.sprite.setFlipX(this.player.x<enemy.x);
             });
             this.orbs.children.iterate(orb => {
                 if (!orb || !orb.active) return;
@@ -594,12 +624,82 @@
             this.bullets.children.iterate(bolt => {
                 if (!bolt || !bolt.active) return;
                 bolt.life -= dt;
-                if (bolt.life <= 0 || bolt.x < -25 || bolt.x > W + 25 || bolt.y < -25 || bolt.y > H + 25) bolt.destroy();
+                const v=this.cameras.main.worldView;
+                if(bolt.life<=0||bolt.x<v.x-80||bolt.x>v.right+80||bolt.y<v.y-80||bolt.y>v.bottom+80)bolt.destroy();
             });
             if (this.dashButton && this.hud.dash) {
                 const base = this.hud.dash.getAt(0);
                 base.setFillStyle(this.dashCooldown <= 0 ? 0x493b2a : 0x29251f, 0.94);
             }
+        }
+
+
+        formatTime(ms){const n=Math.floor(ms/1000);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");}
+        updateWorldChunks(x,y){
+            const size=520,cx=Math.floor(x/size),cy=Math.floor(y/size);
+            for(let gx=cx-2;gx<=cx+2;gx++)for(let gy=cy-2;gy<=cy+2;gy++){
+                const key=gx+":"+gy;if(this.worldChunks.has(key))continue;
+                const objs=[];let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
+                const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+                for(let i=0,n=5+Math.floor(rand()*7);i<n;i++){
+                    const px=gx*size+25+rand()*(size-50),py=gy*size+25+rand()*(size-50);
+                    if(Phaser.Math.Distance.Between(px,py,x,y)<130)continue;
+                    const obj=this.add.image(px,py,rand()<0.17?"ruin":"tree").setDepth(2+py/100000).setScale(.8+rand()*.45);objs.push(obj);
+                }this.worldChunks.set(key,objs);
+            }
+            for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>3||Math.abs(gy-cy)>3){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
+            if(this.ground){this.ground.setPosition(x,y);this.ground.setTilePosition(x*.35,y*.35);}
+        }
+        castFireball(){
+            const target=this.nearestEnemy();if(!target)return;
+            const a=Phaser.Math.Angle.Between(this.player.x,this.player.y,target.x,target.y);
+            const fire=this.add.image(this.player.x,this.player.y,"fireball").setDepth(22).setScale(1.25);
+            this.physics.add.existing(fire);fire.body.setAllowGravity(false);fire.body.setCircle(8);fire.body.setVelocity(Math.cos(a)*330,Math.sin(a)*330);
+            fire.damage=this.stats.fireDamage||45;fire.life=1900;fire.isFireball=true;this.bullets.add(fire);
+            this.tweens.add({targets:fire,angle:360,scale:1.6,duration:420,repeat:-1});
+            fire.trail=this.add.particles(fire.x,fire.y,"fireball",{speed:18,scale:{start:.45,end:0},lifespan:260,frequency:35,tint:[0xffa13b,0xffd36b],blendMode:"ADD"}).setDepth(20);
+        }
+        castLightning(){
+            const first=this.nearestEnemy();if(!first)return;const hit=new Set(),damage=this.stats.lightningDamage||34;
+            const strike=(enemy,fx,fy)=>{if(!enemy||!enemy.active||hit.has(enemy))return;hit.add(enemy);
+                const g=this.add.graphics().setDepth(28);g.lineStyle(4,0x9ce9ff,.95);let px=fx,py=fy;
+                for(let i=1;i<=7;i++){const t=i/7,nx=fx+(enemy.x-fx)*t+(i===7?0:Phaser.Math.Between(-16,16)),ny=fy+(enemy.y-fy)*t+(i===7?0:Phaser.Math.Between(-13,13));g.lineBetween(px,py,nx,ny);px=nx;py=ny;}
+                g.lineStyle(1.5,0xffffff,1);g.lineBetween(fx,fy,enemy.x,enemy.y);this.tweens.add({targets:g,alpha:0,duration:190,onComplete:()=>g.destroy()});
+                enemy.hp-=damage;enemy.healthBack.setVisible(true);enemy.healthBar.setVisible(true);enemy.healthBar.width=Math.max(1,28*enemy.hp/enemy.maxHp);
+                enemy.sprite.setTint(0x9ce9ff);this.time.delayedCall(100,()=>{if(enemy.active)enemy.sprite.clearTint();});if(enemy.hp<=0)this.killEnemy(enemy);
+            };
+            strike(first,this.player.x,this.player.y);
+            const second=this.enemies.getChildren().filter(e=>e.active&&!hit.has(e)&&Phaser.Math.Distance.Between(first.x,first.y,e.x,e.y)<155)
+                .sort((a,b)=>Phaser.Math.Distance.Between(first.x,first.y,a.x,a.y)-Phaser.Math.Distance.Between(first.x,first.y,b.x,b.y))[0];
+            if(second)strike(second,first.x,first.y);this.cameras.main.shake(90,.0018);
+        }
+        spawnBoss(stage){
+            const types=[{name:"ПЕПЕЛЬНЫЙ КОЛОСС",kind:"brute",hp:520,speed:38,damage:28,scale:2.35,tint:0x9c7052},
+                {name:"КОСТЯНОЙ ПАЛАЧ",kind:"skeleton",hp:390,speed:72,damage:22,scale:2.1,tint:0xc8c0a9},
+                {name:"СТРАЖ РАЗЛОМА",kind:"brute",hp:680,speed:48,damage:32,scale:2.55,tint:0x806a9b}];
+            const b=types[(stage-1)%types.length],factor=1+(stage-1)*.42,v=this.cameras.main.worldView,side=Phaser.Math.Between(0,3);
+            const x=side===0?v.x-50:side===1?v.right+50:Phaser.Math.Between(v.x+50,v.right-50);
+            const y=side===2?v.y-50:side===3?v.bottom+50:Phaser.Math.Between(v.y+80,v.bottom-50);
+            const boss=this.add.container(x,y).setDepth(24);boss.sprite=this.add.image(0,0,b.kind==="skeleton"?"skeleton":"brute").setScale(b.scale).setTint(b.tint);boss.add(boss.sprite);
+            this.physics.add.existing(boss);boss.body.setCircle(25,-25,-25);boss.body.setAllowGravity(false);
+            boss.kind=b.kind;boss.isBoss=true;boss.bossName=b.name;boss.hp=Math.round(b.hp*factor);boss.maxHp=boss.hp;boss.speed=b.speed+stage*2.4;boss.damage=Math.round(b.damage*factor);boss.xpValue=16+stage*3;boss.radius=25;
+            boss.healthBack=this.add.rectangle(0,-43,64,6,0x241a18).setOrigin(.5).setVisible(false);boss.healthBar=this.add.rectangle(-32,-43,64,4,0xd94b3e).setOrigin(0,.5).setVisible(false);boss.add([boss.healthBack,boss.healthBar]);
+            boss.animTween=this.tweens.add({targets:boss.sprite,y:4,duration:310,yoyo:true,repeat:-1});this.enemies.add(boss);
+            this.bossLabel=this.add.text(W/2,78,b.name,this.style(18,0xffd38a,true)).setOrigin(.5).setScrollFactor(0).setDepth(70);
+            this.bossBar=this.add.container(W/2,105).setScrollFactor(0).setDepth(70);const back=this.add.rectangle(0,0,280,10,0x2b1b18).setStrokeStyle(1,0xd0a45e),fill=this.add.rectangle(-138,0,276,6,0xb83d36).setOrigin(0,.5);
+            this.bossBar.add([back,fill]);this.bossBar.fill=fill;this.bossBar.boss=boss;
+            const notice=this.add.text(W/2,H/2-125,"БОСС: "+b.name,this.style(24,0xffc66e,true)).setOrigin(.5).setDepth(75);
+            this.tweens.add({targets:notice,alpha:0,y:notice.y-45,duration:1800,onComplete:()=>notice.destroy()});this.cameras.main.shake(350,.006);if(sdk)sdk.vibrate(100);
+        }
+        pauseRun(){
+            if(this.mode!=="playing")return;this.mode="paused";this.physics.pause();this.playerWalkTween.pause();
+            this.joy.active=false;this.joy.dx=0;this.joy.dy=0;this.hud.joyKnob.setPosition(0,0);
+            this.panel("ПАУЗА","ЗАБЕГ ПРИОСТАНОВЛЕН");
+            this.addOverlay(this.add.text(W/2,H/2-53,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
+                "\nСЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(15,C.parchment,true)).setOrigin(.5).setAlign("center").setLineSpacing(7));
+            this.addOverlay(this.add.text(W/2,H/2+12,"ВЫБРАННЫЕ УСИЛЕНИЯ\n"+(this.selectedUpgrades.length?this.selectedUpgrades.join("\n"):"Пока нет выбранных усилений"),this.style(12,C.gold,true)).setOrigin(.5).setAlign("center").setLineSpacing(5));
+            this.makeButton(W/2,H/2+105,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},210);
+            this.makeButton(W/2,H/2+160,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},210);
         }
 
         addWaveNotice() {
