@@ -132,6 +132,14 @@
                 g.fillStyle(0xd8d0b9); g.fillRect(6, 22, 4, 5); g.fillRect(14, 22, 4, 5);
                 g.fillStyle(0x6d6251); g.fillRect(3, 12, 3, 9); g.fillRect(18, 12, 3, 9);
             });
+            make("cultist", 30, 34, g => {
+                g.fillStyle(0x211b2d);g.fillRect(7,5,16,25);g.fillRect(3,15,24,13);
+                g.fillStyle(0x513d70);g.fillRect(8,7,14,20);g.fillRect(5,16,20,10);
+                g.fillStyle(0x9c73d2);g.fillRect(9,8,12,5);g.fillRect(7,22,16,4);
+                g.fillStyle(0xd5c3f0);g.fillRect(10,10,3,3);g.fillRect(17,10,3,3);
+                g.fillStyle(0x21172c);g.fillRect(10,11,2,2);g.fillRect(18,11,2,2);
+                g.fillStyle(0x8e68b7);g.fillRect(23,9,3,22);g.fillStyle(0xd6baff);g.fillRect(22,6,5,5);
+            });
             make("brute", 32, 34, g => {
                 g.fillStyle(0x302923); g.fillRect(6, 5, 20, 25);
                 g.fillStyle(0x88634a); g.fillRect(4, 8, 24, 18);
@@ -352,7 +360,7 @@
             this.mode = "menu";
             this.physics.pause();
             this.panel("RIFT SURVIVORS", "ПРОКЛЯТЫЕ РУИНЫ");
-            this.addOverlay(this.add.image(W/2,H/2-104,"gameIcon").setDisplaySize(116,116).setDepth(101));
+            this.addOverlay(this.add.image(W/2,H/2-91,"gameIcon").setDisplaySize(116,116).setDepth(101));
             this.addOverlay(this.add.text(W / 2, H / 2 - 25,
                 "СОБИРАЙ РЕЛИКВИИ • ОСВАИВАЙ МАГИЮ • УБИВАЙ БОССОВ\nКаждый забег — новая сборка и новые угрозы.",
                 this.style(13, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(7));
@@ -375,7 +383,7 @@
             const rows = [
                 ["ПЕРЕДВИЖЕНИЕ", "Удерживай левый виртуальный стик"],
                 ["СТРЕЛЬБА", "Рыцарь автоматически стреляет в ближайшего врага"],
-                ["УСИЛЕНИЯ", "После повышения уровня выбери одну из трёх карт"],
+                ["УСИЛЕНИЯ", "Открывай ветер, землю, цепную молнию и их улучшения"],
                 ["БОССЫ", "Новый босс появляется каждые три минуты"],
                 ["ПАУЗА", "Кнопка II в верхней части экрана"]
             ];
@@ -463,24 +471,24 @@
             const x=side===0?view.x-35:side===1?view.right+35:Phaser.Math.Between(view.x+25,view.right-25);
             const y=side===2?view.y-35:side===3?view.bottom+35:Phaser.Math.Between(view.y+75,view.bottom-30);
             const roll = Math.random();
-            const kind = type || (this.wave >= 7 && roll < 0.13 ? "beetle" : this.wave >= 5 && roll < 0.29 ? "wraith" : this.wave >= 4 && roll < 0.43 ? "brute" : this.wave >= 2 && roll < 0.70 ? "skeleton" : "slime");
-            const key = kind === "brute" ? "brute" : kind === "skeleton" ? "skeleton" : kind === "wraith" ? "wraith" : kind === "beetle" ? "beetle" : "slime";
-            const scale = kind === "brute" ? 1.45 : kind === "skeleton" ? 1.15 : kind === "wraith" ? 1.28 : kind === "beetle" ? 1.32 : 1.2;
+            const kind = type || (this.wave >= 8 && roll < 0.13 ? "cultist" : this.wave >= 7 && roll < 0.13 ? "beetle" : this.wave >= 5 && roll < 0.29 ? "wraith" : this.wave >= 4 && roll < 0.43 ? "brute" : this.wave >= 2 && roll < 0.70 ? "skeleton" : "slime");
+            const key = kind === "brute" ? "brute" : kind === "skeleton" ? "skeleton" : kind === "wraith" ? "wraith" : kind === "beetle" ? "beetle" : kind === "cultist" ? "cultist" : "slime";
+            const scale = kind === "brute" ? 1.45 : kind === "skeleton" ? 1.15 : kind === "wraith" ? 1.28 : kind === "beetle" ? 1.32 : kind === "cultist" ? 1.24 : 1.2;
             const enemy = this.add.container(x, y).setDepth(12);
             enemy.sprite = this.add.image(0, 0, key).setScale(scale);
             enemy.add(enemy.sprite);
             this.physics.add.existing(enemy);
-            const radius = kind === "brute" ? 17 : kind === "beetle" ? 15 : kind === "wraith" ? 12 : kind === "skeleton" ? 12 : 11;
+            const radius = kind === "brute" ? 17 : kind === "beetle" ? 15 : kind === "wraith" ? 12 : kind === "cultist" ? 12 : kind === "skeleton" ? 12 : 11;
             enemy.body.setCircle(radius, -radius, -radius);
             enemy.body.setCollideWorldBounds(false);
             enemy.animTween=this.tweens.add({targets:enemy.sprite,y:2,duration:kind==="brute"?260:190,yoyo:true,repeat:-1});
             enemy.isBoss=false; enemy.bossName="";
             enemy.kind = kind;
-            enemy.hp = kind === "brute" ? 150 + this.wave * 12 : kind === "beetle" ? 190 + this.wave * 13 : kind === "wraith" ? 72 + this.wave * 7 : kind === "skeleton" ? 64 + this.wave * 6 : 42 + this.wave * 4;
+            enemy.hp = kind === "brute" ? 150 + this.wave * 12 : kind === "beetle" ? 190 + this.wave * 13 : kind === "cultist" ? 92 + this.wave * 8 : kind === "wraith" ? 72 + this.wave * 7 : kind === "skeleton" ? 64 + this.wave * 6 : 42 + this.wave * 4;
             enemy.maxHp = enemy.hp;
-            enemy.speed = kind === "brute" ? 48 + this.wave : kind === "beetle" ? 38 + this.wave * 0.8 : kind === "wraith" ? 105 + this.wave * 1.8 : kind === "skeleton" ? 82 + this.wave * 1.5 : 65 + this.wave * 1.5;
-            enemy.damage = kind === "brute" ? 25 : kind === "beetle" ? 30 : kind === "wraith" ? 16 : 14;
-            enemy.xpValue = kind === "brute" ? 5 : kind === "beetle" ? 7 : kind === "wraith" ? 3 : kind === "skeleton" ? 2 : 1;
+            enemy.speed = kind === "brute" ? 48 + this.wave : kind === "beetle" ? 38 + this.wave * 0.8 : kind === "cultist" ? 54 + this.wave : kind === "wraith" ? 105 + this.wave * 1.8 : kind === "skeleton" ? 82 + this.wave * 1.5 : 65 + this.wave * 1.5;
+            enemy.damage = kind === "brute" ? 25 : kind === "beetle" ? 30 : kind === "cultist" ? 18 : kind === "wraith" ? 16 : 14;
+            enemy.xpValue = kind === "brute" ? 5 : kind === "beetle" ? 7 : kind === "cultist" ? 4 : kind === "wraith" ? 3 : kind === "skeleton" ? 2 : 1;
             enemy.radius = radius;
             enemy.hitFlash = 0;
             enemy.skillClock=Phaser.Math.Between(2600,4600);enemy.skillState="idle";enemy.skillDuration=0;
@@ -677,6 +685,14 @@
                     enemy.body.setVelocity(Math.cos(a)*speed,Math.sin(a)*speed);enemy.sprite.setTint(enemy.kind==="beetle"?0xffa05a:0x8effef);
                 }return;
             }
+            if(enemy.kind==="cultist"&&enemy.skillClock<=0){
+                enemy.skillClock=3600;const tx=this.player.x,ty=this.player.y;
+                const bolt=this.add.circle(enemy.x,enemy.y,8,0x9d6cff,0.95).setStrokeStyle(2,0xe5caff).setDepth(28);
+                this.tweens.add({targets:bolt,x:tx,y:ty,scale:0.55,duration:850,ease:"Cubic.In",onComplete:()=>{
+                    if(this.mode==="playing"&&Phaser.Math.Distance.Between(this.player.x,this.player.y,tx,ty)<42&&this.invulnerable<=0){this.stats.hp-=enemy.damage;this.invulnerable=520;this.cameras.main.flash(90,135,75,190);if(this.stats.hp<=0)this.endRun();this.refreshHud();}
+                    bolt.destroy();
+                }});
+            }
             if(enemy.skillClock<=0&&(enemy.kind==="wraith"||enemy.kind==="beetle")){
                 enemy.skillState="windup";enemy.skillDuration=520;enemy.charging=true;enemy.body.setVelocity(0,0);enemy.sprite.setTint(0xffe18a);
                 const mark=this.add.circle(enemy.x,enemy.y,enemy.kind==="beetle"?23:17,0xffffff,0.12).setStrokeStyle(2,enemy.kind==="beetle"?0xff8d52:0x8dfff2).setDepth(18);
@@ -789,7 +805,12 @@
                 if (!enemy || !enemy.active) return;
                 const angle=Phaser.Math.Angle.Between(enemy.x,enemy.y,this.player.x,this.player.y);
                 if(!enemy.isBoss)this.updateEnemySkill(enemy,dt,angle);
-                if(!enemy.charging&&enemy.skillState!=="windup")enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
+                if(enemy.kind==="cultist"&&!enemy.charging&&enemy.skillState==="idle"){
+                    const distance=Phaser.Math.Distance.Between(enemy.x,enemy.y,this.player.x,this.player.y);
+                    if(distance<190)enemy.body.setVelocity(-Math.cos(angle)*enemy.speed,-Math.sin(angle)*enemy.speed);
+                    else if(distance>310)enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
+                    else enemy.body.setVelocity(0,0);
+                }else if(!enemy.charging&&enemy.skillState!=="windup")enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
                 if(enemy.sprite)enemy.sprite.setFlipX(this.player.x<enemy.x);
                 if(enemy.isBoss){enemy.attackClock-=dt;if(enemy.attackClock<=0)this.bossAttack(enemy);}
             });
