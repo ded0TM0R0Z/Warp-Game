@@ -316,6 +316,10 @@
             this.hud.xpBack = this.add.rectangle(W / 2, 37, 150, 5, 0x51452f);
             this.hud.xp = this.add.rectangle(W / 2 - 73, 37, 1, 3, 0xd7b65f).setOrigin(0, 0.5);
             this.hud.timer=this.add.text(W/2,48,"00:00",this.style(10,C.gold,true)).setOrigin(0.5,0);
+            this.hud.biome=this.add.container(W/2,H-42).setDepth(44).setScrollFactor(0);
+            this.hud.biomePlate=this.add.rectangle(0,0,430,27,0x171d18,0.88).setStrokeStyle(1,0x9c946b,0.75);
+            this.hud.biomeText=this.add.text(0,0,"БИОМ: ЗАРОСШИЕ РУИНЫ",this.style(11,0x9fc87b,true)).setOrigin(0.5);
+            this.hud.biome.add([this.hud.biomePlate,this.hud.biomeText]); this.hud.biome.setVisible(false);
             this.hud.pauseBg=this.add.circle(W-34,30,27,0x493b2a,0.98).setStrokeStyle(2,C.gold,1).setInteractive({useHandCursor:true});
             this.hud.pauseText=this.add.text(W-34,30,"Ⅱ",this.style(19,C.parchment,true)).setOrigin(0.5);
             this.hud.pauseBg.on("pointerdown",()=>this.pauseRun()); this.pauseButton=this.hud.pauseBg;
@@ -338,6 +342,7 @@
             this.hud.skills.setVisible(false);
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
+            if(this.hud.biome)this.hud.biome.setVisible(false);
              this.hud.help.setVisible(false);
             this.layoutJoystick();
         }
@@ -449,7 +454,7 @@
             this.fireClock = 250; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
-            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
+            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:260,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
             this.activeBiome=-1;this.biomeXpMultiplier=1;this.biomeCritBonus=0;
             this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;this.runePower=1;
@@ -464,11 +469,11 @@
             this.joy.baseX = 100; this.joy.baseY = H - 120;
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             this.hud.joyKnob.setPosition(0, 0);
-            this.hud.top.setVisible(true); this.hud.joy.setVisible(true);
+            this.hud.top.setVisible(true); this.hud.joy.setVisible(true); this.hud.biome.setVisible(true);
             this.hud.skills.setVisible(true);
             this.hud.help.setVisible(true);
             this.refreshHud();
-            this.spawnEnemy("slime"); this.spawnEnemy("slime"); this.spawnEnemy("skeleton");
+            this.spawnEnemy("slime"); this.spawnEnemy("slime");
         }
 
         pointerDown(pointer) {
@@ -505,13 +510,13 @@
         }
 
          spawnEnemy(type) {
-            if (this.mode !== "playing" || this.enemies.countActive(true) >= 65) return;
+            if (this.mode !== "playing" || this.enemies.countActive(true) >= 42) return;
             const side = Phaser.Math.Between(0, 3);
             const view=this.cameras.main.worldView;
             const x=side===0?view.x-35:side===1?view.right+35:Phaser.Math.Between(view.x+25,view.right-25);
             const y=side===2?view.y-35:side===3?view.bottom+35:Phaser.Math.Between(view.y+75,view.bottom-30);
             const roll = Math.random();
-            const kind = type || (this.wave >= 8 && roll < 0.13 ? "cultist" : this.wave >= 7 && roll < 0.13 ? "beetle" : this.wave >= 5 && roll < 0.29 ? "wraith" : this.wave >= 4 && roll < 0.43 ? "brute" : this.wave >= 2 && roll < 0.70 ? "skeleton" : "slime");
+            const kind = type || (this.wave >= 12 && roll < 0.08 ? "cultist" : this.wave >= 10 && roll < 0.18 ? "beetle" : this.wave >= 8 && roll < 0.30 ? "wraith" : this.wave >= 6 && roll < 0.45 ? "brute" : this.wave >= 3 && roll < 0.72 ? "skeleton" : "slime");
             const key = kind === "brute" ? "brute" : kind === "skeleton" ? "skeleton" : kind === "wraith" ? "wraith" : kind === "beetle" ? "beetle" : kind === "cultist" ? "cultist" : "slime";
             const scale = kind === "brute" ? 1.45 : kind === "skeleton" ? 1.15 : kind === "wraith" ? 1.28 : kind === "beetle" ? 1.32 : kind === "cultist" ? 1.24 : 1.2;
             const enemy = this.add.container(x, y).setDepth(12);
@@ -524,11 +529,11 @@
             enemy.animTween=this.tweens.add({targets:enemy.sprite,y:2,duration:kind==="brute"?260:190,yoyo:true,repeat:-1});
             enemy.isBoss=false; enemy.bossName="";
             enemy.kind = kind;
-            enemy.hp = kind === "brute" ? 150 + this.wave * 12 : kind === "beetle" ? 190 + this.wave * 13 : kind === "cultist" ? 92 + this.wave * 8 : kind === "wraith" ? 72 + this.wave * 7 : kind === "skeleton" ? 64 + this.wave * 6 : 42 + this.wave * 4;
+            enemy.hp = kind === "brute" ? 112 + this.wave * 7 : kind === "beetle" ? 142 + this.wave * 8 : kind === "cultist" ? 76 + this.wave * 5 : kind === "wraith" ? 58 + this.wave * 4 : kind === "skeleton" ? 46 + this.wave * 4 : 32 + this.wave * 3;
             enemy.maxHp = enemy.hp;
-            enemy.speed = kind === "brute" ? 48 + this.wave : kind === "beetle" ? 38 + this.wave * 0.8 : kind === "cultist" ? 54 + this.wave : kind === "wraith" ? 105 + this.wave * 1.8 : kind === "skeleton" ? 82 + this.wave * 1.5 : 65 + this.wave * 1.5;
-            enemy.damage = kind === "brute" ? 25 : kind === "beetle" ? 30 : kind === "cultist" ? 18 : kind === "wraith" ? 16 : 14;
-            enemy.xpValue = kind === "brute" ? 5 : kind === "beetle" ? 7 : kind === "cultist" ? 4 : kind === "wraith" ? 3 : kind === "skeleton" ? 2 : 1;
+            enemy.speed = kind === "brute" ? 44 + this.wave * 0.7 : kind === "beetle" ? 36 + this.wave * 0.6 : kind === "cultist" ? 48 + this.wave * 0.7 : kind === "wraith" ? 86 + this.wave * 0.9 : kind === "skeleton" ? 68 + this.wave : 58 + this.wave;
+            enemy.damage = kind === "brute" ? 18 : kind === "beetle" ? 22 : kind === "cultist" ? 14 : kind === "wraith" ? 12 : kind === "skeleton" ? 10 : 8;
+            enemy.xpValue = kind === "brute" ? 5 : kind === "beetle" ? 6 : kind === "cultist" ? 4 : kind === "wraith" ? 3 : kind === "skeleton" ? 2 : 1;
             enemy.radius = radius;
             enemy.hitFlash = 0;
             enemy.skillClock=Phaser.Math.Between(2600,4600);enemy.skillState="idle";enemy.skillDuration=0;
@@ -607,7 +612,7 @@
             this.hud.score.setText(this.score.toLocaleString("ru-RU"));
             const orb = this.add.image(x, y, "orb").setDepth(14).setScale(1.25);
             this.physics.add.existing(orb);
-            orb.body.setCircle(7);
+            orb.body.setCircle(10);
             orb.body.setAllowGravity(false);
             orb.value = value;
             this.orbs.add(orb);
@@ -804,11 +809,12 @@
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
             this.elapsedMs+=dt; this.hud.timer.setText(this.formatTime(this.elapsedMs)); this.waveClock+=dt; this.earthClock+=dt;
-            const biomeSize=520,bgx=Math.floor(this.player.x/biomeSize),bgy=Math.floor(this.player.y/biomeSize),biome=Math.abs((bgx*31+bgy*17)%3);
+            const biome=this.getBiomeAt(this.player.x,this.player.y);
             if(biome!==this.activeBiome){
                 this.activeBiome=biome;this.biomeXpMultiplier=biome===2?1.2:1;this.biomeCritBonus=biome===1?0.07:0;
                 const names=["ЗАРОСШИЕ РУИНЫ","ПЕПЕЛЬНЫЕ ПУСТОШИ","ЗАРАЖЁННЫЙ РАЗЛОМ"],colors=[0x9fc87b,0xe0a46b,0x8ce8df];
                 const bonus=biome===1?" • +7% КРИТ. ШАНС":biome===2?" • +20% ЭССЕНЦИИ":"";
+                this.hud.biomeText.setText("БИОМ: "+names[biome]+bonus).setColor("#"+colors[biome].toString(16).padStart(6,"0"));
                 this.showCombatNotice(names[biome]+bonus,colors[biome]);
             }
             this.updateWorldChunks(this.player.x,this.player.y);
@@ -842,12 +848,12 @@
                 this.player.body.setVelocity(this.player.body.velocity.x * 0.82, this.player.body.velocity.y * 0.82);
             }
 
-            if (this.spawnClock > Math.max(390, 1500 - this.wave * 48)) {
+            if (this.spawnClock > Math.max(850, 2100 - this.wave * 22)) {
                 this.spawnClock = 0;
-                const count = Math.min(4, 1 + Math.floor(this.wave / 5));
+                const count = Math.min(3, 1 + Math.floor((this.wave - 1) / 7));
                 for (let i = 0; i < count; i++) this.spawnEnemy();
             }
-            if(this.elapsedMs>=180000 && Math.floor(this.elapsedMs/180000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/180000);this.spawnBoss(this.lastBossMinute);}
+            if(this.elapsedMs>=240000 && Math.floor(this.elapsedMs/240000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/240000);this.spawnBoss(this.lastBossMinute);}
             if(this.stats.earthUnlocked && this.earthClock>=this.stats.earthDelay){this.earthClock=0;this.castEarthWave();}
             if(this.lightningUnlocked){this.lightningClock+=dt;if(this.lightningClock>=this.lightningDelay){this.lightningClock=0;this.castChainLightning();}}
             this.updateWindOrbs(dt);
@@ -855,7 +861,7 @@
                 this.fireClock = 0;
                 this.fire();
             }
-            if (this.waveClock >= 28000) {
+            if (this.waveClock >= 45000) {
                 this.waveClock = 0;
                 this.wave++;
                 this.refreshHud();
@@ -883,7 +889,7 @@
                 const d = Phaser.Math.Distance.Between(orb.x, orb.y, this.player.x, this.player.y);
                 if (d < this.stats.magnet) {
                     const angle = Phaser.Math.Angle.Between(orb.x, orb.y, this.player.x, this.player.y);
-                    orb.body.setVelocity(Math.cos(angle) * 250, Math.sin(angle) * 250);
+                    const pullSpeed = Phaser.Math.Clamp(720 - d * 0.55, 360, 720); orb.body.setVelocity(Math.cos(angle) * pullSpeed, Math.sin(angle) * pullSpeed);
                 } else orb.body.setVelocity(0, 0);
             });
             this.bullets.children.iterate(bolt => {
@@ -900,27 +906,41 @@
 
 
         formatTime(ms){const n=Math.floor(ms/1000);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");}
+        getBiomeAt(x,y){
+            const px=Math.floor(x/24)*24,py=Math.floor(y/24)*24;
+            const field=Math.sin(px/1450)+Math.cos(py/1320)+0.42*Math.sin((px+py)/760)+0.28*Math.cos((px-py)/510);
+            if(field<-0.48)return 1;
+            if(field>0.58)return 2;
+            return 0;
+        }
+
         updateWorldChunks(x,y){
             const size=520,cx=Math.floor(x/size),cy=Math.floor(y/size);
             for(let gx=cx-2;gx<=cx+2;gx++)for(let gy=cy-2;gy<=cy+2;gy++){
                 const key=gx+":"+gy;if(this.worldChunks.has(key))continue;
                 const objs=[];
-                const biome=Math.abs((gx*31+gy*17)%3);const groundKey=biome===1?"groundAsh":biome===2?"groundRift":"ground";
-                const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,groundKey).setDepth(-20).setTilePosition(gx*size,gy*size);
+                const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,"ground").setDepth(-20).setTilePosition(gx*size,gy*size);
                 objs.push(ground);
+                const biomePaint=this.add.graphics().setDepth(-19),cell=24;
+                for(let ox=0;ox<size;ox+=cell)for(let oy=0;oy<size;oy+=cell){
+                    const localBiome=this.getBiomeAt(gx*size+ox+cell/2,gy*size+oy+cell/2);
+                    if(localBiome===1){biomePaint.fillStyle(0x514b47,0.88);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell,cell);}
+                    else if(localBiome===2){biomePaint.fillStyle(0x263c3d,0.9);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell,cell);}
+                }
+                objs.push(biomePaint);
                 let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
                 const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
                 for(let i=0,n=3+Math.floor(rand()*3);i<n;i++){
                     const px=gx*size+25+rand()*(size-50),py=gy*size+25+rand()*(size-50);
                     if(Phaser.Math.Distance.Between(px,py,x,y)<155)continue;
-                    const roll=rand();
+                    const roll=rand(),localBiome=this.getBiomeAt(px,py);
                     if(roll<0.11){
                         const obj=this.add.image(px,py,"dirt").setDepth(-5).setScale(1.7+rand()*0.8).setAlpha(0.98).setRotation(0);objs.push(obj);
                     }else if(roll<0.20){
                         const obj=this.add.image(px,py,"rubble").setDepth(3+py/100000).setScale(0.7+rand()*0.8).setRotation(rand()*0.8);objs.push(obj);
                     }else if(roll<0.26){
                         const obj=this.add.image(px,py,"grassTuft").setDepth(3+py/100000).setScale(0.8+rand()*0.7);objs.push(obj);
-                    }else if(roll<0.34&&biome===2){
+                    }else if(roll<0.34&&localBiome===2){
                         const obj=this.add.image(px,py,"crystal").setDepth(3+py/100000).setScale(0.9+rand()*0.6);objs.push(obj);
                     }else{
                         const obj=this.addObstacle(px,py,roll<0.39?"ruin":"tree",0.8+rand()*0.45);objs.push(obj);
@@ -1016,7 +1036,7 @@
             const types=[{name:"МАЛЫЙ СТРАЖ РАЗЛОМА",kind:"bossRift",hp:380,speed:43,damage:21,scale:1.75,tint:0xffffff},
                 {name:"КОСТЯНОЙ ПАЛАЧ",kind:"bossBone",hp:650,speed:68,damage:27,scale:1.9,tint:0xffffff},
                 {name:"ДРЕВНИЙ КОЛОСС",kind:"bossColossus",hp:1050,speed:48,damage:36,scale:1.8,tint:0xffffff}];
-            const b=types[(stage-1)%types.length],factor=1+(stage-1)*.42,v=this.cameras.main.worldView,side=Phaser.Math.Between(0,3);
+            const b=types[(stage-1)%types.length],factor=1+(stage-1)*.25,v=this.cameras.main.worldView,side=Phaser.Math.Between(0,3);
             const x=side===0?v.x-50:side===1?v.right+50:Phaser.Math.Between(v.x+50,v.right-50);
             const y=side===2?v.y-50:side===3?v.bottom+50:Phaser.Math.Between(v.y+80,v.bottom-50);
             const boss=this.add.container(x,y).setDepth(24);boss.sprite=this.add.image(0,0,b.kind).setScale(b.scale).setTint(b.tint);boss.add(boss.sprite);
@@ -1053,7 +1073,7 @@
             this.joy.active=false;this.joy.pointerId=null;this.joy.dx=0;this.joy.dy=0;this.joy.baseX=100;this.joy.baseY=H-120;this.hud.joy.setPosition(this.joy.baseX,this.joy.baseY);this.hud.joyKnob.setPosition(0,0);this.player.body.setVelocity(0,0);
             this.panel("ПАУЗА","ЗАБЕГ ПРИОСТАНОВЛЕН");
             this.addOverlay(this.add.text(W/2,H/2-111,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
-                "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
+                "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/240000)+1)*240000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
             this.addOverlay(this.add.text(W/2,H/2-75,"УСИЛЕНИЯ, ВЫБРАННЫЕ ПРИ ПОВЫШЕНИИ УРОВНЯ",this.style(12,C.gold,true)).setOrigin(.5));
             const recent = this.selectedUpgrades.slice(-6);
             if (!recent.length) {

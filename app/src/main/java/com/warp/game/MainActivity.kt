@@ -620,7 +620,10 @@ class MainActivity : Activity() {
         if (game.gameId == "com.warp.riftsurvivors") {
             val avatar = ImageView(this).apply {
                 setImageResource(R.drawable.rift_survivors_icon)
-                scaleType = ImageView.ScaleType.CENTER_CROP
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                setPadding(dp(4), dp(4), dp(4), dp(4))
+                imageAlpha = 255
                 background = rounded(surfaceAlt, 16)
                 clipToOutline = true
                 contentDescription = "Rift Survivors"
