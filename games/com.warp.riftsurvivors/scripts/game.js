@@ -573,9 +573,10 @@
         hitEnemy(bolt, enemy) {
             if (!bolt.active || !enemy.active) return;
             if(bolt.trail)bolt.trail.destroy();
+            const isCrit=!!bolt.isCrit;
             bolt.destroy();
             enemy.hp -= bolt.damage * (enemy.kind === "beetle" ? 0.78 : 1);
-            if(bolt.isCrit){const label=this.add.text(enemy.x,enemy.y-28,"КРИТ!",this.style(13,0xffdf79,true)).setOrigin(.5).setDepth(32);this.tweens.add({targets:label,y:label.y-22,alpha:0,duration:480,onComplete:()=>label.destroy()});}
+            if(isCrit){const label=this.add.text(enemy.x,enemy.y-28,"КРИТ!",this.style(13,0xffdf79,true)).setOrigin(.5).setDepth(32);this.tweens.add({targets:label,y:label.y-22,alpha:0,duration:480,onComplete:()=>label.destroy()});}
             enemy.healthBack.setVisible(true);
             enemy.healthBar.setVisible(true);
             enemy.healthBar.width = Math.max(1, 28 * enemy.hp / enemy.maxHp);
@@ -857,7 +858,10 @@
                     else enemy.body.setVelocity(0,0);
                 }else if(!enemy.charging&&enemy.skillState!=="windup")enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
                 if(enemy.sprite)enemy.sprite.setFlipX(this.player.x<enemy.x);
-                if(enemy.isBoss){enemy.attackClock-=dt;if(enemy.attackClock<=0)this.bossAttack(enemy);}
+                if(enemy.isBoss){
+                    if(!enemy.enraged&&enemy.hp<=enemy.maxHp*.45){enemy.enraged=true;enemy.speed*=1.28;enemy.attackClock=Math.min(enemy.attackClock,1200);enemy.sprite.setTint(0xff8b83);this.showCombatNotice(enemy.bossName+" ВПАДАЕТ В ЯРОСТЬ",0xff8b83);this.cameras.main.shake(260,.004);}
+                    enemy.attackClock-=dt;if(enemy.attackClock<=0)this.bossAttack(enemy);
+                }
             });
             this.orbs.children.iterate(orb => {
                 if (!orb || !orb.active) return;
@@ -1002,7 +1006,7 @@
             const y=side===2?v.y-50:side===3?v.bottom+50:Phaser.Math.Between(v.y+80,v.bottom-50);
             const boss=this.add.container(x,y).setDepth(24);boss.sprite=this.add.image(0,0,b.kind).setScale(b.scale).setTint(b.tint);boss.add(boss.sprite);
             this.physics.add.existing(boss);boss.body.setCircle(25,-25,-25);boss.body.setAllowGravity(false);
-            boss.kind=b.kind;boss.isBoss=true;boss.bossName=b.name;boss.bossStage=stage;boss.attackClock=4300;boss.hp=Math.round(b.hp*factor);boss.maxHp=boss.hp;boss.speed=b.speed+stage*2.4;boss.damage=Math.round(b.damage*factor);boss.xpValue=16+stage*3;boss.radius=25;
+            boss.kind=b.kind;boss.isBoss=true;boss.bossName=b.name;boss.bossStage=stage;boss.attackClock=4300;boss.enraged=false;boss.hp=Math.round(b.hp*factor);boss.maxHp=boss.hp;boss.speed=b.speed+stage*2.4;boss.damage=Math.round(b.damage*factor);boss.xpValue=16+stage*3;boss.radius=25;
             boss.healthBack=this.add.rectangle(0,-43,64,6,0x241a18).setOrigin(.5).setVisible(false);boss.healthBar=this.add.rectangle(-32,-43,64,4,0xd94b3e).setOrigin(0,.5).setVisible(false);boss.add([boss.healthBack,boss.healthBar]);
             boss.animTween=this.tweens.add({targets:boss.sprite,y:4,duration:310,yoyo:true,repeat:-1});this.enemies.add(boss);
             this.bossLabel=this.add.text(W/2,78,b.name,this.style(18,0xffd38a,true)).setOrigin(.5).setScrollFactor(0).setDepth(70);
@@ -1015,14 +1019,14 @@
         bossAttack(boss){
             if(!boss.active)return;
             if(boss.kind==="bossRift"){
-                boss.attackClock=5000;const tx=this.player.x,ty=this.player.y;this.showCombatNotice("СТРАЖ: УДАР РАЗЛОМА",0x9bf4c5);this.bossTelegraph(boss,tx,ty,108,Math.round(boss.damage*1.35),0x72f0c1,900);
+                boss.attackClock=5000*(boss.enraged?0.72:1);const tx=this.player.x,ty=this.player.y;this.showCombatNotice("СТРАЖ: УДАР РАЗЛОМА",0x9bf4c5);this.bossTelegraph(boss,tx,ty,108,Math.round(boss.damage*1.35),0x72f0c1,900);
                 boss.charging=true;const a=Phaser.Math.Angle.Between(boss.x,boss.y,tx,ty);boss.body.setVelocity(Math.cos(a)*230,Math.sin(a)*230);this.time.delayedCall(480,()=>{if(boss.active){boss.charging=false;boss.body.setVelocity(0,0);}});
             }else if(boss.kind==="bossBone"){
-                boss.attackClock=5700;this.showCombatNotice("ПАЛАЧ: КОСТЯНЫЕ ШИПЫ",0xffb5a0);const a=Phaser.Math.Angle.Between(boss.x,boss.y,this.player.x,this.player.y),px=this.player.x,py=this.player.y;
+                boss.attackClock=5700*(boss.enraged?0.72:1);this.showCombatNotice("ПАЛАЧ: КОСТЯНЫЕ ШИПЫ",0xffb5a0);const a=Phaser.Math.Angle.Between(boss.x,boss.y,this.player.x,this.player.y),px=this.player.x,py=this.player.y;
                 for(let i=-1;i<=1;i++){const x=px+Math.cos(a+Math.PI/2)*i*58,y=py+Math.sin(a+Math.PI/2)*i*58;this.bossTelegraph(boss,x,y,43,Math.round(boss.damage*.85),0xe8d6b0,760+i*90);}
                 boss.charging=true;boss.body.setVelocity(Math.cos(a)*285,Math.sin(a)*285);this.time.delayedCall(620,()=>{if(boss.active){boss.charging=false;boss.body.setVelocity(0,0);}});
             }else{
-                boss.attackClock=6800;this.showCombatNotice("КОЛОСС: ЗЕМЛЕТРЯСЕНИЕ",0xd3a8ff);const x=boss.x,y=boss.y;
+                boss.attackClock=6800*(boss.enraged?0.72:1);this.showCombatNotice("КОЛОСС: ЗЕМЛЕТРЯСЕНИЕ",0xd3a8ff);const x=boss.x,y=boss.y;
                 const ring=this.add.circle(x,y,28,0x9b75c9,.13).setStrokeStyle(5,0xd4a7ff,.95).setDepth(27);
                 this.tweens.add({targets:ring,radius:190,alpha:0,duration:1000,ease:"Cubic.Out",onComplete:()=>ring.destroy()});
                 this.time.delayedCall(850,()=>{if(this.mode==="playing"&&boss.active){const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,x,y);if(d<190&&d>62&&this.invulnerable<=0){this.stats.hp-=Math.round(boss.damage*1.25);this.invulnerable=700;if(this.stats.hp<=0)this.endRun();this.refreshHud();}this.spawnEnemy("skeleton");this.spawnEnemy("brute");boss.hp=Math.min(boss.maxHp,boss.hp+Math.round(boss.maxHp*.035));}});
