@@ -385,15 +385,6 @@ class MainActivity : Activity() {
             ).apply { setPadding(0, 0, 0, dp(12)) })
         }
 
-        if (catalogEntries.isEmpty()) {
-            pageContent.addView(emptyState(
-                "Каталог пока пуст",
-                "Новые игры появятся здесь после публикации пакетов."
-            ))
-            addBuiltInDemoCards(pageContent)
-            return
-        }
-
         val searchField = EditText(this).apply {
             setSingleLine(true)
             setText(catalogSearchQuery)
@@ -508,11 +499,15 @@ class MainActivity : Activity() {
 
         if (filteredGames.isEmpty()) {
             catalogResultsContainer.addView(emptyState(
-                if (query.isEmpty()) "Каталог пока пуст" else "Ничего не найдено",
-                if (query.isEmpty()) {
-                    "Новые игры появятся здесь после публикации пакетов."
-                } else {
-                    "Измени поисковый запрос и попробуй ещё раз."
+                when {
+                    query.isNotEmpty() -> "Ничего не найдено"
+                    catalogTypeFilter != "all" || catalogEngineFilter != "all" -> "В этой категории пока нет игр"
+                    else -> "Каталог пока пуст"
+                },
+                when {
+                    query.isNotEmpty() -> "Измени поисковый запрос и попробуй ещё раз."
+                    catalogTypeFilter != "all" || catalogEngineFilter != "all" -> "Выбери другую категорию или движок."
+                    else -> "Новые игры появятся здесь после публикации пакетов."
                 }
             ))
             return
