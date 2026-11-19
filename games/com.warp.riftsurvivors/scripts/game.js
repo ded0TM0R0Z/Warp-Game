@@ -28,6 +28,7 @@
         constructor() {
             super("Arena");
             this.mode = "menu";
+            this.menuBackdrop=null;
             this.enemies = null;
             this.bullets = null;
             this.orbs = null;
@@ -60,6 +61,7 @@
 
         preload() {
             this.load.image("gameIcon", "assets/rift-survivors-icon.webp");
+            this.load.image("menuBackdrop", "assets/rift-menu-bg.webp");
         }
 
         create() {
@@ -363,10 +365,10 @@
 
         panel(title, subtitle) {
             this.clearOverlay();
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, W, H, 0x10150f, 0.84));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, W, H, 0x10150f, 0.58));
             this.addOverlay(this.add.rectangle(W / 2+7, H / 2+9, 700, 470, 0x080b10, 0.72));
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, 700, 470, 0x29251e, 0.985).setStrokeStyle(4, 0xc3a46a, 1));
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, 684, 454, 0x403628, 0.22).setStrokeStyle(1, 0x796442, 0.9));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 700, 470, 0x171827, 0.84).setStrokeStyle(4, 0x9d8bc8, 1));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 684, 454, 0x39364c, 0.16).setStrokeStyle(1, 0x7569a6, 0.72));
             this.addOverlay(this.add.rectangle(W / 2, H / 2 - 206, 180, 4, 0xb89556, 0.9));
             this.addOverlay(this.add.rectangle(W / 2, H / 2 + 206, 180, 4, 0xb89556, 0.9));
             [[W/2-337,H/2-222],[W/2+337,H/2-222],[W/2-337,H/2+222],[W/2+337,H/2+222]].forEach(([x,y])=>this.addOverlay(this.add.rectangle(x,y,10,10,0xd8b66f,0.95).setAngle(45)));
@@ -388,6 +390,8 @@
             this.mode = "menu";
             this.physics.pause();
             this.panel("RIFT SURVIVORS", "ПРОКЛЯТЫЕ РУИНЫ");
+            if(!this.menuBackdrop||!this.menuBackdrop.active)this.menuBackdrop=this.add.image(W/2,H/2,"menuBackdrop").setDisplaySize(W,H).setScrollFactor(0).setDepth(80);
+            this.menuBackdrop.setVisible(true).setAlpha(0.92);
             const halo=this.add.circle(W/2,H/2-84,64,0x8f48d4,0.08).setStrokeStyle(3,0x9c70d0,0.75);
             this.addOverlay(halo);
             this.tweens.add({targets:halo,scale:1.13,alpha:0.55,duration:1800,yoyo:true,repeat:-1,ease:"Sine.InOut"});
@@ -410,6 +414,7 @@
         }
 
         showControls() {
+            if(this.menuBackdrop)this.menuBackdrop.setVisible(false);
             this.panel("УПРАВЛЕНИЕ", "ПРОСТЫЕ ПРАВИЛА ВЫЖИВАНИЯ");
             const rows = [
                 ["ПЕРЕДВИЖЕНИЕ", "Удерживай левый виртуальный стик"],
@@ -427,6 +432,7 @@
         }
 
         startRun() {
+            if(this.menuBackdrop)this.menuBackdrop.setVisible(false);
             this.clearOverlay();
             this.mode = "playing";
             this.physics.resume();
