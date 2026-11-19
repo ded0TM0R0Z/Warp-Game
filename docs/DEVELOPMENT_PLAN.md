@@ -1,7 +1,7 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.2.0  
-**Current stage:** 6 — First 2D game and runtime validation
+**Version:** 1.3.0  
+**Current stage:** 7 — Catalog discovery, downloads and 3D runtime validation
 
 ## Stage 0 — Foundation and validation
 
@@ -100,7 +100,18 @@
 
 **Exit condition:** 3D support is demonstrated on real devices, not assumed from desktop tests.
 
-## Stage 8 — Release readiness
+## Stage 8 — Catalog and download experience
+
+- [x] Add 2D/3D category filters and engine filters to the remote catalog.
+- [x] Add a game details view with package metadata and install/update action.
+- [ ] Add a dedicated downloads screen and persistent download state.
+- [ ] Implement a managed download queue with safe cancellation.
+- [ ] Implement pause/resume only after transfer state and partial-file integrity are designed.
+- [ ] Publish real game packages and validate catalog search, filters and installs.
+
+**Exit condition:** Users can discover, inspect, install and manage multiple published games reliably.
+
+## Stage 9 — Release readiness
 
 - [ ] Security review.
 - [ ] Installation, update and rollback tests.
