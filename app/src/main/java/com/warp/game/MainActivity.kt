@@ -228,7 +228,7 @@ class MainActivity : Activity() {
     }
 
     private fun renderCatalog() {
-        pageContent.addView(pageHeading("Каталог игр", "Находи новые игры для своей библиотеки."))
+        pageHeading("Каталог игр", "Находи новые игры для своей библиотеки.")
         val empty = emptyState(
             "Каталог готовится",
             "Здесь появятся карточки игр, описание, размер, версия и кнопка установки. Сейчас источник каталога ещё не подключён."
@@ -241,7 +241,7 @@ class MainActivity : Activity() {
     }
 
     private fun renderLibrary() {
-        pageContent.addView(pageHeading("Мои игры", "Все установленные игры будут собраны здесь."))
+        pageHeading("Мои игры", "Все установленные игры будут собраны здесь.")
         pageContent.addView(emptyState(
             "Библиотека пока пуста",
             "После подключения установщика здесь появятся твои игры. Их можно будет запускать, обновлять и удалять отдельно от сохранений."
@@ -249,7 +249,7 @@ class MainActivity : Activity() {
     }
 
     private fun renderSettings() {
-        pageContent.addView(pageHeading("Настройки", "Информация о приложении и его состоянии."))
+        pageHeading("Настройки", "Информация о приложении и его состоянии.")
         val appCard = panel()
         appCard.setPadding(dp(16), dp(16), dp(16), dp(16))
         appCard.addView(label("WARP GAME", 18f, textMain, true))
