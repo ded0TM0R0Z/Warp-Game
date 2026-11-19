@@ -18,6 +18,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 - [Build environment](docs/BUILD_ENVIRONMENT.md)
 - [Development plan](docs/DEVELOPMENT_PLAN.md)
 - [Game package specification](docs/GAME_PACKAGE_SPEC.md)
+- [Catalog backend](docs/CATALOG_BACKEND.md)
 
 ## Build
 
