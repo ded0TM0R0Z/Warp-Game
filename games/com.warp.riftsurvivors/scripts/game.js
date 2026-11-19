@@ -293,10 +293,12 @@
         panel(title, subtitle) {
             this.clearOverlay();
             this.addOverlay(this.add.rectangle(W / 2, H / 2, W, H, 0x10150f, 0.78));
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, 540, 360, 0x29251e, 0.98).setStrokeStyle(4, 0xc3a46a, 1));
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, 526, 346, 0x403628, 0.24).setStrokeStyle(1, 0x796442, 0.9));
-            this.addOverlay(this.add.text(W / 2, H / 2 - 135, title, this.style(30, C.parchment, true)).setOrigin(0.5));
-            if (subtitle) this.addOverlay(this.add.text(W / 2, H / 2 - 92, subtitle, this.style(14, C.gold, true)).setOrigin(0.5));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 700, 470, 0x29251e, 0.985).setStrokeStyle(4, 0xc3a46a, 1));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 684, 454, 0x403628, 0.22).setStrokeStyle(1, 0x796442, 0.9));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2 - 206, 180, 4, 0xb89556, 0.9));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2 + 206, 180, 4, 0xb89556, 0.9));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 194, title, this.style(30, C.parchment, true)).setOrigin(0.5));
+            if (subtitle) this.addOverlay(this.add.text(W / 2, H / 2 - 153, subtitle, this.style(14, C.gold, true)).setOrigin(0.5));
         }
 
         makeButton(x, y, label, callback, width) {
@@ -311,14 +313,38 @@
             this.mode = "menu";
             this.physics.pause();
             this.panel("RIFT SURVIVORS", "ПРОКЛЯТЫЕ РУИНЫ");
-            this.addOverlay(this.add.text(W / 2, H / 2 - 30,
-                "Ты — последний рыцарь у древнего разлома.\nОтбивайся от тварей, собирай эссенцию и усиливай клинок.",
-                this.style(15, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(8));
-            this.addOverlay(this.add.text(W / 2, H / 2 + 35, "РЕКОРД: " + this.best, this.style(14, C.gold, true)).setOrigin(0.5));
-            this.makeButton(W / 2, H / 2 + 105, "НАЧАТЬ ЗАБЕГ", () => this.startRun());
-            this.addOverlay(this.add.text(W / 2, H - 24,
-                "Левый стик — движение   •   Рыцарь сам атакует ближайшего врага",
-                this.style(11, C.muted, false)).setOrigin(0.5));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 100,
+                "Последний рыцарь у древнего разлома.\nВыдержи волны тварей, собирай эссенцию и открывай\nновые боевые навыки с каждым уровнем.",
+                this.style(16, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(10));
+            const statsY = H / 2 - 10;
+            [["РЕКОРД", this.best.toLocaleString("ru-RU")], ["БОССЫ", "КАЖДЫЕ 3 МИН."], ["АТАКА", "АВТОМАТИЧЕСКАЯ"]].forEach((item, i) => {
+                const x = W / 2 - 205 + i * 205;
+                this.addOverlay(this.add.rectangle(x, statsY, 184, 52, 0x393326, 0.98).setStrokeStyle(1, 0x806c48, 0.9));
+                this.addOverlay(this.add.text(x, statsY - 10, item[0], this.style(10, C.muted, true)).setOrigin(0.5));
+                this.addOverlay(this.add.text(x, statsY + 10, String(item[1]), this.style(13, C.gold, true)).setOrigin(0.5));
+            });
+            this.makeButton(W / 2, H / 2 + 90, "НАЧАТЬ ЗАБЕГ", () => this.startRun(), 290);
+            this.makeButton(W / 2, H / 2 + 151, "КАК ИГРАТЬ", () => this.showControls(), 220);
+            this.addOverlay(this.add.text(W / 2, H - 22,
+                "ЛЕВЫЙ СТИК — ДВИЖЕНИЕ     •     РЫЦАРЬ САМ ВЫБИРАЕТ ЦЕЛЬ",
+                this.style(10, C.muted, false)).setOrigin(0.5));
+        }
+
+        showControls() {
+            this.panel("УПРАВЛЕНИЕ", "ПРОСТЫЕ ПРАВИЛА ВЫЖИВАНИЯ");
+            const rows = [
+                ["ПЕРЕДВИЖЕНИЕ", "Удерживай левый виртуальный стик"],
+                ["СТРЕЛЬБА", "Рыцарь автоматически стреляет в ближайшего врага"],
+                ["УСИЛЕНИЯ", "После повышения уровня выбери одну из трёх карт"],
+                ["БОССЫ", "Новый босс появляется каждые три минуты"],
+                ["ПАУЗА", "Кнопка II в верхней части экрана"]
+            ];
+            rows.forEach((row, i) => {
+                const y = H / 2 - 82 + i * 48;
+                this.addOverlay(this.add.text(W / 2 - 275, y, row[0], this.style(12, C.gold, true)));
+                this.addOverlay(this.add.text(W / 2 - 80, y, row[1], this.style(12, C.parchment, false)));
+            });
+            this.makeButton(W / 2, H / 2 + 175, "НАЗАД", () => this.showMenu(), 220);
         }
 
         startRun() {
@@ -541,12 +567,12 @@
             this.mode = "upgrade";
             this.physics.pause();
             this.panel("НОВЫЙ УРОВЕНЬ", "ВЫБЕРИ ОДНО УЛУЧШЕНИЕ");
-            this.addOverlay(this.add.text(W / 2, H / 2 - 40, "УРОВЕНЬ " + this.level, this.style(13, C.gold, true)).setOrigin(0.5));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 105, "УРОВЕНЬ " + this.level, this.style(13, C.gold, true)).setOrigin(0.5));
             this.upgradeOptions().forEach((option, index) => {
-                const y = H / 2 + 20 + index * 67;
-                const bg = this.add.rectangle(W / 2, y, 410, 56, 0x493a29).setStrokeStyle(2, 0xb99a62, 0.95).setInteractive();
-                const title = this.add.text(W / 2 - 180, y - 9, option.title, this.style(13, C.parchment, true));
-                const desc = this.add.text(W / 2 - 180, y + 12, option.desc, this.style(11, C.muted, false));
+                const y = H / 2 - 48 + index * 72;
+                const bg = this.add.rectangle(W / 2, y, 520, 58, 0x493a29).setStrokeStyle(2, 0xb99a62, 0.95).setInteractive();
+                const title = this.add.text(W / 2 - 235, y - 9, option.title, this.style(13, C.parchment, true));
+                const desc = this.add.text(W / 2 - 235, y + 12, option.desc, this.style(11, C.muted, false));
                 bg.on("pointerdown", () => {
                     option.apply(); this.selectedUpgrades.push(option.title);
                     this.mode = "playing";
