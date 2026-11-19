@@ -78,7 +78,6 @@ def safe_relative_path(value: str) -> PurePosixPath:
     path = PurePosixPath(value)
     if (
         not value
-        or "\" in value
         or "\\" in value
         or ":" in value
         or any(part in {"", ".", ".."} for part in value.split("/"))
@@ -138,10 +137,7 @@ def package_game(game_dir: Path, output: Path, game_id: str, version: str, githu
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     filename = f"{game_id}-{version}.zip"
     if output.name != filename:
-        final_path = output.with_name(filename)
-        output.replace(final_path)
-        output = final_path
-
+        fail(f"Output filename must be {filename}")
     print(json.dumps({"filename": filename, "sha256": digest, "size": size}))
     if github_output:
         with open(github_output, "a", encoding="utf-8") as stream:
