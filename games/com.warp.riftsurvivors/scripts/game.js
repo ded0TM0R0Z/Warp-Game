@@ -1,7 +1,7 @@
 (function () {
     "use strict";
 
-    let W = 960, H = 540;
+    const W = 960, H = 540;
     const sdk = window.WarpGameSDK || null;
     const STORAGE_KEY = "rift-survivors-save";
     const C = {
@@ -488,7 +488,7 @@
                 this.joy.active = false; this.joy.pointerId = null;
                 this.joy.dx = 0; this.joy.dy = 0;
                 this.hud.joyKnob.setPosition(0, 0);
-                this.joy.baseX = 100; this.joy.baseY = H - 120;
+                this.joy.baseX = 100; this.joy.baseY = H - 155;
                 this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             }
         }
