@@ -24,6 +24,7 @@ class GameInstaller(
         val packageFile = File(storage.cacheDirectory, "package-" + UUID.randomUUID() + ".zip")
         val stagingDirectory = File(storage.gamesDirectory, ".staging-" + UUID.randomUUID())
         var backupDirectory: File? = null
+        var targetDirectory: File? = null
         var promotedDirectory: File? = null
         var previousDirectoryBackedUp = false
 
@@ -44,6 +45,7 @@ class GameInstaller(
             }
 
             val finalDirectory = storage.gameDirectory(manifest.gameId)
+            targetDirectory = finalDirectory
             val existingGame = database.getInstalledGame(manifest.gameId)
             if (finalDirectory.exists()) {
                 val backup = File(
@@ -83,8 +85,12 @@ class GameInstaller(
             database.saveInstalledGame(installedGame)
 
             backupDirectory?.let { backup ->
-                if (backup.exists() && !backup.deleteRecursively()) {
-                    WarpLogger.warning("Installer", "Previous game backup could not be fully removed")
+                try {
+                    if (backup.exists() && !backup.deleteRecursively()) {
+                        WarpLogger.warning("Installer", "Previous game backup could not be fully removed")
+                    }
+                } catch (cleanupError: Exception) {
+                    WarpLogger.warning("Installer", "Previous game backup cleanup failed", cleanupError)
                 }
             }
             return installedGame
@@ -93,18 +99,12 @@ class GameInstaller(
                 if (directory.exists()) directory.deleteRecursively()
             }
             if (previousDirectoryBackedUp) {
-                val finalDirectory = backupDirectory?.let {
-                    File(storage.gamesDirectory, it.name.removePrefix(".backup-"))
-                }
-                val targetDirectory = finalDirectory?.let {
-                    storage.gamesDirectory.listFiles()
-                        ?.firstOrNull { file -> file.name == it.name }
-                }
                 val backup = backupDirectory
-                if (backup != null && backup.exists() && targetDirectory != null) {
-                    backup.renameTo(targetDirectory)
-                } else if (backup != null && backup.exists()) {
-                    WarpLogger.error("Installer", "Could not restore previous game directory")
+                val target = targetDirectory
+                if (backup != null && backup.exists() && target != null) {
+                    if (!backup.renameTo(target)) {
+                        WarpLogger.error("Installer", "Could not restore previous game directory")
+                    }
                 }
             }
             if (error is GamePackageException) throw error
@@ -148,6 +148,7 @@ class GameInstaller(
         val seenPaths = mutableSetOf<String>()
         var entryCount = 0
         var totalExpandedBytes = 0L
+        val extractionBuffer = ByteArray(BUFFER_SIZE)
 
         ZipInputStream(FileInputStream(archiveFile)).use { zip ->
             while (true) {
@@ -192,7 +193,7 @@ class GameInstaller(
                     var entryBytes = 0L
                     FileOutputStream(outputFile).use { output ->
                         while (true) {
-                            val count = zip.read(bufferForExtraction)
+                            val count = zip.read(extractionBuffer)
                             if (count < 0) break
                             if (count == 0) continue
                             entryBytes += count
@@ -206,7 +207,7 @@ class GameInstaller(
                             if (rawPath == MANIFEST_FILE && entryBytes > MAX_MANIFEST_BYTES) {
                                 throw GamePackageException("manifest.json is too large")
                             }
-                            output.write(bufferForExtraction, 0, count)
+                            output.write(extractionBuffer, 0, count)
                         }
                     }
                 }
@@ -249,6 +250,5 @@ class GameInstaller(
         const val MAX_ENTRIES = 10000
 
         val SHA256_PATTERN = Regex("[A-Fa-f0-9]{64}")
-        val bufferForExtraction = ByteArray(BUFFER_SIZE)
     }
 }
