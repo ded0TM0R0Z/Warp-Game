@@ -1,6 +1,6 @@
 # WARP GAME — BUILD ENVIRONMENT
 
-**Version:** 1.0.3  
+**Version:** 1.0.4  
 **Status:** Stable signing key verified; local HTML5 runtime APK builds successfully. Physical-device runtime validation remains pending.
 
 ## 1. Decision
@@ -75,14 +75,14 @@ The first workflow attempt exposed an obsolete Android SDK package request, whic
 
 ## 5. Latest signed build
 
-- Workflow run: [Android Build #33](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44568310650)
-- Commit: `377309e01f0a7267c5115fb88ed3041c4cd3ae2f`
+- Workflow run: [Android Build #40](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44569852644)
+- Commit: `0cc9d2d116ee2a135a3e54e797d8c2d3f03947bc`
 - Result: successful.
 - Artifact: `warp-game-debug-apk`
-- Artifact ID: `14553965635`
-- Artifact ZIP SHA-256: `8a22fcd0fb74c89e5bc626af28a01255aef98464fca50e58e1b4ca83d424f890`
-- APK size: 1,394,582 bytes.
-- APK SHA-256: `c1210ef43313a3eb9ce35494b28511c42925445c5a5c90122f330925f4378550`
+- Artifact ID: `14552513983`
+- Artifact ZIP SHA-256: `7daaf4a21c9b2cab17fe628b01ad4005d01d04b7e71baf2e3e7bac1279114990`
+- APK size: 1,410,522 bytes.
+- APK SHA-256: `a5abf4022edbb31f5470a1df8a2a555dd7fc89759fe63ed40aa4b5580f81f90d`
 - Signing certificate SHA-256: `feb23e40910a3faf207cedc2644397c4dc76d4ce347e50b95fdf2f9c74c24a07`
 - Artifact expiry: 2026-11-26.
 
