@@ -55,6 +55,7 @@ class MainActivity : Activity() {
     private var downloadingGameId: String? = null
     private var downloadProgressPercent = 0
     private var catalogSearchQuery = ""
+    private var librarySearchQuery = ""
     private lateinit var catalogResultsContainer: LinearLayout
     private var activeDownloadToken: DownloadCancellationToken? = null
     private var downloadCancelRequested = false
@@ -750,7 +751,7 @@ class MainActivity : Activity() {
     }
 
     private fun renderLibrary() {
-        pageHeading("Мои игры", "Все установленные игры будут собраны здесь.")
+        pageHeading("Мои игры", "Установленные игры и локальные сохранения.")
 
         if (!::warpDatabase.isInitialized) {
             pageContent.addView(emptyState(
@@ -782,13 +783,76 @@ class MainActivity : Activity() {
         if (installedGames.isEmpty()) {
             pageContent.addView(emptyState(
                 "Библиотека пока пуста",
-                "После установки игры она появится здесь. Сохранения хранятся отдельно от файлов игры."
+                "Установи игру из каталога — она появится здесь. Сохранения будут храниться отдельно от файлов игры."
             ))
             return
         }
 
-        installedGames.forEach { game ->
-            pageContent.addView(gameCard(game))
+        pageContent.addView(label(
+            "УСТАНОВЛЕНО ИГР: ${installedGames.size}",
+            10f,
+            accent,
+            true
+        ).apply {
+            letterSpacing = 0.1f
+            setPadding(0, 0, 0, dp(10))
+        })
+
+        val searchField = EditText(this).apply {
+            setSingleLine(true)
+            setText(librarySearchQuery)
+            hint = "Поиск по названию или движку"
+            textSize = 14f
+            setTextColor(textMain)
+            setHintTextColor(textMuted)
+            background = rounded(surfaceAlt, 12)
+            setPadding(dp(13), dp(11), dp(13), dp(11))
+        }
+        searchField.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                librarySearchQuery = s?.toString().orEmpty()
+                renderLibraryResults(installedGames)
+            }
+        })
+        val searchParams = LinearLayout.LayoutParams(-1, -2)
+        searchParams.bottomMargin = dp(12)
+        pageContent.addView(searchField, searchParams)
+
+        val results = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            tag = "library_results"
+        }
+        pageContent.addView(results)
+        renderLibraryResults(installedGames, results)
+    }
+
+    private fun renderLibraryResults(
+        installedGames: List<InstalledGame>,
+        container: LinearLayout? = null
+    ) {
+        val target = container ?: pageContent.findViewWithTag<LinearLayout>("library_results")
+            ?: return
+        target.removeAllViews()
+        val query = librarySearchQuery.trim()
+        val filteredGames = installedGames.filter { game ->
+            query.isEmpty() ||
+                game.name.contains(query, ignoreCase = true) ||
+                game.engine.contains(query, ignoreCase = true) ||
+                game.gameId.contains(query, ignoreCase = true)
+        }
+
+        if (filteredGames.isEmpty()) {
+            target.addView(emptyState(
+                "Ничего не найдено",
+                "Измени запрос и попробуй ещё раз."
+            ))
+            return
+        }
+
+        filteredGames.forEach { game ->
+            target.addView(gameCard(game))
         }
     }
 
@@ -796,8 +860,28 @@ class MainActivity : Activity() {
         val card = panel().apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(14), dp(14), dp(10), dp(14))
+            setPadding(dp(13), dp(14), dp(11), dp(14))
         }
+
+        val typeLabel = when {
+            game.gameType.contains("3d", ignoreCase = true) -> "3D"
+            game.gameType.contains("2d", ignoreCase = true) -> "2D"
+            else -> "HTML"
+        }
+        val gameIcon = TextView(this).apply {
+            text = typeLabel
+            textSize = 12f
+            setTypeface(typeface, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(220, 225, 255))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(68, 57, 133), Color.rgb(30, 49, 82))
+            ).apply { cornerRadius = dp(13).toFloat() }
+        }
+        card.addView(gameIcon, LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+            rightMargin = dp(12)
+        })
 
         val info = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -812,25 +896,28 @@ class MainActivity : Activity() {
         }
         info.addView(label(game.name, 15f, textMain, true))
         info.addView(label(
-            "Версия " + game.version + " • " + game.gameType.uppercase() + " • " + game.engine,
+            game.engine + " • " + game.version,
             11f,
             textMuted,
             false
-        ).apply { setPadding(0, dp(5), 0, 0) })
+        ).apply { setPadding(0, dp(5), 0, dp(4)) })
+        info.addView(label("НАЖМИ, ЧТОБЫ ЗАПУСТИТЬ", 9f, accent, true))
         card.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
 
         val remove = TextView(this).apply {
             text = "Удалить"
-            textSize = 11f
-            setTextColor(Color.rgb(255, 139, 139))
-            setPadding(dp(10), dp(10), dp(6), dp(10))
+            textSize = 10f
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(255, 151, 151))
+            background = rounded(Color.rgb(61, 35, 48), 9)
+            setPadding(dp(9), dp(9), dp(9), dp(9))
             isClickable = true
             isFocusable = true
             setOnClickListener { confirmGameRemoval(game) }
         }
         card.addView(remove)
         val params = LinearLayout.LayoutParams(-1, -2)
-        params.bottomMargin = dp(9)
+        params.bottomMargin = dp(10)
         card.layoutParams = params
         return card
     }
@@ -984,7 +1071,7 @@ class MainActivity : Activity() {
     }
 
     private fun renderSettings() {
-        pageHeading("Настройки", "Информация о приложении и его состоянии.")
+        pageHeading("Настройки", "Состояние платформы и инструменты разработчика.")
         val appCard = panel()
         appCard.setPadding(dp(16), dp(16), dp(16), dp(16))
         appCard.addView(label("WARP GAME", 18f, textMain, true))
@@ -996,7 +1083,7 @@ class MainActivity : Activity() {
         })
         pageContent.addView(appCard)
 
-        sectionTitle("Разработка")
+        sectionTitle("Инструменты разработчика")
         pageContent.addView(actionCard(
             "Установить тестовую игру",
             "Проверить ZIP, SHA-256, установку и запуск",
@@ -1026,7 +1113,7 @@ class MainActivity : Activity() {
             startActivity(android.content.Intent(this, RuntimeTestActivity::class.java))
         })
 
-        sectionTitle("Принципы платформы")
+        sectionTitle("Возможности платформы")
         pageContent.addView(detailRow("Офлайн-режим", "Игры должны запускаться без интернета после установки."))
         pageContent.addView(detailRow("Сохранения", "Сохранения хранятся отдельно от файлов игры."))
         pageContent.addView(detailRow("Совместимость", "Приоритет — телефоны Android, включая устройства начального уровня."))
