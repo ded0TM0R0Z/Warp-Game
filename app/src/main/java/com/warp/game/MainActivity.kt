@@ -312,6 +312,15 @@ class MainActivity : Activity() {
         })
         pageContent.addView(appCard)
 
+        sectionTitle("Разработка")
+        pageContent.addView(actionCard(
+            "Тест игрового движка",
+            "Проверить локальный HTML5, касания и WebGL",
+            "TEST"
+        ) {
+            startActivity(android.content.Intent(this, RuntimeTestActivity::class.java))
+        })
+
         sectionTitle("Принципы платформы")
         pageContent.addView(detailRow("Офлайн-режим", "Игры должны запускаться без интернета после установки."))
         pageContent.addView(detailRow("Сохранения", "Сохранения хранятся отдельно от файлов игры."))

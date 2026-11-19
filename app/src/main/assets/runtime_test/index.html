@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#0a0c13">
+    <title>Warp Game Runtime Test</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="screen">
+        <section class="heading">
+            <p class="eyebrow">WARP GAME / RUNTIME</p>
+            <h1>Локальная игра</h1>
+            <p class="description">Коснись поля, чтобы переместить объект. Страница и ресурсы загружены из APK.</p>
+        </section>
+
+        <section class="status-grid">
+            <div class="status-card">
+                <span class="status-label">HTML5 / JavaScript</span>
+                <strong id="script-status">Проверка…</strong>
+            </div>
+            <div class="status-card">
+                <span class="status-label">WebGL</span>
+                <strong id="webgl-status">Проверка…</strong>
+            </div>
+        </section>
+
+        <canvas id="game" aria-label="Игровое поле"></canvas>
+
+        <section class="footer">
+            <strong id="tap-count">Касаний: 0</strong>
+            <span>Сеть не используется</span>
+        </section>
+    </main>
+    <script src="game.js"></script>
+</body>
+</html>
