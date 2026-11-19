@@ -1,7 +1,7 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.0  
-**Current stage:** 0 — Foundation and build validation
+**Version:** 1.1.1  
+**Current stage:** 0 — Foundation and device validation
 
 ## Stage 0 — Foundation and validation
 
@@ -11,8 +11,10 @@
 - [x] Add Android project skeleton.
 - [x] Add GitHub Actions debug build workflow.
 - [x] Pin prototype build toolchain.
-- [ ] Confirm the first successful GitHub Actions build.
+- [x] Complete a successful cloud build.
+- [x] Upload the debug APK artifact.
 - [ ] Download and install the APK on the target phone.
+- [ ] Confirm the app launches without crashing.
 - [ ] Record baseline device performance.
 
 **Exit condition:** A repeatable cloud build produces an APK that installs and launches on the target Android phone.
