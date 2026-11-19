@@ -104,8 +104,8 @@
 
 - [x] Add 2D/3D category filters and engine filters to the remote catalog.
 - [x] Add a game details view with package metadata and install/update action.
-- [ ] Add a dedicated downloads screen and persistent download state.
-- [ ] Implement a managed download queue with safe cancellation.
+- [x] Add a dedicated downloads screen and persistent download state.
+- [x] Implement a serial download queue with duplicate prevention, cancellation, retry and process-restart recovery.
 - [ ] Implement pause/resume only after transfer state and partial-file integrity are designed.
 - [ ] Publish real game packages and validate catalog search, filters and installs.
 
