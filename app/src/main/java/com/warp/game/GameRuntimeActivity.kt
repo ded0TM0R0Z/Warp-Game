@@ -25,6 +25,7 @@ class GameRuntimeActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.statusBarColor = Color.rgb(10, 12, 19)
         window.navigationBarColor = Color.rgb(10, 12, 19)
+        applyImmersiveMode()
 
         val gameId = intent.getStringExtra(EXTRA_GAME_ID)
         if (gameId.isNullOrBlank()) {
@@ -178,6 +179,19 @@ class GameRuntimeActivity : Activity() {
                 setPadding(32, 32, 32, 32)
             }
         )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun applyImmersiveMode() {
+        window.decorView.systemUiVisibility =
+            android.view.View.SYSTEM_UI_FLAG_FULLSCREEN or
+            android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+            android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applyImmersiveMode()
     }
 
     override fun onResume() {
