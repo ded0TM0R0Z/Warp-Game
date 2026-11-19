@@ -22,6 +22,13 @@ object GamePackageManifestParser {
     private val gameIdPattern = Regex("[A-Za-z0-9][A-Za-z0-9._-]{2,127}")
     private val platformVersionPattern = Regex("\\d+\\.\\d+\\.\\d+")
 
+    fun isPlatformVersionCompatible(minimumPlatformVersion: String): Boolean {
+        if (!platformVersionPattern.matches(minimumPlatformVersion)) {
+            throw GamePackageException("Invalid minimum_platform_version")
+        }
+        return compareVersions(minimumPlatformVersion, PLATFORM_VERSION) <= 0
+    }
+
     fun parse(jsonText: String): GamePackageManifest {
         val json = try {
             JSONObject(jsonText)
@@ -51,10 +58,7 @@ object GamePackageManifestParser {
         }
 
         val minimumPlatformVersion = requiredString(json, "minimum_platform_version")
-        if (!platformVersionPattern.matches(minimumPlatformVersion)) {
-            throw GamePackageException("Invalid minimum_platform_version")
-        }
-        if (compareVersions(minimumPlatformVersion, PLATFORM_VERSION) > 0) {
+        if (!isPlatformVersionCompatible(minimumPlatformVersion)) {
             throw GamePackageException("Game requires a newer WARP GAME version")
         }
 
