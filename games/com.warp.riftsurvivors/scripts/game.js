@@ -416,7 +416,6 @@
             if (!target) return;
             const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
             this.playerSprite.setFlipX(target.x < this.player.x);
-            this.tweens.killTweensOf(this.playerSprite);
             this.playerSprite.setScale(1.08,0.94);
             this.tweens.add({targets:this.playerSprite,scaleX:1,scaleY:1,duration:130,ease:"Back.Out"});
             const flash=this.add.circle(this.player.x+Math.cos(angle)*18,this.player.y+Math.sin(angle)*18,5,0xffe3a0,0.9).setDepth(19);
