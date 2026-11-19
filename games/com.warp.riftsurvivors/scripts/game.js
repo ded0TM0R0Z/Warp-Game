@@ -437,7 +437,7 @@
             this.projectiles = 1;
             this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
-            this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;
+            this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;this.runePower=1;
             this.worldChunks.forEach(items => items.forEach(obj => obj.destroy()));
             this.worldChunks.clear();
             this.player.body.reset(W / 2, H / 2);
@@ -605,7 +605,7 @@
         collectLoot(player,item){
             if(!item.active||this.mode!=="playing")return;
             if(item.lootType==="potion"){const before=this.stats.hp;this.stats.hp=Math.min(this.stats.maxHp,this.stats.hp+28);this.showCombatNotice("ВОССТАНОВЛЕНИЕ +"+(this.stats.hp-before),0x8ee6a0);}
-            else{this.stats.damage*=1.12;this.stats.windDamage*=1.12;this.lightningDamage*=1.12;this.showCombatNotice("РУНА СИЛЫ +12% УРОНА",0xd9a6ff);}
+            else{this.runePower*=1.12;this.stats.damage*=1.12;this.stats.windDamage*=1.12;this.stats.earthDamage*=1.12;this.lightningDamage*=1.12;this.showCombatNotice("РУНА СИЛЫ +12% УРОНА",0xd9a6ff);}
             item.destroy();this.refreshHud();if(sdk)sdk.vibrate(18);
         }
 
@@ -652,13 +652,13 @@
                 all.push({title:"СИЛА ЗЕМЛИ",desc:"+35% урон волны и +12% радиус",apply:()=>{this.stats.earthDamage*=1.35;this.stats.earthRadius=(this.stats.earthRadius||145)*1.12;}});
                 all.push({title:"ДРЕВНИЙ ИМПУЛЬС",desc:"Волна земли перезаряжается на 18% быстрее",apply:()=>{this.stats.earthDelay=Math.max(3200,this.stats.earthDelay*0.82);}});
             }
-            if(!this.stats.windUnlocked) all.push({title:"ДУХ ВЕТРА",desc:"Призывает сильный шар ветра с периодическим уроном",apply:()=>{this.stats.windUnlocked=true;this.stats.windOrbCount=1;this.stats.windDamage=38+this.level*2.5;this.stats.windDelay=420;this.stats.windRadius=88;}});
+            if(!this.stats.windUnlocked) all.push({title:"ДУХ ВЕТРА",desc:"Призывает сильный шар ветра с периодическим уроном",apply:()=>{this.stats.windUnlocked=true;this.stats.windOrbCount=1;this.stats.windDamage=(38+this.level*2.5)*this.runePower;this.stats.windDelay=420;this.stats.windRadius=88;}});
             else {
                 all.push({title:"ШТОРМОВОЙ ШАР",desc:"+55% урон ветра и быстрее повторные попадания",apply:()=>{this.stats.windDamage*=1.55;this.stats.windDelay=Math.max(220,this.stats.windDelay*0.84);}});
                 if((this.stats.windOrbCount||1)<4) all.push({title:"ВТОРОЙ ПОТОК",desc:"Добавляет ещё один шар ветра вокруг героя",apply:()=>{this.stats.windOrbCount=Math.min(4,(this.stats.windOrbCount||1)+1);this.stats.windDamage*=1.12;}});
                 all.push({title:"ВОРОНКА ВЕТРА",desc:"+20% радиус вращения и +25% урон",apply:()=>{this.stats.windRadius*=1.2;this.stats.windDamage*=1.25;}});
             }
-            if(!this.lightningUnlocked)all.push({title:"ЦЕПНАЯ МОЛНИЯ",desc:"Молния поражает двух ближайших врагов и перескакивает между ними",apply:()=>{this.lightningUnlocked=true;this.lightningClock=0;this.lightningDamage=58+this.level*2;this.lightningDelay=6200;this.lightningTargets=2;}});
+            if(!this.lightningUnlocked)all.push({title:"ЦЕПНАЯ МОЛНИЯ",desc:"Молния поражает двух ближайших врагов и перескакивает между ними",apply:()=>{this.lightningUnlocked=true;this.lightningClock=0;this.lightningDamage=(58+this.level*2)*this.runePower;this.lightningDelay=6200;this.lightningTargets=2;}});
             else{all.push({title:"ГРОЗОВОЙ РАЗРЯД",desc:"+45% урон молнии и -12% перезарядка",apply:()=>{this.lightningDamage*=1.45;this.lightningDelay=Math.max(2600,this.lightningDelay*0.88);}});all.push({title:"ЦЕПНАЯ РЕАКЦИЯ",desc:"Молния поражает ещё одну цель",apply:()=>{this.lightningTargets=Math.min(5,this.lightningTargets+1);this.lightningDamage*=1.12;}});}
             return Phaser.Utils.Array.Shuffle(all).slice(0,3);
         }
