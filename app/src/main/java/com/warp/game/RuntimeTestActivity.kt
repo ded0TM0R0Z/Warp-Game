@@ -132,7 +132,7 @@ class RuntimeTestActivity : Activity() {
                     "Runtime",
                     "WebView renderer stopped; crashed=" + detail.didCrash()
                 )
-                finish()
+                WarpNavigation.returnToHome(this@RuntimeTestActivity)
                 return true
             }
         }
@@ -163,6 +163,11 @@ class RuntimeTestActivity : Activity() {
     override fun onPause() {
         if (::webView.isInitialized) webView.onPause()
         super.onPause()
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() {
+        WarpNavigation.returnToHome(this)
     }
 
     override fun onDestroy() {
