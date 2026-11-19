@@ -33,5 +33,8 @@ jobs:
         run: python -m unittest discover -s tools/tests -v
       - name: Check game JavaScript syntax
         run: node --check games/com.warp.riftsurvivors/scripts/game.js
+      - name: Read game version
+        id: game
+        run: echo "version=$(python -c 'import json; print(json.load(open("games/com.warp.riftsurvivors/manifest.json"))["version"])')" >> "$GITHUB_OUTPUT"
       - name: Validate and package game
-        run: python tools/publish_game.py package --game-dir games/com.warp.riftsurvivors --output /tmp/com.warp.riftsurvivors-1.0.0.zip --game-id com.warp.riftsurvivors --version 1.0.0
+        run: python tools/publish_game.py package --game-dir games/com.warp.riftsurvivors --output "/tmp/com.warp.riftsurvivors-\${{ steps.game.outputs.version }}.zip" --game-id com.warp.riftsurvivors --version "\${{ steps.game.outputs.version }}"
