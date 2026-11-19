@@ -200,7 +200,7 @@ class MainActivity : Activity() {
         hero.addView(status)
         pageContent.addView(hero)
 
-        pageContent.addView(sectionTitle("Быстрый доступ"))
+        sectionTitle("Быстрый доступ")
         pageContent.addView(actionCard(
             "Каталог игр",
             "Найти и установить новую игру",
@@ -212,7 +212,7 @@ class MainActivity : Activity() {
             "02"
         ) { navigateTo("library") })
 
-        pageContent.addView(sectionTitle("Что дальше"))
+        sectionTitle("Что дальше")
         val info = panel()
         info.setPadding(dp(16), dp(16), dp(16), dp(16))
         info.addView(label("Платформа развивается", 16f, textMain, true))
@@ -261,7 +261,7 @@ class MainActivity : Activity() {
         })
         pageContent.addView(appCard)
 
-        pageContent.addView(sectionTitle("Принципы платформы"))
+        sectionTitle("Принципы платформы")
         pageContent.addView(detailRow("Офлайн-режим", "Игры должны запускаться без интернета после установки."))
         pageContent.addView(detailRow("Сохранения", "Сохранения хранятся отдельно от файлов игры."))
         pageContent.addView(detailRow("Совместимость", "Приоритет — телефоны Android, включая устройства начального уровня."))
