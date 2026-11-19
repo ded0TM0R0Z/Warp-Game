@@ -11,8 +11,8 @@
             "game_type": "2d",
             "orientation": "landscape",
             "package_url": "https://github.com/ded0TM0R0Z/Warp-Game/releases/download/warp-game-com.warp.riftsurvivors-v1.1.0/com.warp.riftsurvivors-1.1.0.zip",
-            "package_sha256": "6e954846f06af2d216a89c3ec7209f4c02c10f433d34d3dc3918f703f918b211",
-            "package_size_bytes": 333885,
+            "package_sha256": "b05a23d7d851c376095aa7ed1963683073f48c264f27a7efa93094acce3d66d0",
+            "package_size_bytes": 334675,
             "minimum_platform_version": "0.2.0",
             "offline_supported": true
         }
