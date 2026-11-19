@@ -16,6 +16,9 @@ object GameEngineRegistry {
             HTML5, CUSTOM -> Unit
 
             PHASER -> {
+                if (manifest.gameType != "2d") {
+                    throw GamePackageException("Phaser packages must declare game_type 2d")
+                }
                 if (manifest.engineVersion != PHASER_VERSION) {
                     throw GamePackageException(
                         "Unsupported Phaser version. Required: $PHASER_VERSION"
@@ -25,6 +28,9 @@ object GameEngineRegistry {
             }
 
             BABYLON -> {
+                if (manifest.gameType != "3d") {
+                    throw GamePackageException("Babylon.js packages must declare game_type 3d")
+                }
                 if (manifest.engineVersion != BABYLON_VERSION) {
                     throw GamePackageException(
                         "Unsupported Babylon.js version. Required: $BABYLON_VERSION"
