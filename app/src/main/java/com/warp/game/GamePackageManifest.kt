@@ -17,7 +17,7 @@ data class GamePackageManifest(
 )
 
 object GamePackageManifestParser {
-    const val PLATFORM_VERSION = "0.1.0"
+    const val PLATFORM_VERSION = "0.2.0"
 
     private val gameIdPattern = Regex("[A-Za-z0-9][A-Za-z0-9._-]{2,127}")
     private val platformVersionPattern = Regex("\\d+\\.\\d+\\.\\d+")
