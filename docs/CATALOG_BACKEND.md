@@ -55,7 +55,11 @@ The initial package URL must use HTTPS and a trusted GitHub host. Redirects are 
 - Installed games do not depend on the catalog to launch.
 - Package checksums and manifest metadata are verified before installation.
 
-## 5. Current limitations
+## 5. Built-in demos
+
+When the remote catalog is empty or unavailable, the app still shows three locally bundled demo packages in the Catalog screen: the Phaser 2D demo, native WebGL 3D test and HTML5 runtime test. These are installed through the same local package installer but are not entries in the remote JSON catalog and do not require a network connection.
+
+## 6. Current limitations
 
 - The initial catalog is public and read-only.
 - Catalog search is local and matches game name, description, engine, game type and game ID.
