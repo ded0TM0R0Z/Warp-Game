@@ -11,6 +11,7 @@ import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import java.io.IOException
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -380,7 +381,8 @@ class MainActivity : Activity() {
 
         val query = catalogSearchQuery.trim()
         val filteredGames = catalogEntries.filter { game ->
-            query.isEmpty() ||
+            game.gameId == downloadingGameId ||
+                query.isEmpty() ||
                 game.name.contains(query, ignoreCase = true) ||
                 game.description.contains(query, ignoreCase = true) ||
                 game.engine.contains(query, ignoreCase = true) ||
@@ -595,6 +597,8 @@ class MainActivity : Activity() {
                     }
                 }
 
+                val completedGame = installedGame
+                    ?: throw IllegalStateException("Download finished without an installed game")
                 runOnUiThread {
                     activeDownloadToken = null
                     downloadingGameId = null
@@ -607,7 +611,7 @@ class MainActivity : Activity() {
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     android.widget.Toast.makeText(
                         this,
-                        "Игра установлена: " + installedGame.name,
+                        "Игра установлена: " + completedGame.name,
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
                     navigateTo("library")
@@ -643,7 +647,7 @@ class MainActivity : Activity() {
     }
 
     private fun cancelGameDownload() {
-        if (downloadIsInstalling || downloadCancelRequested) return
+        if (downloadIsInstalling || activeDownloadToken?.isInstalling == true || downloadCancelRequested) return
         downloadCancelRequested = true
         activeDownloadCancelView?.text = "Отмена…"
         activeDownloadCancelView?.isClickable = false
@@ -1069,6 +1073,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        activeDownloadToken?.cancel()
         backgroundExecutor.shutdownNow()
         if (::warpDatabase.isInitialized) {
             warpDatabase.close()
@@ -1078,6 +1083,8 @@ class MainActivity : Activity() {
 
     internal companion object {
         const val EXTRA_RETURN_HOME = "com.warp.game.extra.RETURN_HOME"
+        const val MAX_DOWNLOAD_ATTEMPTS = 3
+        const val RETRY_DELAY_MS = 750L
     }
 
     private fun dp(value: Int): Int =
