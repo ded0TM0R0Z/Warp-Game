@@ -853,7 +853,7 @@
                 const count = Math.min(3, 1 + Math.floor((this.wave - 1) / 7));
                 for (let i = 0; i < count; i++) this.spawnEnemy();
             }
-            if(this.elapsedMs>=240000 && Math.floor(this.elapsedMs/240000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/180000);this.spawnBoss(this.lastBossMinute);}
+            if(this.elapsedMs>=240000 && Math.floor(this.elapsedMs/240000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/240000);this.spawnBoss(this.lastBossMinute);}
             if(this.stats.earthUnlocked && this.earthClock>=this.stats.earthDelay){this.earthClock=0;this.castEarthWave();}
             if(this.lightningUnlocked){this.lightningClock+=dt;if(this.lightningClock>=this.lightningDelay){this.lightningClock=0;this.castChainLightning();}}
             this.updateWindOrbs(dt);
