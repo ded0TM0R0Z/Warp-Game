@@ -6,8 +6,8 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Stage:** Catalog, package manager, Game SDK and initial 2D/3D engine registry implemented  
-**Current priority:** Verify the engine registry build, then validate Phaser/Babylon rendering, touch and SDK behavior on the target phone.
+**Current stage:** First playable Phaser 2D demo added; Android build and physical-device validation in progress.  
+**Implemented:** Catalog foundation, package installer, isolated offline WebView runtime, Game SDK, engine registry and main-menu Back navigation.
 
 ## Documentation
 
@@ -21,19 +21,20 @@ The platform is designed to support both 2D and 3D games, with development and t
 - [Catalog backend](docs/CATALOG_BACKEND.md)
 - [Game SDK](docs/GAME_SDK_SPEC.md)
 - [Engine support](docs/ENGINE_SUPPORT.md)
+- [Phaser demo and acceptance checks](docs/PHASER_DEMO.md)
 
 ## Build
 
-Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a verified permanent signing key. The latest APK is available from [Android Build #45](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44571054178). See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details and installation instructions.
+Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #45](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44571054178). New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
 
 ## Core principles
 
 1. Android is the target platform.
-2. Both 2D and 3D games are supported by the platform architecture.
+2. Both 2D and 3D games are required platform capabilities.
 3. Installed games must launch offline.
 4. Game files and save data are stored separately.
 5. Modules communicate through documented, versioned interfaces.
 6. Shared architecture changes require approval in the MAIN CONTROL chat.
-7. Every task must include changed files and test results.
+7. A successful cloud build is not proof of device compatibility.
 
 See the documentation above before making changes.
