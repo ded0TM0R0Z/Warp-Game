@@ -752,7 +752,7 @@
             }
             if(enemy.kind==="brute"&&enemy.skillClock<=0&&Phaser.Math.Distance.Between(enemy.x,enemy.y,this.player.x,this.player.y)<115){
                 enemy.skillClock=6200;const x=enemy.x,y=enemy.y;const ring=this.add.circle(x,y,20,0xd58b4b,0.12).setStrokeStyle(3,0xffb56c).setDepth(19);
-                this.tweens.add({targets:ring,radius:92,alpha:0,duration:600,onComplete:()=>{if(this.mode==="playing"&&Phaser.Math.Distance.Between(this.player.x,this.player.y,x,y)<92&&this.invulnerable<=0){this.stats.hp-=Math.max(8,Math.round(enemy.damage*.75));this.invulnerable=500;this.cameras.main.shake(110,.003);if(this.stats.hp<=0)this.endRun();this.refreshHud();}ring.destroy();}});
+                this.tweens.add({targets:ring,radius:92,alpha:0,duration:600,onComplete:()=>{if(enemy.active&&this.mode==="playing"&&Phaser.Math.Distance.Between(this.player.x,this.player.y,x,y)<92&&this.invulnerable<=0){this.stats.hp-=Math.max(8,Math.round(enemy.damage*.75));this.invulnerable=500;this.cameras.main.shake(110,.003);if(this.stats.hp<=0)this.endRun();this.refreshHud();}ring.destroy();}});
             }
         }
 
@@ -979,15 +979,15 @@
                 this.windOrb=this.add.container(this.player.x,this.player.y).setDepth(23);
                 this.windOrb.items=[];
                 for(let i=0;i<count;i++){
-                    const orb=this.add.image(0,0,"windorb").setScale(1.15);
+                    const orb=this.add.image(0,0,"windorb").setScale(1.45);
                     this.windOrb.add(orb);this.windOrb.items.push(orb);
-                    this.tweens.add({targets:orb,scale:1.38,duration:420,yoyo:true,repeat:-1,ease:"Sine.InOut"});
+                    this.tweens.add({targets:orb,scale:1.72,duration:420,yoyo:true,repeat:-1,ease:"Sine.InOut"});
                 }
             }
             while(this.windOrb.items.length<count){
-                const orb=this.add.image(0,0,"windorb").setScale(1.15);
+                const orb=this.add.image(0,0,"windorb").setScale(1.45);
                 this.windOrb.add(orb);this.windOrb.items.push(orb);
-                this.tweens.add({targets:orb,scale:1.38,duration:420,yoyo:true,repeat:-1,ease:"Sine.InOut"});
+                this.tweens.add({targets:orb,scale:1.72,duration:420,yoyo:true,repeat:-1,ease:"Sine.InOut"});
             }
             while(this.windOrb.items.length>count)this.windOrb.items.pop().destroy();
             this.windOrb.setPosition(this.player.x,this.player.y);
