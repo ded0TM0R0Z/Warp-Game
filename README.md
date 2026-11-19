@@ -6,8 +6,8 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Stage:** Foundation and technical validation  
-**Current priority:** Establish a reliable phone-based development workflow and verify the Android runtime architecture before implementing application modules.
+**Stage:** Foundation and build validation  
+**Current priority:** Confirm the cloud build and install the first APK on the target phone.
 
 ## Documentation
 
@@ -15,8 +15,13 @@ The platform is designed to support both 2D and 3D games, with development and t
 - [Project rules](docs/PROJECT_RULES.md)
 - [Task template for development chats](docs/CHAT_TASK_TEMPLATE.md)
 - [Phone development workflow](docs/PHONE_WORKFLOW.md)
+- [Build environment](docs/BUILD_ENVIRONMENT.md)
 - [Development plan](docs/DEVELOPMENT_PLAN.md)
 - [Game package specification](docs/GAME_PACKAGE_SPEC.md)
+
+## Build
+
+Android debug builds are configured through GitHub Actions. See [Build environment](docs/BUILD_ENVIRONMENT.md) for pinned versions and APK download instructions.
 
 ## Core principles
 
