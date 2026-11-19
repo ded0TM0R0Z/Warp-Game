@@ -1,6 +1,13 @@
 name: Publish Game Package
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "games/com.warp.riftsurvivors/**"
+      - "tools/publish_game.py"
+      - ".github/workflows/publish_game.yml"
   workflow_dispatch:
     inputs:
       game_id:
@@ -40,10 +47,11 @@ jobs:
       - name: Validate inputs and package game
         id: package
         env:
-          GAME_ID: ${{ inputs.game_id }}
+          GAME_ID: ${{ inputs.game_id || 'com.warp.riftsurvivors' }}
           GAME_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
+          GAME_VERSION="${GAME_VERSION:-$(python -c 'import json; print(json.load(open("games/com.warp.riftsurvivors/manifest.json", encoding="utf-8"))["version"])')}"
           if [[ ! "$GAME_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{2,127}$ ]]; then
             echo "::error::Invalid game_id."
             exit 1
@@ -60,12 +68,13 @@ jobs:
             --version "$GAME_VERSION" \
             --github-output "$GITHUB_OUTPUT"
           echo "package_path=$PACKAGE_PATH" >> "$GITHUB_OUTPUT"
+          echo "version=$GAME_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Publish release asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GAME_ID: ${{ inputs.game_id }}
-          GAME_VERSION: ${{ inputs.version }}
+          GAME_ID: ${{ inputs.game_id || 'com.warp.riftsurvivors' }}
+          GAME_VERSION: ${{ steps.package.outputs.version }}
           PACKAGE_PATH: ${{ steps.package.outputs.package_path }}
         run: |
           set -euo pipefail
@@ -82,8 +91,8 @@ jobs:
 
       - name: Update remote catalog
         env:
-          GAME_ID: ${{ inputs.game_id }}
-          GAME_VERSION: ${{ inputs.version }}
+          GAME_ID: ${{ inputs.game_id || 'com.warp.riftsurvivors' }}
+          GAME_VERSION: ${{ steps.package.outputs.version }}
           PACKAGE_PATH: ${{ steps.package.outputs.package_path }}
         run: |
           set -euo pipefail

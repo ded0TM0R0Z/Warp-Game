@@ -571,7 +571,7 @@ class MainActivity : Activity() {
         } else {
             null
         }
-        val isCurrentVersionInstalled = installedGame?.version == game.version
+        val isCurrentVersionInstalled = installedGame != null && installedGame.version == game.version && installedGame.packageSha256.equals(game.packageSha256, ignoreCase = true)
         val sizeMb = String.format(
             java.util.Locale.US,
             "%.1f MB",
@@ -651,7 +651,7 @@ class MainActivity : Activity() {
         } else {
             null
         }
-        val isCurrentVersionInstalled = installedGame?.version == game.version
+        val isCurrentVersionInstalled = installedGame != null && installedGame.version == game.version && installedGame.packageSha256.equals(game.packageSha256, ignoreCase = true)
         val isDownloading = downloadingGameId == game.gameId
         val queuedEntry = if (::downloadQueueStore.isInitialized) {
             downloadQueueStore.getEntries().firstOrNull { it.game.gameId == game.gameId }
