@@ -97,8 +97,17 @@ class WarpGameSdkBridge(
         if (settingsJson.toByteArray(Charsets.UTF_8).size > MAX_SETTINGS_BYTES) return false
         return try {
             JSONObject(settingsJson)
-            val file = resolveSaveFile(ensureSaveRoot(), SETTINGS_FILE_NAME)
-            writeAtomically(file, settingsJson.toByteArray(Charsets.UTF_8))
+            val root = ensureSaveRoot()
+            val file = resolveSaveFile(root, SETTINGS_FILE_NAME)
+            val bytes = settingsJson.toByteArray(Charsets.UTF_8)
+            val currentTotal = root.listFiles()
+                ?.filter { it.isFile && !it.name.endsWith(".tmp") && !it.name.endsWith(".bak") }
+                ?.sumOf { it.length() } ?: 0L
+            val previousSize = if (file.isFile) file.length() else 0L
+            if (currentTotal - previousSize + bytes.size > MAX_SAVE_TOTAL_BYTES) {
+                return false
+            }
+            writeAtomically(file, bytes)
         } catch (error: JSONException) {
             false
         } catch (error: Exception) {
@@ -171,6 +180,9 @@ class WarpGameSdkBridge(
         val temporary = File(target.parentFile, target.name + ".tmp")
         val backup = File(target.parentFile, target.name + ".bak")
         try {
+            if (backup.exists()) {
+                if (!target.exists()) backup.renameTo(target) else backup.delete()
+            }
             FileOutputStreamCompat.write(temporary, bytes)
             if (target.exists() && !target.renameTo(backup)) return false
             if (!temporary.renameTo(target)) {
