@@ -67,6 +67,7 @@ class GameDownloadManager(context: Context) {
                             expectedSizeBytes = game.packageSizeBytes,
                             expectedMetadata = ExpectedGameMetadata(
                                 gameId = game.gameId,
+                                name = game.name,
                                 version = game.version,
                                 engine = game.engine,
                                 engineVersion = game.engineVersion,
