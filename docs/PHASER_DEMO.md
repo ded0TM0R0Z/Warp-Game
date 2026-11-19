@@ -15,7 +15,7 @@ A small offline 2D game used to verify that Warp Game can install and run a real
 - Entry point: `index.html`
 - Runtime: `libraries/phaser.min.js`
 
-All runtime files are stored in `app/src/main/assets/phaser_demo/`. The app action **Установить 2D-игру Phaser** creates a ZIP, calculates its SHA-256 and passes it through the regular package installer. The installer checks the manifest, engine version, local Phaser library and entry point.
+The original prototype files are archived under `dev-tools/legacy-demos/phaser_demo/`. They are excluded from the Android APK. This prototype is retained as a reference for the first remotely published Phaser game.
 
 ## Gameplay and SDK coverage
 
@@ -36,16 +36,17 @@ Phaser 3.90.0 is distributed under the MIT license. The exact minified upstream 
 
 ## Physical-device acceptance checklist
 
-The following checks have not been marked complete until run on a real Android phone:
+The prototype was used for earlier runtime development. Its old in-app installation checklist is historical; production validation must be performed against a remotely published game.
 
-1. Install the APK and open Settings.
-2. Tap **Установить 2D-игру Phaser**.
-3. Open the installed game from Library.
-4. Confirm the game renders without a blank screen or console/runtime error.
-5. Move the player with touch and collect at least five crystals.
-6. Exit to the platform menu and relaunch the game.
-7. Confirm the saved best score remains.
-8. Disable network access and repeat launch/gameplay.
-9. Observe touch latency, frame pacing, memory use and device temperature.
+1. Publish the game package through the `Publish Game Package` workflow.
+2. Refresh the remote Catalog in WARP GAME.
+3. Install the game from its remote catalog card.
+4. Open the installed game from Library.
+5. Confirm the game renders without a blank screen or console/runtime error.
+6. Move the player with touch and collect at least five crystals.
+7. Exit to the platform menu and relaunch the game.
+8. Confirm the saved best score remains.
+9. Disable network access and repeat launch/gameplay.
+10. Observe touch latency, frame pacing, memory use and device temperature.
 
 A successful GitHub Actions build confirms Kotlin/Android compilation only. It does not complete this device checklist.
