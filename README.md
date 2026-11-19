@@ -20,6 +20,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 - [Game package specification](docs/GAME_PACKAGE_SPEC.md)
 - [Catalog backend](docs/CATALOG_BACKEND.md)
 - [Game SDK](docs/GAME_SDK_SPEC.md)
+- [Engine support](docs/ENGINE_SUPPORT.md)
 
 ## Build
 
