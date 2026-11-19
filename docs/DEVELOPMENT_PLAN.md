@@ -81,8 +81,8 @@
 - [x] Pin Phaser 3.90.0 and register the engine in the installer.
 - [x] Include the official Phaser minified runtime locally; no CDN is required.
 - [x] Create the small playable "Кристальный рейд" demo.
-- [x] Package the manifest, game code, styles, engine and MIT license into an offline ZIP.
-- [x] Add an in-app action to install the Phaser demo.
+- [x] Package the manifest, game code, styles, engine and MIT license into an offline ZIP for runtime proof of concept.
+- [x] Move prototype game assets out of the Android APK; production games are delivered as remote packages.
 - [ ] Verify Phaser rendering, touch movement, save/load and offline launch on the target phone.
 - [ ] Measure performance on the target phone and weaker devices.
 
