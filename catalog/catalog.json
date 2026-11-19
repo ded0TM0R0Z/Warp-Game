@@ -4,15 +4,15 @@
         {
             "game_id": "com.warp.riftsurvivors",
             "name": "Rift Survivors",
-            "description": "Выживи на арене разлома: отражай волны монстров, собирай энергию и выбирай улучшения, чтобы продержаться как можно дольше.",
-            "version": "1.0.0",
+            "description": "Средневековая пиксельная арена: сражайся с монстрами, собирай эссенцию и усиливай оружие.",
+            "version": "1.1.0",
             "engine": "phaser",
             "engine_version": "3.90.0",
             "game_type": "2d",
             "orientation": "landscape",
-            "package_url": "https://github.com/ded0TM0R0Z/Warp-Game/releases/download/warp-game-com.warp.riftsurvivors-v1.0.0/com.warp.riftsurvivors-1.0.0.zip",
-            "package_sha256": "e79b0917cf7f1af3468b009fc8721e565d8a75e6259097950f384ca7444b584d",
-            "package_size_bytes": 326171,
+            "package_url": "https://github.com/ded0TM0R0Z/Warp-Game/releases/download/warp-game-com.warp.riftsurvivors-v1.1.0/com.warp.riftsurvivors-1.1.0.zip",
+            "package_sha256": "3bd231f7bb1f116b8bc15087b98774bbc72dff2e45c95a99f5ab2fe0aadc506e",
+            "package_size_bytes": 328016,
             "minimum_platform_version": "0.2.0",
             "offline_supported": true
         }
