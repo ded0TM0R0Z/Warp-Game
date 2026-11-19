@@ -1,6 +1,6 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.6  
+**Version:** 1.1.7  
 **Current stage:** 0 — Foundation and device validation
 
 ## Stage 0 — Foundation and validation
