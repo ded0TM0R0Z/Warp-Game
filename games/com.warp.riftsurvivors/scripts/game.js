@@ -446,7 +446,7 @@
             this.fireClock = 250; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
-            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:260,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
+            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:520,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
             this.activeBiome=-1;this.biomeXpMultiplier=1;this.biomeCritBonus=0;
             this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;this.runePower=1;
@@ -475,7 +475,7 @@
                 this.joy.active = true;
                 this.joy.pointerId = pointer.id;
                 this.joy.baseX = Phaser.Math.Clamp(pointer.x, 76, 250);
-                this.joy.baseY = Phaser.Math.Clamp(pointer.y, 95, H - 85);
+                this.joy.baseY = Phaser.Math.Clamp(pointer.y, 95, H - 155);
                 this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
                 this.updateJoystick(pointer);
             }
@@ -884,7 +884,7 @@
                 if (!orb || !orb.active || !orb.body) return;
                 orb.magnetDelay=Math.max(0,(orb.magnetDelay||0)-dt);
                 const d=Phaser.Math.Distance.Between(orb.x,orb.y,this.player.x,this.player.y);
-                if(orb.magnetDelay<=0 && d<520){
+                if(orb.magnetDelay<=0 && d<this.stats.magnet){
                     const angle=Phaser.Math.Angle.Between(orb.x,orb.y,this.player.x,this.player.y);
                     const speed=Phaser.Math.Clamp(980-d*0.35,560,980);
                     orb.body.setVelocity(Math.cos(angle)*speed,Math.sin(angle)*speed);
