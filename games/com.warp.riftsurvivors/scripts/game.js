@@ -39,7 +39,6 @@
             this.waveClock = 0;
             this.spawnClock = 0;
             this.fireClock = 0;
-            this.dashCooldown = 0;
             this.invulnerable = 0;
             this.level = 1;
             this.xp = 0;
@@ -87,11 +86,12 @@
                 g.generateTexture(key, width, height);
                 g.destroy();
             };
-            make("ground", 32, 32, g => {
-                g.fillStyle(0x426b3e); g.fillRect(0, 0, 32, 32);
-                g.fillStyle(0x4e7946); g.fillRect(2, 3, 5, 3); g.fillRect(18, 8, 4, 3);
-                g.fillStyle(0x365d38); g.fillRect(10, 17, 5, 2); g.fillRect(25, 25, 4, 3);
-                g.fillStyle(0x6b8a4b); g.fillRect(24, 2, 2, 2); g.fillRect(5, 25, 2, 2);
+            make("ground", 48, 48, g => {
+                g.fillStyle(0x426b3e); g.fillRect(0, 0, 48, 48);
+                g.fillStyle(0x4e7946); g.fillRect(2, 3, 5, 3); g.fillRect(18, 8, 4, 3); g.fillRect(34, 29, 5, 3);
+                g.fillStyle(0x365d38); g.fillRect(10, 17, 5, 2); g.fillRect(25, 25, 4, 3); g.fillRect(4,38,7,3);
+                g.fillStyle(0x6b8a4b); g.fillRect(24, 2, 2, 2); g.fillRect(5, 25, 2, 2); g.fillRect(41,8,3,2);
+                g.fillStyle(0x557b43); g.fillRect(29,39,4,2); g.fillRect(13,31,3,2);
             });
             make("hero", 24, 28, g => {
                 g.fillStyle(0x302b28); g.fillRect(6, 2, 12, 5);
