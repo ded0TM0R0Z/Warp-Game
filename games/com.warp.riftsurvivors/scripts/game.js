@@ -159,10 +159,30 @@
                 g.fillStyle(0xf3c45d); g.fillRect(4, 1, 5, 6);
                 g.fillStyle(0xffed9b); g.fillRect(5, 2, 2, 3);
             });
+            make("dirt", 48, 48, g => {
+                g.fillStyle(0x66513a); g.fillRect(0,0,48,48);
+                g.fillStyle(0x806447); g.fillRect(4,7,12,4); g.fillRect(25,5,8,3); g.fillRect(18,27,15,5);
+                g.fillStyle(0x4e402f); g.fillRect(9,20,7,4); g.fillRect(36,34,8,5); g.fillRect(2,39,10,3);
+                g.fillStyle(0x9a7950); g.fillRect(20,12,4,3); g.fillRect(39,16,3,3);
+            });
+            make("rubble", 28, 22, g => {
+                g.fillStyle(0x514f49); g.fillRect(2,10,9,8); g.fillRect(12,5,10,12); g.fillRect(21,12,6,7);
+                g.fillStyle(0x898477); g.fillRect(4,8,5,3); g.fillRect(14,3,6,4); g.fillRect(22,10,4,3);
+                g.fillStyle(0x353632); g.fillRect(7,17,17,3);
+            });
+            make("pillar", 22, 40, g => {
+                g.fillStyle(0x777267); g.fillRect(4,8,14,29); g.fillRect(1,5,20,5);
+                g.fillStyle(0xa29b88); g.fillRect(6,10,4,24); g.fillRect(3,35,16,4);
+                g.fillStyle(0x45443f); g.fillRect(12,14,4,17);
+            });
+            make("grassTuft", 20, 16, g => {
+                g.fillStyle(0x294b30); g.fillTriangle(2,15,7,2,9,15); g.fillTriangle(8,15,13,0,15,15);
+                g.fillStyle(0x8aa65a); g.fillTriangle(5,15,8,6,10,15); g.fillTriangle(12,15,15,5,17,15);
+            });
         }
 
         createWorld() {
-            this.ground = this.add.tileSprite(W / 2, H / 2, 2200, 1400, "ground").setDepth(-20);
+            this.ground = this.add.tileSprite(W / 2, H / 2, 2400, 1600, "ground").setDepth(-20);
             const deco = this.add.graphics().setDepth(-10);
             for (let i = 0; i < 210; i++) {
                 const x = Phaser.Math.Between(8, W - 8), y = Phaser.Math.Between(8, H - 8);
@@ -176,12 +196,28 @@
                 [24, 425, "tree"], [150, 490, "tree"], [795, 490, "tree"],
                 [920, 420, "tree"], [310, 25, "tree"], [650, 20, "tree"]
             ];
-            placements.forEach(p => this.add.image(p[0], p[1], p[2]).setDepth(2 + p[1] / 100));
+            placements.forEach(p => this.addObstacle(p[0], p[1], p[2], 1));
             this.add.image(72, 220, "torch").setDepth(5);
             this.add.image(888, 260, "torch").setDepth(5);
+            this.add.image(245, 405, "rubble").setDepth(4).setAlpha(0.9);
+            this.add.image(710, 130, "rubble").setDepth(4).setAngle(18);
+            this.add.image(610, 455, "pillar").setDepth(4).setAngle(-8);
+            this.add.image(345, 115, "grassTuft").setDepth(3).setAlpha(0.9);
             const vignette = this.add.graphics().setDepth(10);
             vignette.fillStyle(0x182017, 0.08);
             vignette.fillRect(0, 0, W, 8); vignette.fillRect(0, H - 8, W, 8);
+        }
+
+        addObstacle(x, y, key, scale) {
+            const obj = this.obstacles.create(x, y, key);
+            obj.setScale(scale || 1).setDepth(2 + y / 100000);
+            obj.refreshBody();
+            const width = key === "ruin" ? 32 : 23;
+            const height = key === "ruin" ? 35 : 31;
+            obj.body.setSize(width, height);
+            obj.body.setOffset((obj.width - width) / 2, obj.height - height);
+            obj.refreshBody();
+            return obj;
         }
 
         createPlayer() {
@@ -309,7 +345,10 @@
             this.projectiles = 1;
             this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,earthUnlocked:false,earthDamage:42,earthDelay:8500,windUnlocked:false,windDamage:18,windDelay:650,windRadius:76 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
-            this.worldChunks.clear(); this.cameras.main.stopFollow(); this.cameras.main.startFollow(this.player,true,0.085,0.085);
+            this.worldChunks.forEach(items => items.forEach(obj => obj.destroy()));
+            this.worldChunks.clear();
+            this.player.body.reset(W / 2, H / 2);
+            this.cameras.main.stopFollow(); this.cameras.main.startFollow(this.player,true,0.085,0.085);
             this.player.body.setMaxVelocity(180); this.playerWalkTween.pause(); this.playerSprite.setPosition(0,0).setAngle(0);
             this.joy.active = false; this.joy.pointerId = null; this.joy.dx = 0; this.joy.dy = 0;
             this.joy.baseX = 100; this.joy.baseY = H - 120;
@@ -663,14 +702,28 @@
                 const key=gx+":"+gy;if(this.worldChunks.has(key))continue;
                 const objs=[];let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
                 const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
-                for(let i=0,n=5+Math.floor(rand()*7);i<n;i++){
+                for(let i=0,n=7+Math.floor(rand()*8);i<n;i++){
                     const px=gx*size+25+rand()*(size-50),py=gy*size+25+rand()*(size-50);
-                    if(Phaser.Math.Distance.Between(px,py,x,y)<130)continue;
-                    const obj=this.add.image(px,py,rand()<0.17?"ruin":"tree").setDepth(2+py/100000).setScale(.8+rand()*.45);objs.push(obj);
-                }this.worldChunks.set(key,objs);
+                    if(Phaser.Math.Distance.Between(px,py,x,y)<155)continue;
+                    const roll=rand();
+                    if(roll<0.13){
+                        const obj=this.add.image(px,py,"dirt").setDepth(-5).setScale(0.65+rand()*0.8).setAlpha(0.92).setRotation(rand()*Math.PI);objs.push(obj);
+                    }else if(roll<0.23){
+                        const obj=this.add.image(px,py,"rubble").setDepth(3+py/100000).setScale(0.7+rand()*0.8).setRotation(rand()*0.8);objs.push(obj);
+                    }else if(roll<0.29){
+                        const obj=this.add.image(px,py,"grassTuft").setDepth(3+py/100000).setScale(0.8+rand()*0.7);objs.push(obj);
+                    }else{
+                        const obj=this.addObstacle(px,py,roll<0.39?"ruin":"tree",0.8+rand()*0.45);objs.push(obj);
+                    }
+                }
+                if(rand()<0.48){
+                    const px=gx*size+80+rand()*(size-160),py=gy*size+80+rand()*(size-160);
+                    const obj=this.add.image(px,py,"pillar").setDepth(3+py/100000).setAngle(rand()*0.5-0.25).setScale(0.8+rand()*0.4);objs.push(obj);
+                }
+                this.worldChunks.set(key,objs);
             }
             for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>3||Math.abs(gy-cy)>3){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
-            if(this.ground){this.ground.setPosition(x,y);this.ground.setTilePosition(x*.35,y*.35);}
+            if(this.ground){this.ground.setPosition(x,y);this.ground.setTilePosition(x,y);}
         }
         damageSkillEnemy(enemy,damage,knockbackX,knockbackY) {
             if(!enemy||!enemy.active)return;
