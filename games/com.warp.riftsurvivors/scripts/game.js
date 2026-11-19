@@ -449,7 +449,7 @@
             this.fireClock = 250; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
-            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
+            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:260,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
             this.activeBiome=-1;this.biomeXpMultiplier=1;this.biomeCritBonus=0;
             this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;this.runePower=1;
@@ -468,7 +468,7 @@
             this.hud.skills.setVisible(true);
             this.hud.help.setVisible(true);
             this.refreshHud();
-            this.spawnEnemy("slime"); this.spawnEnemy("slime"); this.spawnEnemy("skeleton");
+            this.spawnEnemy("slime"); this.spawnEnemy("slime");
         }
 
         pointerDown(pointer) {
@@ -505,7 +505,7 @@
         }
 
          spawnEnemy(type) {
-            if (this.mode !== "playing" || this.enemies.countActive(true) >= 65) return;
+            if (this.mode !== "playing" || this.enemies.countActive(true) >= 42) return;
             const side = Phaser.Math.Between(0, 3);
             const view=this.cameras.main.worldView;
             const x=side===0?view.x-35:side===1?view.right+35:Phaser.Math.Between(view.x+25,view.right-25);
@@ -842,12 +842,12 @@
                 this.player.body.setVelocity(this.player.body.velocity.x * 0.82, this.player.body.velocity.y * 0.82);
             }
 
-            if (this.spawnClock > Math.max(390, 1500 - this.wave * 48)) {
+            if (this.spawnClock > Math.max(850, 2100 - this.wave * 22)) {
                 this.spawnClock = 0;
-                const count = Math.min(4, 1 + Math.floor(this.wave / 5));
+                const count = Math.min(3, 1 + Math.floor((this.wave - 1) / 7));
                 for (let i = 0; i < count; i++) this.spawnEnemy();
             }
-            if(this.elapsedMs>=180000 && Math.floor(this.elapsedMs/180000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/180000);this.spawnBoss(this.lastBossMinute);}
+            if(this.elapsedMs>=240000 && Math.floor(this.elapsedMs/240000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/180000);this.spawnBoss(this.lastBossMinute);}
             if(this.stats.earthUnlocked && this.earthClock>=this.stats.earthDelay){this.earthClock=0;this.castEarthWave();}
             if(this.lightningUnlocked){this.lightningClock+=dt;if(this.lightningClock>=this.lightningDelay){this.lightningClock=0;this.castChainLightning();}}
             this.updateWindOrbs(dt);
@@ -855,7 +855,7 @@
                 this.fireClock = 0;
                 this.fire();
             }
-            if (this.waveClock >= 28000) {
+            if (this.waveClock >= 45000) {
                 this.waveClock = 0;
                 this.wave++;
                 this.refreshHud();
@@ -1016,7 +1016,7 @@
             const types=[{name:"МАЛЫЙ СТРАЖ РАЗЛОМА",kind:"bossRift",hp:380,speed:43,damage:21,scale:1.75,tint:0xffffff},
                 {name:"КОСТЯНОЙ ПАЛАЧ",kind:"bossBone",hp:650,speed:68,damage:27,scale:1.9,tint:0xffffff},
                 {name:"ДРЕВНИЙ КОЛОСС",kind:"bossColossus",hp:1050,speed:48,damage:36,scale:1.8,tint:0xffffff}];
-            const b=types[(stage-1)%types.length],factor=1+(stage-1)*.42,v=this.cameras.main.worldView,side=Phaser.Math.Between(0,3);
+            const b=types[(stage-1)%types.length],factor=1+(stage-1)*.25,v=this.cameras.main.worldView,side=Phaser.Math.Between(0,3);
             const x=side===0?v.x-50:side===1?v.right+50:Phaser.Math.Between(v.x+50,v.right-50);
             const y=side===2?v.y-50:side===3?v.bottom+50:Phaser.Math.Between(v.y+80,v.bottom-50);
             const boss=this.add.container(x,y).setDepth(24);boss.sprite=this.add.image(0,0,b.kind).setScale(b.scale).setTint(b.tint);boss.add(boss.sprite);
@@ -1053,7 +1053,7 @@
             this.joy.active=false;this.joy.pointerId=null;this.joy.dx=0;this.joy.dy=0;this.joy.baseX=100;this.joy.baseY=H-120;this.hud.joy.setPosition(this.joy.baseX,this.joy.baseY);this.hud.joyKnob.setPosition(0,0);this.player.body.setVelocity(0,0);
             this.panel("ПАУЗА","ЗАБЕГ ПРИОСТАНОВЛЕН");
             this.addOverlay(this.add.text(W/2,H/2-111,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
-                "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
+                "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/240000)+1)*240000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
             this.addOverlay(this.add.text(W/2,H/2-75,"УСИЛЕНИЯ, ВЫБРАННЫЕ ПРИ ПОВЫШЕНИИ УРОВНЯ",this.style(12,C.gold,true)).setOrigin(.5));
             const recent = this.selectedUpgrades.slice(-6);
             if (!recent.length) {
