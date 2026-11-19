@@ -316,6 +316,10 @@
             this.hud.xpBack = this.add.rectangle(W / 2, 37, 150, 5, 0x51452f);
             this.hud.xp = this.add.rectangle(W / 2 - 73, 37, 1, 3, 0xd7b65f).setOrigin(0, 0.5);
             this.hud.timer=this.add.text(W/2,48,"00:00",this.style(10,C.gold,true)).setOrigin(0.5,0);
+            this.hud.biome=this.add.container(W/2,H-42).setDepth(44).setScrollFactor(0);
+            this.hud.biomePlate=this.add.rectangle(0,0,430,27,0x171d18,0.88).setStrokeStyle(1,0x9c946b,0.75);
+            this.hud.biomeText=this.add.text(0,0,"БИОМ: ЗАРОСШИЕ РУИНЫ",this.style(11,0x9fc87b,true)).setOrigin(0.5);
+            this.hud.biome.add([this.hud.biomePlate,this.hud.biomeText]); this.hud.biome.setVisible(false);
             this.hud.pauseBg=this.add.circle(W-34,30,27,0x493b2a,0.98).setStrokeStyle(2,C.gold,1).setInteractive({useHandCursor:true});
             this.hud.pauseText=this.add.text(W-34,30,"Ⅱ",this.style(19,C.parchment,true)).setOrigin(0.5);
             this.hud.pauseBg.on("pointerdown",()=>this.pauseRun()); this.pauseButton=this.hud.pauseBg;
@@ -338,6 +342,7 @@
             this.hud.skills.setVisible(false);
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
+            if(this.hud.biome)this.hud.biome.setVisible(false);
              this.hud.help.setVisible(false);
             this.layoutJoystick();
         }
@@ -464,7 +469,7 @@
             this.joy.baseX = 100; this.joy.baseY = H - 120;
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             this.hud.joyKnob.setPosition(0, 0);
-            this.hud.top.setVisible(true); this.hud.joy.setVisible(true);
+            this.hud.top.setVisible(true); this.hud.joy.setVisible(true); this.hud.biome.setVisible(true);
             this.hud.skills.setVisible(true);
             this.hud.help.setVisible(true);
             this.refreshHud();
@@ -804,11 +809,12 @@
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
             this.elapsedMs+=dt; this.hud.timer.setText(this.formatTime(this.elapsedMs)); this.waveClock+=dt; this.earthClock+=dt;
-            const biomeSize=520,bgx=Math.floor(this.player.x/biomeSize),bgy=Math.floor(this.player.y/biomeSize),biome=Math.abs((bgx*31+bgy*17)%3);
+            const biome=this.getBiomeAt(this.player.x,this.player.y);
             if(biome!==this.activeBiome){
                 this.activeBiome=biome;this.biomeXpMultiplier=biome===2?1.2:1;this.biomeCritBonus=biome===1?0.07:0;
                 const names=["ЗАРОСШИЕ РУИНЫ","ПЕПЕЛЬНЫЕ ПУСТОШИ","ЗАРАЖЁННЫЙ РАЗЛОМ"],colors=[0x9fc87b,0xe0a46b,0x8ce8df];
                 const bonus=biome===1?" • +7% КРИТ. ШАНС":biome===2?" • +20% ЭССЕНЦИИ":"";
+                this.hud.biomeText.setText("БИОМ: "+names[biome]+bonus).setColor("#"+colors[biome].toString(16).padStart(6,"0"));
                 this.showCombatNotice(names[biome]+bonus,colors[biome]);
             }
             this.updateWorldChunks(this.player.x,this.player.y);
