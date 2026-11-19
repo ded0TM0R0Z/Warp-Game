@@ -1,7 +1,7 @@
 # WARP GAME — BUILD ENVIRONMENT
 
-**Version:** 1.0.1  
-**Status:** First cloud APK build succeeded; physical-device installation remains pending.
+**Version:** 1.0.2  
+**Status:** Stable signing key verified; local HTML5 runtime APK builds successfully. Physical-device runtime validation remains pending.
 
 ## 1. Decision
 
@@ -26,6 +26,7 @@ The repository is public. GitHub documents standard GitHub-hosted runner usage a
 | JDK | 17 | Build runtime |
 | Android compile SDK | 36 | Compile platform |
 | Android build tools | 36.0.0 | APK packaging |
+| AndroidX WebKit | 1.18.0 | Secure local WebView content |
 | Minimum Android SDK | 26 | Initial Android 8.0 minimum |
 
 Compatibility basis:
@@ -72,7 +73,24 @@ Latest successful build:
 
 The first workflow attempt exposed an obsolete Android SDK package request, which was removed. A later build was blocked by a temporary Maven Central HTTP 429 response; rerunning the same build succeeded. The Kotlin compiler configuration was also updated to the typed `compilerOptions` DSL.
 
-## 5. Downloading the APK on Android
+## 5. Latest signed build
+
+- Workflow run: [Android Build #28](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44566819990)
+- Commit: `8106eb83f67d0e062de5a9c3c80050472bc9ddc8`
+- Result: successful.
+- Artifact: `warp-game-debug-apk`
+- Artifact ID: `14552795959`
+- Artifact ZIP SHA-256: `1089279035690ef333d3de62d1186b92070cfe5f3cfd87784a59650369e1b214`
+- APK size: 1,371,699 bytes.
+- APK SHA-256: `d133fce9a24084d522f8bb68352c36904025ffc2a9ff33e57e0932f2ef736f41`
+- Signing certificate SHA-256: `feb23e40910a3faf207cedc2644397c4dc76d4ce347e50b95fdf2f9c74c24a07`
+- Artifact expiry: 2026-11-26.
+
+The workflow validated the permanent PKCS12 keystore. The APK v2 signing certificate was extracted and its SHA-256 fingerprint matched the certificate in the keystore.
+
+If the phone still has an APK signed with the old temporary debug key, uninstall that version once before installing this stable-key build. Later builds signed with the same key can update it normally.
+
+## 6. Downloading the APK on Android
 
 1. Open the repository on GitHub.
 2. Open the **Actions** tab.
@@ -84,7 +102,7 @@ The first workflow attempt exposed an obsolete Android SDK package request, whic
 
 Do not install an artifact from a failed or untrusted workflow run.
 
-## 6. Required validation
+## 7. Required validation
 
 The cloud build is confirmed. The build environment is not fully validated until:
 - [x] GitHub Actions completes successfully.
@@ -93,7 +111,7 @@ The cloud build is confirmed. The build environment is not fully validated until
 - [ ] The app launches without crashing.
 - [ ] Device model and Android version are recorded.
 
-## 7. Limitations
+## 8. Limitations
 
 - A successful cloud build does not prove correct behavior on the physical phone.
 - Device performance, WebView behavior, thermal load and offline behavior require real-device tests.
