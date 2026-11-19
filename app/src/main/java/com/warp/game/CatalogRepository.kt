@@ -24,7 +24,9 @@ class CatalogRepository(context: Context) {
             CatalogSnapshot(games, false)
         } catch (networkOrParseError: Exception) {
             if (!cacheFile.isFile) throw networkOrParseError
-            val cachedGames = parseCatalog(readLimited(FileInputStream(cacheFile)))
+            val cachedGames = FileInputStream(cacheFile).use { input ->
+                parseCatalog(readLimited(input))
+            }
             WarpLogger.warning("Catalog", "Using cached game catalog", networkOrParseError)
             CatalogSnapshot(cachedGames, true)
         }
@@ -126,6 +128,9 @@ class CatalogRepository(context: Context) {
         val minimumPlatformVersion = requiredString(item, "minimum_platform_version")
         if (!PLATFORM_VERSION_PATTERN.matches(minimumPlatformVersion)) {
             throw IllegalStateException("Catalog contains an invalid platform version")
+        }
+        if (!GamePackageManifestParser.isPlatformVersionCompatible(minimumPlatformVersion)) {
+            throw IllegalStateException("Catalog game requires a newer platform version")
         }
 
         return CatalogGame(
