@@ -255,7 +255,7 @@
             this.overlay.forEach(item => item.destroy());
             this.overlay = [];
         }
-        addOverlay(item) { item.setDepth(100); this.overlay.push(item); return item; }
+        addOverlay(item) { item.setDepth(100).setScrollFactor(0); this.overlay.push(item); return item; }
 
         panel(title, subtitle) {
             this.clearOverlay();
