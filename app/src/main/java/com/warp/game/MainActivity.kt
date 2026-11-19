@@ -12,6 +12,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -616,6 +617,18 @@ class MainActivity : Activity() {
         val card = panel().apply {
             setPadding(dp(16), dp(16), dp(16), dp(14))
         }
+        if (game.gameId == "com.warp.riftsurvivors") {
+            val avatar = ImageView(this).apply {
+                setImageResource(R.drawable.rift_survivors_icon)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = rounded(surfaceAlt, 16)
+                clipToOutline = true
+                contentDescription = "Rift Survivors"
+            }
+            val avatarParams = LinearLayout.LayoutParams(dp(92), dp(92))
+            avatarParams.bottomMargin = dp(12)
+            card.addView(avatar, avatarParams)
+        }
         card.addView(label(game.name, 17f, textMain, true))
         val detailsButton = TextView(this).apply {
             text = "Подробнее"
@@ -640,7 +653,7 @@ class MainActivity : Activity() {
             game.packageSizeBytes / (1024f * 1024f)
         )
         card.addView(label(
-            game.gameType.uppercase() + " • " + game.engine + " • " + game.version + " • " + sizeMb,
+            (if (game.gameId == "com.warp.riftsurvivors") game.engine else game.gameType.uppercase()) + " • " + game.version + " • " + sizeMb,
             10f,
             accent,
             true
