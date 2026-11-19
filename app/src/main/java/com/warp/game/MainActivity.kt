@@ -1,6 +1,7 @@
 package com.warp.game
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -11,6 +12,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import java.util.concurrent.Executors
 
 class MainActivity : Activity() {
 
@@ -33,6 +35,9 @@ class MainActivity : Activity() {
     private val pageHistory = mutableListOf<String>()
     private lateinit var platformStorage: PlatformStorage
     private lateinit var warpDatabase: WarpDatabase
+    private lateinit var gameManager: GameManager
+    private val backgroundExecutor = Executors.newSingleThreadExecutor()
+    private var testInstallInProgress = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +62,9 @@ class MainActivity : Activity() {
             warpDatabase = WarpDatabase(this)
             warpDatabase.readableDatabase
             WarpLogger.info("Database", "Local database initialized")
+            if (::platformStorage.isInitialized) {
+                gameManager = GameManager(platformStorage, warpDatabase)
+            }
         } catch (error: Exception) {
             WarpLogger.error("Database", "Local database initialization failed", error)
         }
@@ -272,8 +280,16 @@ class MainActivity : Activity() {
             return
         }
 
+        if (!::gameManager.isInitialized) {
+            pageContent.addView(emptyState(
+                "Менеджер игр недоступен",
+                "Локальные службы не удалось инициализировать."
+            ))
+            return
+        }
+
         val installedGames = try {
-            warpDatabase.getInstalledGames()
+            gameManager.getInstalledGames()
         } catch (error: Exception) {
             WarpLogger.error("Library", "Could not read installed games", error)
             pageContent.addView(emptyState(
@@ -292,10 +308,116 @@ class MainActivity : Activity() {
         }
 
         installedGames.forEach { game ->
-            pageContent.addView(detailRow(
-                game.name,
-                "Версия " + game.version + " • " + game.gameType.uppercase() + " • " + game.engine
-            ))
+            pageContent.addView(gameCard(game))
+        }
+    }
+
+    private fun gameCard(game: InstalledGame): LinearLayout {
+        val card = panel().apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(14), dp(10), dp(14))
+        }
+
+        val info = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                startActivity(
+                    android.content.Intent(this@MainActivity, GameRuntimeActivity::class.java)
+                        .putExtra("com.warp.game.extra.GAME_ID", game.gameId)
+                )
+            }
+        }
+        info.addView(label(game.name, 15f, textMain, true))
+        info.addView(label(
+            "Версия " + game.version + " • " + game.gameType.uppercase() + " • " + game.engine,
+            11f,
+            textMuted,
+            false
+        ).apply { setPadding(0, dp(5), 0, 0) })
+        card.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
+
+        val remove = TextView(this).apply {
+            text = "Удалить"
+            textSize = 11f
+            setTextColor(Color.rgb(255, 139, 139))
+            setPadding(dp(10), dp(10), dp(6), dp(10))
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { confirmGameRemoval(game) }
+        }
+        card.addView(remove)
+        val params = LinearLayout.LayoutParams(-1, -2)
+        params.bottomMargin = dp(9)
+        card.layoutParams = params
+        return card
+    }
+
+    private fun confirmGameRemoval(game: InstalledGame) {
+        AlertDialog.Builder(this)
+            .setTitle("Удалить игру?")
+            .setMessage(
+                "Файлы игры «" + game.name + "» будут удалены. Сохранения останутся на устройстве."
+            )
+            .setNegativeButton("Отмена", null)
+            .setPositiveButton("Удалить") { _, _ ->
+                try {
+                    gameManager.removeGame(game.gameId)
+                    android.widget.Toast.makeText(
+                        this,
+                        "Игра удалена",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    renderPage(true)
+                } catch (error: Exception) {
+                    WarpLogger.error("Library", "Game removal failed", error)
+                    android.widget.Toast.makeText(
+                        this,
+                        "Не удалось удалить игру",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            .show()
+    }
+
+    private fun installBundledTestGame() {
+        if (testInstallInProgress) return
+        testInstallInProgress = true
+        android.widget.Toast.makeText(
+            this,
+            "Проверка и установка пакета…",
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+
+        backgroundExecutor.execute {
+            try {
+                val installedGame = BundledTestGameInstaller(this).install()
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Тестовая игра установлена",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    navigateTo("library")
+                }
+                WarpLogger.info("Installer", "Bundled test game installed: " + installedGame.gameId)
+            } catch (error: Exception) {
+                WarpLogger.error("Installer", "Bundled test game installation failed", error)
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Не удалось установить тестовую игру",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 
@@ -313,6 +435,13 @@ class MainActivity : Activity() {
         pageContent.addView(appCard)
 
         sectionTitle("Разработка")
+        pageContent.addView(actionCard(
+            "Установить тестовую игру",
+            "Проверить ZIP, SHA-256, установку и запуск",
+            "PKG"
+        ) {
+            installBundledTestGame()
+        })
         pageContent.addView(actionCard(
             "Тест игрового движка",
             "Проверить локальный HTML5, касания и WebGL",
@@ -452,6 +581,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        backgroundExecutor.shutdownNow()
         if (::warpDatabase.isInitialized) {
             warpDatabase.close()
         }

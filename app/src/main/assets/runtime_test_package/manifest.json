@@ -1,0 +1,12 @@
+{
+    "game_id": "com.warp.runtime_test",
+    "name": "Warp Runtime Test",
+    "version": "1.0.0",
+    "engine": "html5",
+    "engine_version": "1",
+    "game_type": "2d",
+    "entry_point": "index.html",
+    "orientation": "unspecified",
+    "offline_supported": true,
+    "minimum_platform_version": "0.1.0"
+}
