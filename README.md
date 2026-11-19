@@ -26,7 +26,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Build
 
-Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #47](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44578040115). The Phaser and WebGL demo additions are being validated separately in [PR #7](https://github.com/ded0TM0R0Z/Warp-Game/pull/7). New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
+Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #47](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44578040115). The Phaser and WebGL demo packages are included in the latest main-branch build. New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
 
 ## Core principles
 
