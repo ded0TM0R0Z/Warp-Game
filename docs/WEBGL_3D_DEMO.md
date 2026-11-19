@@ -17,7 +17,7 @@ It is deliberately separate from the Babylon.js engine contract. It does not pro
 - Offline: required
 - Entry point: `index.html`
 
-All files are stored under `app/src/main/assets/webgl3d_demo/`. The app action **Установить 3D WebGL-тест** packages these files and uses the regular SHA-256 and manifest installer.
+The original prototype files are archived under `dev-tools/legacy-demos/webgl3d_demo/`. They are excluded from the Android APK and retained as a reference for future remotely published 3D packages.
 
 ## Test coverage
 
@@ -31,14 +31,15 @@ All files are stored under `app/src/main/assets/webgl3d_demo/`. The app action *
 
 ## Physical-device acceptance checklist
 
-1. Install the APK and open Settings.
-2. Tap **Установить 3D WebGL-тест**.
-3. Launch the installed test from Library.
-4. Confirm a colored 3D cube is visible and rotates.
-5. Drag across the screen and confirm the cube responds.
-6. Exit and relaunch; confirm the touch count is restored.
-7. Disable network access and repeat the test.
-8. Record WebGL renderer, frame pacing, memory use and device temperature.
+1. Package a 3D game following the game package specification.
+2. Publish it through the `Publish Game Package` workflow.
+3. Refresh the remote Catalog and install the package.
+4. Launch the installed game from Library.
+5. Confirm a colored 3D cube is visible and rotates.
+6. Drag across the screen and confirm the cube responds.
+7. Exit and relaunch; confirm the touch count is restored.
+8. Disable network access and repeat the test.
+9. Record WebGL renderer, frame pacing, memory use and device temperature.
 
 ## Limits
 
