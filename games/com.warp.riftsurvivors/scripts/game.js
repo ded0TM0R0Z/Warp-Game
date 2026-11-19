@@ -310,7 +310,7 @@
             const plate = this.add.rectangle(W / 2, 28, 360, 48, 0x29251f, 0.94).setStrokeStyle(2, 0xb79a5e, 0.95);
             this.hud.wave = this.add.text(28, 16, "ВОЛНА 1", this.style(16, C.parchment, true));
             this.hud.level = this.add.text(28, 39, "УР. 1", this.style(11, C.gold, true));
-            this.hud.score = this.add.text(W - 78, 17, "0", this.style(17, C.gold, true)).setOrigin(1, 0);
+            this.hud.score = this.add.text(W - 130, 17, "0", this.style(17, C.gold, true)).setOrigin(1, 0);
             this.hud.hpBack = this.add.rectangle(W / 2, 19, 150, 9, 0x4b302a);
             this.hud.hp = this.add.rectangle(W / 2 - 73, 19, 146, 5, 0x9c3935).setOrigin(0, 0.5);
             this.hud.xpBack = this.add.rectangle(W / 2, 37, 150, 5, 0x51452f);
@@ -1084,8 +1084,8 @@
                     this.addOverlay(this.add.text(x,y,(this.selectedUpgrades.length-recent.length+i+1)+".  "+name,this.style(11,C.parchment,true)).setOrigin(.5));
                 });
             }
-            this.makeButton(W/2,H/2+153,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},250);
-            this.makeButton(W/2,H/2+207,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},250);
+            this.makeButton(W/2,H/2+118,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},250);
+            this.makeButton(W/2,H/2+172,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},250);
         }
 
         addWaveNotice() {
