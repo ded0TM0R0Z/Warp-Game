@@ -31,14 +31,35 @@ class MainActivity : Activity() {
 
     private var currentPage = "home"
     private val pageHistory = mutableListOf<String>()
+    private lateinit var platformStorage: PlatformStorage
+    private lateinit var warpDatabase: WarpDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.statusBarColor = bg
         window.navigationBarColor = bg
         window.decorView.systemUiVisibility = 0
+        initializePlatformServices()
         buildShell()
         renderPage(false)
+    }
+
+    private fun initializePlatformServices() {
+        try {
+            platformStorage = PlatformStorage(this)
+            platformStorage.initialize()
+            WarpLogger.info("Storage", "Platform storage initialized")
+        } catch (error: Exception) {
+            WarpLogger.error("Storage", "Platform storage initialization failed", error)
+        }
+
+        try {
+            warpDatabase = WarpDatabase(this)
+            warpDatabase.readableDatabase
+            WarpLogger.info("Database", "Local database initialized")
+        } catch (error: Exception) {
+            WarpLogger.error("Database", "Local database initialization failed", error)
+        }
     }
 
     private fun buildShell() {
@@ -242,10 +263,40 @@ class MainActivity : Activity() {
 
     private fun renderLibrary() {
         pageHeading("Мои игры", "Все установленные игры будут собраны здесь.")
-        pageContent.addView(emptyState(
-            "Библиотека пока пуста",
-            "После подключения установщика здесь появятся твои игры. Их можно будет запускать, обновлять и удалять отдельно от сохранений."
-        ))
+
+        if (!::warpDatabase.isInitialized) {
+            pageContent.addView(emptyState(
+                "База данных недоступна",
+                "Не удалось открыть локальное хранилище. Подробности записаны в системный журнал."
+            ))
+            return
+        }
+
+        val installedGames = try {
+            warpDatabase.getInstalledGames()
+        } catch (error: Exception) {
+            WarpLogger.error("Library", "Could not read installed games", error)
+            pageContent.addView(emptyState(
+                "Не удалось загрузить библиотеку",
+                "Произошла ошибка чтения локальной базы данных."
+            ))
+            return
+        }
+
+        if (installedGames.isEmpty()) {
+            pageContent.addView(emptyState(
+                "Библиотека пока пуста",
+                "После установки игры она появится здесь. Сохранения хранятся отдельно от файлов игры."
+            ))
+            return
+        }
+
+        installedGames.forEach { game ->
+            pageContent.addView(detailRow(
+                game.name,
+                "Версия " + game.version + " • " + game.gameType.uppercase() + " • " + game.engine
+            ))
+        }
     }
 
     private fun renderSettings() {
@@ -389,6 +440,13 @@ class MainActivity : Activity() {
             GradientDrawable.Orientation.TL_BR,
             intArrayOf(Color.rgb(43, 37, 83), Color.rgb(25, 31, 51), Color.rgb(20, 27, 39))
         ).apply { cornerRadius = dp(20).toFloat() }
+    }
+
+    override fun onDestroy() {
+        if (::warpDatabase.isInitialized) {
+            warpDatabase.close()
+        }
+        super.onDestroy()
     }
 
     private fun dp(value: Int): Int =
