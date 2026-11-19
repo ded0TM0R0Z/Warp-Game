@@ -6,7 +6,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Current stage:** Offline Phaser 2D and native WebGL 3D demos added; Android build and physical-device validation in progress.  
+**Current stage:** Offline Phaser 2D and native WebGL 3D demos, catalog search and cancellable downloads implemented; physical-device validation pending.  
 **Implemented:** Catalog foundation, package installer, isolated offline WebView runtime, Game SDK, engine registry and main-menu Back navigation.
 
 ## Documentation
@@ -23,10 +23,11 @@ The platform is designed to support both 2D and 3D games, with development and t
 - [Engine support](docs/ENGINE_SUPPORT.md)
 - [Phaser demo and acceptance checks](docs/PHASER_DEMO.md)
 - [WebGL 3D demo and acceptance checks](docs/WEBGL_3D_DEMO.md)
+- [Catalog search and download controls](docs/CATALOG_SEARCH_DOWNLOADS.md)
 
 ## Build
 
-Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #47](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44578040115). The Phaser and WebGL demo packages are included in the latest main-branch build. New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
+Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #47](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44578040115). The Phaser and WebGL demo packages are included in the latest main-branch build. Catalog search and download controls are being validated in a follow-up build. New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
 
 ## Core principles
 
