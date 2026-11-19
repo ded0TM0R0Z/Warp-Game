@@ -171,7 +171,7 @@
   function draw(time) {
     resize();
     gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
+    gl.disable(gl.CULL_FACE);
     gl.clearColor(0.035, 0.05, 0.09, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
