@@ -1,7 +1,7 @@
 # WARP GAME — DEVELOPMENT PLAN
 
 **Version:** 1.3.0  
-**Current stage:** 7 — Catalog discovery, downloads and 3D runtime validation
+**Current stage:** 8 — Remote game publishing and first production games
 
 ## Stage 0 — Foundation and validation
 
@@ -107,7 +107,9 @@
 - [x] Add a dedicated downloads screen and persistent download state.
 - [x] Implement a serial download queue with duplicate prevention, cancellation, retry and process-restart recovery.
 - [ ] Implement pause/resume only after transfer state and partial-file integrity are designed.
-- [ ] Publish real game packages and validate catalog search, filters and installs.
+- [x] Prepare remote GitHub Release package hosting and static catalog distribution.
+- [x] Add automated ZIP validation, SHA-256 generation, release upload and catalog publishing workflow.
+- [ ] Publish the first production game and validate remote catalog discovery, download and install.
 
 **Exit condition:** Users can discover, inspect, install and manage multiple published games reliably.
 
