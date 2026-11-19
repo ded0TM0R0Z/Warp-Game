@@ -310,14 +310,14 @@
             const plate = this.add.rectangle(W / 2, 28, 360, 48, 0x29251f, 0.94).setStrokeStyle(2, 0xb79a5e, 0.95);
             this.hud.wave = this.add.text(28, 16, "ВОЛНА 1", this.style(16, C.parchment, true));
             this.hud.level = this.add.text(28, 39, "УР. 1", this.style(11, C.gold, true));
-            this.hud.score = this.add.text(W - 25, 17, "0", this.style(17, C.gold, true)).setOrigin(1, 0);
+            this.hud.score = this.add.text(W - 78, 17, "0", this.style(17, C.gold, true)).setOrigin(1, 0);
             this.hud.hpBack = this.add.rectangle(W / 2, 19, 150, 9, 0x4b302a);
             this.hud.hp = this.add.rectangle(W / 2 - 73, 19, 146, 5, 0x9c3935).setOrigin(0, 0.5);
             this.hud.xpBack = this.add.rectangle(W / 2, 37, 150, 5, 0x51452f);
             this.hud.xp = this.add.rectangle(W / 2 - 73, 37, 1, 3, 0xd7b65f).setOrigin(0, 0.5);
             this.hud.timer=this.add.text(W/2,48,"00:00",this.style(10,C.gold,true)).setOrigin(0.5,0);
-            this.hud.pauseBg=this.add.circle(W-28,28,20,0x493b2a,0.96).setStrokeStyle(2,C.gold,1).setInteractive();
-            this.hud.pauseText=this.add.text(W-28,28,"Ⅱ",this.style(17,C.parchment,true)).setOrigin(0.5);
+            this.hud.pauseBg=this.add.circle(W-34,30,27,0x493b2a,0.98).setStrokeStyle(2,C.gold,1).setInteractive({useHandCursor:true});
+            this.hud.pauseText=this.add.text(W-34,30,"Ⅱ",this.style(19,C.parchment,true)).setOrigin(0.5);
             this.hud.pauseBg.on("pointerdown",()=>this.pauseRun()); this.pauseButton=this.hud.pauseBg;
             this.hud.top.add([plate,this.hud.wave,this.hud.level,this.hud.score,this.hud.hpBack,this.hud.hp,this.hud.xpBack,this.hud.xp,this.hud.timer,this.hud.pauseBg,this.hud.pauseText]);
 
@@ -1050,7 +1050,7 @@
 
         pauseRun(){
             if(this.mode!=="playing")return;this.mode="paused";this.physics.pause();this.playerWalkTween.pause();
-            this.joy.active=false;this.joy.dx=0;this.joy.dy=0;this.hud.joyKnob.setPosition(0,0);
+            this.joy.active=false;this.joy.pointerId=null;this.joy.dx=0;this.joy.dy=0;this.joy.baseX=100;this.joy.baseY=H-120;this.hud.joy.setPosition(this.joy.baseX,this.joy.baseY);this.hud.joyKnob.setPosition(0,0);this.player.body.setVelocity(0,0);
             this.panel("ПАУЗА","ЗАБЕГ ПРИОСТАНОВЛЕН");
             this.addOverlay(this.add.text(W/2,H/2-111,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
                 "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
