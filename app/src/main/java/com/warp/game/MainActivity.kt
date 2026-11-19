@@ -182,11 +182,11 @@ class MainActivity : Activity() {
         navLibrary.setOnClickListener { navigateTo("library") }
         navDownloads.setOnClickListener { navigateTo("downloads") }
         navSettings.setOnClickListener { navigateTo("settings") }
-        bottomNav.addView(navHome, LinearLayout.LayoutParams(0, dp(56), 1f))
-        bottomNav.addView(navCatalog, LinearLayout.LayoutParams(0, dp(56), 1f))
-        bottomNav.addView(navLibrary, LinearLayout.LayoutParams(0, dp(56), 1f))
-        bottomNav.addView(navDownloads, LinearLayout.LayoutParams(0, dp(56), 1f))
-        bottomNav.addView(navSettings, LinearLayout.LayoutParams(0, dp(56), 1f))
+        bottomNav.addView(navHome, LinearLayout.LayoutParams(0, dp(62), 1f))
+        bottomNav.addView(navCatalog, LinearLayout.LayoutParams(0, dp(62), 1f))
+        bottomNav.addView(navLibrary, LinearLayout.LayoutParams(0, dp(62), 1f))
+        bottomNav.addView(navDownloads, LinearLayout.LayoutParams(0, dp(62), 1f))
+        bottomNav.addView(navSettings, LinearLayout.LayoutParams(0, dp(62), 1f))
         root.addView(bottomNav)
 
         setContentView(root)
@@ -369,9 +369,8 @@ class MainActivity : Activity() {
         if (catalogLoading) {
             pageContent.addView(emptyState(
                 "Загрузка каталога",
-                "Получаем список доступных игр. Встроенные демо уже доступны."
+                "Получаем список доступных игр. Игры появятся здесь после публикации пакетов на сервере."
             ))
-            addBuiltInDemoCards(pageContent)
             return
         }
 
@@ -389,7 +388,6 @@ class MainActivity : Activity() {
                 catalogError = null
                 renderPage(true)
             })
-            addBuiltInDemoCards(pageContent)
             return
         }
 
@@ -463,50 +461,6 @@ class MainActivity : Activity() {
         }
         pageContent.addView(catalogResultsContainer)
         renderCatalogResults()
-        addBuiltInDemoCards(pageContent)
-    }
-
-    private fun addBuiltInDemoCards(container: LinearLayout) {
-        val demos = listOf(
-            Triple("2d", "phaser", Triple(
-                "Кристальный рейд · 2D",
-                "Phaser 3.90 · касания · сохранение рекорда · офлайн",
-                "2D"
-            )),
-            Triple("3d", "webgl", Triple(
-                "3D WebGL-тест",
-                "Вращающийся 3D-объект · управление касанием · офлайн",
-                "3D"
-            )),
-            Triple("all", "html5", Triple(
-                "HTML5 Runtime-тест",
-                "Проверка установки, SDK, касаний и локального запуска",
-                "HTML"
-            ))
-        )
-        val query = catalogSearchQuery.trim()
-        val visibleDemos = demos.filter { (type, engine, card) ->
-            (type == "all" || catalogTypeFilter == "all" || catalogTypeFilter == type) &&
-                (catalogEngineFilter == "all" || catalogEngineFilter.equals(engine, ignoreCase = true)) &&
-                (query.isEmpty() || card.first.contains(query, ignoreCase = true) ||
-                    card.second.contains(query, ignoreCase = true) ||
-                    engine.contains(query, ignoreCase = true))
-        }
-        if (visibleDemos.isEmpty()) return
-
-        container.addView(label("ВСТРОЕННЫЕ ДЕМО", 10f, accent, true).apply {
-            letterSpacing = 0.12f
-            setPadding(0, dp(22), 0, dp(10))
-        })
-        visibleDemos.forEach { (_, _, card) ->
-            container.addView(actionCard(card.first, card.second, card.third) {
-                when (card.third) {
-                    "2D" -> installPhaserDemoGame()
-                    "3D" -> installWebGlDemoGame()
-                    else -> installBundledTestGame()
-                }
-            })
-        }
     }
 
     private fun renderCatalogResults() {
@@ -534,12 +488,12 @@ class MainActivity : Activity() {
                 when {
                     query.isNotEmpty() -> "Ничего не найдено"
                     catalogTypeFilter != "all" || catalogEngineFilter != "all" -> "В этой категории пока нет игр"
-                    else -> "Каталог пока пуст"
+                    else -> "Пока нет опубликованных игр"
                 },
                 when {
                     query.isNotEmpty() -> "Измени поисковый запрос и попробуй ещё раз."
                     catalogTypeFilter != "all" || catalogEngineFilter != "all" -> "Выбери другую категорию или движок."
-                    else -> "Новые игры появятся здесь после публикации пакетов."
+                    else -> "Новые игры будут загружаться с сервера после публикации."
                 }
             ))
             return
@@ -1256,126 +1210,6 @@ class MainActivity : Activity() {
             .show()
     }
 
-    private fun installBundledTestGame() {
-        if (testInstallInProgress) return
-        testInstallInProgress = true
-        android.widget.Toast.makeText(
-            this,
-            "Проверка и установка пакета…",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
-
-        backgroundExecutor.execute {
-            try {
-                val installedGame = BundledTestGameInstaller(this).install()
-                runOnUiThread {
-                    testInstallInProgress = false
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    android.widget.Toast.makeText(
-                        this,
-                        "Тестовая игра установлена",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                    navigateTo("library")
-                }
-                WarpLogger.info("Installer", "Bundled test game installed: " + installedGame.gameId)
-            } catch (error: Exception) {
-                WarpLogger.error("Installer", "Bundled test game installation failed", error)
-                runOnUiThread {
-                    testInstallInProgress = false
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    android.widget.Toast.makeText(
-                        this,
-                        "Не удалось установить тестовую игру",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    }
-
-    private fun installPhaserDemoGame() {
-        if (testInstallInProgress) return
-        testInstallInProgress = true
-        android.widget.Toast.makeText(
-            this,
-            "Подготовка Phaser 2D…",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
-
-        backgroundExecutor.execute {
-            try {
-                val installedGame = BundledPhaserDemoInstaller(this).install()
-                runOnUiThread {
-                    testInstallInProgress = false
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    android.widget.Toast.makeText(
-                        this,
-                        "Phaser-игра установлена офлайн",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                    navigateTo("library")
-                }
-                WarpLogger.info(
-                    "Installer",
-                    "Bundled Phaser demo installed: " + installedGame.gameId
-                )
-            } catch (error: Exception) {
-                WarpLogger.error("Installer", "Phaser demo installation failed", error)
-                runOnUiThread {
-                    testInstallInProgress = false
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    android.widget.Toast.makeText(
-                        this,
-                        "Не удалось установить Phaser-игру",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    }
-
-    private fun installWebGlDemoGame() {
-        if (testInstallInProgress) return
-        testInstallInProgress = true
-        android.widget.Toast.makeText(
-            this,
-            "Подготовка 3D WebGL…",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
-
-        backgroundExecutor.execute {
-            try {
-                val installedGame = BundledWebGlDemoInstaller(this).install()
-                runOnUiThread {
-                    testInstallInProgress = false
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    android.widget.Toast.makeText(
-                        this,
-                        "3D WebGL-тест установлен",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                    navigateTo("library")
-                }
-                WarpLogger.info(
-                    "Installer",
-                    "Bundled WebGL 3D demo installed: " + installedGame.gameId
-                )
-            } catch (error: Exception) {
-                WarpLogger.error("Installer", "WebGL demo installation failed", error)
-                runOnUiThread {
-                    testInstallInProgress = false
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    android.widget.Toast.makeText(
-                        this,
-                        "Не удалось установить 3D WebGL-тест",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    }
-
     private fun renderSettings() {
         pageHeading("Настройки", "Состояние платформы и инструменты разработчика.")
         val appCard = panel()
@@ -1388,36 +1222,6 @@ class MainActivity : Activity() {
             setPadding(0, dp(5), 0, 0)
         })
         pageContent.addView(appCard)
-
-        sectionTitle("Инструменты разработчика")
-        pageContent.addView(actionCard(
-            "Установить тестовую игру",
-            "Проверить ZIP, SHA-256, установку и запуск",
-            "PKG"
-        ) {
-            installBundledTestGame()
-        })
-        pageContent.addView(actionCard(
-            "Установить 2D-игру Phaser",
-            "Офлайн-демо с касаниями и сохранением рекорда",
-            "2D"
-        ) {
-            installPhaserDemoGame()
-        })
-        pageContent.addView(actionCard(
-            "Установить 3D WebGL-тест",
-            "Вращающийся 3D-объект, касания и проверка WebGL",
-            "3D"
-        ) {
-            installWebGlDemoGame()
-        })
-        pageContent.addView(actionCard(
-            "Тест игрового движка",
-            "Проверить локальный HTML5, касания и WebGL",
-            "TEST"
-        ) {
-            startActivity(android.content.Intent(this, RuntimeTestActivity::class.java))
-        })
 
         sectionTitle("Возможности платформы")
         pageContent.addView(detailRow("Офлайн-режим", "Игры должны запускаться без интернета после установки."))
@@ -1505,11 +1309,24 @@ class MainActivity : Activity() {
     private fun navItem(title: String): TextView {
         return TextView(this).apply {
             text = title
-            textSize = 10f
+            textSize = 12f
             gravity = Gravity.CENTER
             setTextColor(textMuted)
+            includeFontPadding = false
+            maxLines = 2
+            setPadding(dp(2), dp(5), dp(2), dp(4))
             isClickable = true
             isFocusable = true
+            contentDescription = title.substringAfter('\n', title)
+            val divider = title.indexOf('\n')
+            if (divider > 0) {
+                val styled = android.text.SpannableString(title)
+                styled.setSpan(android.text.style.RelativeSizeSpan(1.65f), 0, divider, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                styled.setSpan(android.text.style.StyleSpan(Typeface.BOLD), divider + 1, title.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                text = styled
+            } else {
+                text = title
+            }
         }
     }
 
