@@ -1,7 +1,7 @@
 # WARP GAME — BUILD ENVIRONMENT
 
-**Version:** 1.0.0  
-**Status:** Initial cloud build configuration committed; first successful build still must be confirmed.
+**Version:** 1.0.1  
+**Status:** First cloud APK build succeeded; physical-device installation remains pending.
 
 ## 1. Decision
 
@@ -40,8 +40,8 @@ These versions are pinned for the initial prototype. Do not upgrade them indepen
 Workflow: `.github/workflows/android_build.yml`
 
 Triggers:
-- Push to `main`.
-- Pull request targeting `main`.
+- Push to `main` affecting Android source/build files or the workflow.
+- Pull request targeting `main` affecting Android source/build files or the workflow.
 - Manual workflow dispatch from GitHub Actions.
 
 Build command:
@@ -54,29 +54,40 @@ Artifact:
 - Output: `app/build/outputs/apk/debug/*.apk`
 - Retention: 7 days.
 
-## 4. Downloading the APK on Android
+## 4. First successful build
+
+- Workflow run: [Android Build #8](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44480683282)
+- Commit: `67ee53f6be6e953a85d389a6ff710abc988610a7`
+- Result: successful.
+- Artifact: `warp-game-debug-apk`
+- Artifact size: 867,894 bytes.
+- Artifact SHA-256: `4180415851b1d323073e73be2ad4b3c2bb089712c2a19759b700eb31d5999f1b`
+- Artifact expiry: 2026-11-26.
+
+The first workflow attempt exposed an obsolete Android SDK package request, which was removed. A later build was blocked by a temporary Maven Central HTTP 429 response; rerunning the same build succeeded. The Kotlin compiler configuration was also updated to the typed `compilerOptions` DSL.
+
+## 5. Downloading the APK on Android
 
 1. Open the repository on GitHub.
 2. Open the **Actions** tab.
-3. Select the latest **Android Build** run.
-4. Wait until the run is completed successfully.
-5. In **Artifacts**, download `warp-game-debug-apk`.
-6. Extract the ZIP archive.
-7. Install the APK on the phone.
-8. If Android asks, allow installation from the browser or file manager used to open the APK.
+3. Select the latest successful **Android Build** run.
+4. In **Artifacts**, download `warp-game-debug-apk`.
+5. Extract the ZIP archive.
+6. Install the APK on the phone.
+7. If Android asks, allow installation from the browser or file manager used to open the APK.
 
 Do not install an artifact from a failed or untrusted workflow run.
 
-## 5. Required validation
+## 6. Required validation
 
-The cloud build is not considered validated until:
-- [ ] GitHub Actions completes successfully.
-- [ ] The APK artifact is downloadable.
+The cloud build is confirmed. The build environment is not fully validated until:
+- [x] GitHub Actions completes successfully.
+- [x] The APK artifact is uploaded and downloadable.
 - [ ] The APK installs on the user's Android phone.
 - [ ] The app launches without crashing.
 - [ ] Device model and Android version are recorded.
 
-## 6. Limitations
+## 7. Limitations
 
 - A successful cloud build does not prove correct behavior on the physical phone.
 - Device performance, WebView behavior, thermal load and offline behavior require real-device tests.
