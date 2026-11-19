@@ -45,7 +45,7 @@ class GameRuntimeActivity : Activity() {
                 throw GamePackageException("Файл запуска игры не найден")
             }
 
-            createRuntime(game.gameId, gameDirectory, game.entryPoint)
+            createRuntime(game, gameDirectory, storage)
             runtimeInitialized = true
         } catch (error: Exception) {
             WarpLogger.error("GameRuntime", "Could not start installed game", error)
@@ -53,7 +53,11 @@ class GameRuntimeActivity : Activity() {
         }
     }
 
-    private fun createRuntime(gameId: String, gameDirectory: java.io.File, entryPoint: String) {
+    private fun createRuntime(
+        game: InstalledGame,
+        gameDirectory: java.io.File,
+        storage: PlatformStorage
+    ) {
         webView = WebView(this)
         webView.setBackgroundColor(Color.rgb(10, 12, 19))
         webView.isVerticalScrollBarEnabled = false
@@ -77,7 +81,13 @@ class GameRuntimeActivity : Activity() {
         val assetLoader = WebViewAssetLoader.Builder()
             .setDomain(domain)
             .addPathHandler("/game/", GameDirectoryPathHandler(gameDirectory))
+            .addPathHandler("/sdk/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
+
+        webView.addJavascriptInterface(
+            WarpGameSdkBridge(this, game, storage),
+            "WarpGameNative"
+        )
 
         webView.webViewClient = object : WebViewClientCompat() {
             override fun shouldInterceptRequest(
@@ -132,7 +142,7 @@ class GameRuntimeActivity : Activity() {
             )
         )
 
-        val encodedEntryPoint = entryPoint
+        val encodedEntryPoint = game.entryPoint
             .split("/")
             .joinToString("/") { Uri.encode(it) }
         webView.loadUrl("https://$domain/game/$encodedEntryPoint")
