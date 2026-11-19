@@ -62,7 +62,7 @@ First successful build:
 - Commit: `67ee53f6be6e953a85d389a6ff710abc988610a7`
 - Artifact size: 867,894 bytes.
 
-Latest successful build:
+Previous successful build:
 - Workflow run: [Android Build #13](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44481143736)
 - Commit: `1a62a02697f40c428fae3e04beab56ac95da93ed`
 - Result: successful.
