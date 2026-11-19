@@ -11,12 +11,18 @@ import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
 import android.view.animation.DecelerateInterpolator
-import java.io.IOException
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import java.io.EOFException
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.concurrent.Executors
+import javax.net.ssl.SSLException
 
 class MainActivity : Activity() {
 
@@ -657,7 +663,15 @@ class MainActivity : Activity() {
     private fun isRetryableDownloadError(error: Throwable): Boolean {
         var current: Throwable? = error
         while (current != null) {
-            if (current is IOException && current !is DownloadCancelledException) {
+            if (
+                current is TransientDownloadException ||
+                current is EOFException ||
+                current is ConnectException ||
+                current is SocketException ||
+                current is SocketTimeoutException ||
+                current is UnknownHostException ||
+                current is SSLException
+            ) {
                 return true
             }
             current = current.cause
