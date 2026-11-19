@@ -613,7 +613,7 @@
             this.enemies.children.iterate(enemy => {
                 if (!enemy || !enemy.active) return;
                 const angle=Phaser.Math.Angle.Between(enemy.x,enemy.y,this.player.x,this.player.y);
-                enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
+                if(!enemy.charging)enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
                 if(enemy.sprite)enemy.sprite.setFlipX(this.player.x<enemy.x);
                 if(enemy.isBoss){enemy.attackClock-=dt;if(enemy.attackClock<=0)this.bossAttack(enemy);}
             });
@@ -709,8 +709,8 @@
                 }});
             }else if(stage===2){
                 boss.attackClock=6100;const a=Phaser.Math.Angle.Between(boss.x,boss.y,this.player.x,this.player.y);
-                boss.body.setVelocity(Math.cos(a)*330,Math.sin(a)*330);boss.sprite.setTint(0xffb05a);
-                this.time.delayedCall(780,()=>{if(boss.active){boss.body.setVelocity(0,0);boss.sprite.setTint(0xc8c0a9);}});
+                boss.charging=true;boss.body.setVelocity(Math.cos(a)*330,Math.sin(a)*330);boss.sprite.setTint(0xffb05a);
+                this.time.delayedCall(780,()=>{if(boss.active){boss.charging=false;boss.body.setVelocity(0,0);boss.sprite.setTint(0xc8c0a9);}});
             }else{
                 boss.attackClock=6900;this.spawnEnemy("skeleton");this.spawnEnemy("slime");
                 boss.hp=Math.min(boss.maxHp,boss.hp+Math.round(boss.maxHp*.07));
