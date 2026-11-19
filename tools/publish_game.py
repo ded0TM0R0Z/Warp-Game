@@ -10,9 +10,9 @@ import re
 import zipfile
 from pathlib import Path, PurePosixPath
 
-GAME_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{2,127}\\Z")
-VERSION_RE = re.compile(r"\\d+\\.\\d+\\.\\d+\\Z")
-SHA_RE = re.compile(r"[A-Fa-f0-9]{64}\\Z")
+GAME_ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{2,127}\Z")
+VERSION_RE = re.compile(r"\d+\.\d+\.\d+\Z")
+SHA_RE = re.compile(r"[A-Fa-f0-9]{64}\Z")
 ALLOWED_ENGINES = {"html5", "phaser", "babylonjs", "custom"}
 MAX_PACKAGE_BYTES = 256 * 1024 * 1024
 MAX_EXPANDED_BYTES = 512 * 1024 * 1024
@@ -78,7 +78,7 @@ def safe_relative_path(value: str) -> PurePosixPath:
     path = PurePosixPath(value)
     if (
         not value
-        or path.is_absolute()
+        or "\" in value
         or "\\" in value
         or ":" in value
         or any(part in {"", ".", ".."} for part in value.split("/"))
@@ -145,9 +145,9 @@ def package_game(game_dir: Path, output: Path, game_id: str, version: str, githu
     print(json.dumps({"filename": filename, "sha256": digest, "size": size}))
     if github_output:
         with open(github_output, "a", encoding="utf-8") as stream:
-            stream.write(f"filename={filename}\\n")
-            stream.write(f"sha256={digest}\\n")
-            stream.write(f"size={size}\\n")
+            stream.write(f"filename={filename}\n")
+            stream.write(f"sha256={digest}\n")
+            stream.write(f"size={size}\n")
 
 
 def update_catalog(catalog_path: Path, manifest_path: Path, package_path: Path, release_url: str) -> None:
@@ -192,7 +192,7 @@ def update_catalog(catalog_path: Path, manifest_path: Path, package_path: Path, 
     catalog["games"] = sorted(games, key=lambda game: game["name"].casefold())
 
     temporary = catalog_path.with_suffix(catalog_path.suffix + ".tmp")
-    temporary.write_text(json.dumps(catalog, ensure_ascii=False, indent=4) + "\\n", encoding="utf-8")
+    temporary.write_text(json.dumps(catalog, ensure_ascii=False, indent=4) + "\n", encoding="utf-8")
     temporary.replace(catalog_path)
     print(f"Catalog updated: {record['game_id']} {record['version']}")
 
