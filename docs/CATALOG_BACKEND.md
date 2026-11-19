@@ -1,7 +1,7 @@
 # WARP GAME — CATALOG BACKEND
 
 **Version:** 1.0.0  
-**Status:** Provisional MVP backend; catalog search and cancellable downloads implemented
+**Status:** Remote static catalog and automated GitHub Release package publishing prepared
 
 ## 1. Data source
 
@@ -63,7 +63,7 @@ The initial package URL must use HTTPS and a trusted GitHub host. Redirects are 
 
 ## 5. Built-in demos
 
-When the remote catalog is empty or unavailable, the app still shows three locally bundled demo packages in the Catalog screen: the Phaser 2D demo, native WebGL 3D test and HTML5 runtime test. These are installed through the same local package installer but are not entries in the remote JSON catalog and do not require a network connection.
+The previous Phaser, WebGL and HTML5 test packages have been moved to `dev-tools/legacy-demos/` and are no longer bundled in the Android app. The production catalog displays only remotely published games. The catalog can remain empty until the first game is published.
 
 ## 6. Current limitations
 
