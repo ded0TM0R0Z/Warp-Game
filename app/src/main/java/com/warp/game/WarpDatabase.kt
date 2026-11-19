@@ -5,10 +5,11 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import java.io.File
 
 class WarpDatabase(context: Context) : SQLiteOpenHelper(
     context.applicationContext,
-    DATABASE_NAME,
+    databasePath(context),
     null,
     DATABASE_VERSION
 ) {
@@ -146,5 +147,13 @@ class WarpDatabase(context: Context) : SQLiteOpenHelper(
         const val COLUMN_UPDATED_AT = "updated_at"
 
         val GAME_ID_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9._-]{2,127}")
+
+        private fun databasePath(context: Context): String {
+            val directory = File(context.applicationContext.filesDir, "database")
+            if (!directory.exists() && !directory.mkdirs()) {
+                throw IllegalStateException("Cannot create database directory")
+            }
+            return File(directory, DATABASE_NAME).absolutePath
+        }
     }
 }
