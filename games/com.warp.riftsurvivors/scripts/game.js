@@ -89,7 +89,7 @@
             this.player.body.setCollideWorldBounds(true);
             this.player.body.setDamping(true);
             this.player.body.setDrag(900);
-            this.player.body.setMaxVelocity(260);
+            this.player.body.setMaxVelocity(620);
         }
 
         createHud() {
@@ -101,6 +101,7 @@
             this.hud.hp = this.add.rectangle(W / 2 - 108, 25, 216, 6, COLORS.green).setOrigin(0, 0.5);
             this.hud.xpBack = this.add.rectangle(W / 2, 47, 220, 5, 0x252b40);
             this.hud.xp = this.add.rectangle(W / 2 - 108, 47, 1, 3, COLORS.cyan).setOrigin(0, 0.5);
+            this.hud.top.add([this.hud.wave, this.hud.level, this.hud.score, this.hud.hpBack, this.hud.hp, this.hud.xpBack, this.hud.xp]);
             this.hud.dash = this.add.container(W - 76, H - 76).setDepth(30);
             const dashCircle = this.add.circle(0, 0, 34, 0x27304b, 0.9).setStrokeStyle(2, COLORS.cyan, 0.9);
             const dashText = this.add.text(0, 0, "РЫВОК", this.textStyle(11, COLORS.white, true)).setOrigin(0.5);
@@ -235,7 +236,7 @@
         }
 
         spawnEnemy() {
-            if (this.mode !== "playing") return;
+            if (this.mode !== "playing" || this.enemies.countActive(true) >= 75) return;
             const side = Phaser.Math.Between(0, 3);
             const x = side === 0 ? -20 : side === 1 ? W + 20 : Phaser.Math.Between(20, W - 20);
             const y = side === 2 ? -20 : side === 3 ? H + 20 : Phaser.Math.Between(70, H - 30);
@@ -446,7 +447,7 @@
                 bullet.life -= dt;
                 if (bullet.life <= 0 || bullet.x < -20 || bullet.x > W + 20 || bullet.y < -20 || bullet.y > H + 20) bullet.destroy();
             });
-            if (this.dashCooldown <= 0) this.hud.dash.first.setFillStyle(0x27304b, 0.95);
+            if (this.dashCooldown <= 0) this.hud.dash.getAt(0).setFillStyle(0x27304b, 0.95);
             else this.hud.dash.first.setFillStyle(0x20253a, 0.65);
         }
 
