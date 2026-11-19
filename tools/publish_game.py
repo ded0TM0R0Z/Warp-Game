@@ -26,6 +26,14 @@ def fail(message: str) -> None:
     raise SystemExit(message)
 
 
+def hash_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def read_manifest(game_dir: Path, expected_id: str, expected_version: str) -> dict:
     manifest_path = game_dir / "manifest.json"
     if not manifest_path.is_file():
@@ -50,6 +58,8 @@ def read_manifest(game_dir: Path, expected_id: str, expected_version: str) -> di
 
     if not GAME_ID_RE.fullmatch(manifest["game_id"]):
         fail("Invalid manifest game_id")
+    if manifest["game_id"] == "com.warp.template":
+        fail("The template manifest cannot be published")
     if manifest["game_id"] != expected_id:
         fail("Dispatch game_id does not match manifest game_id")
     if not VERSION_RE.fullmatch(manifest["version"]):
@@ -134,7 +144,7 @@ def package_game(game_dir: Path, output: Path, game_id: str, version: str, githu
         output.unlink(missing_ok=True)
         fail("Compressed package must be between 1 byte and 256 MiB")
 
-    digest = hashlib.sha256(output.read_bytes()).hexdigest()
+    digest = hash_file(output)
     filename = f"{game_id}-{version}.zip"
     if output.name != filename:
         fail(f"Output filename must be {filename}")
@@ -156,7 +166,7 @@ def update_catalog(catalog_path: Path, manifest_path: Path, package_path: Path, 
         fail("Invalid game version in manifest")
 
     package_size = package_path.stat().st_size
-    digest = hashlib.sha256(package_path.read_bytes()).hexdigest()
+    digest = hash_file(package_path)
     record = {
         "game_id": manifest["game_id"],
         "name": manifest["name"],
