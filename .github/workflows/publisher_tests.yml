@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "tools/**"
+      - "games/**"
       - ".github/workflows/publisher_tests.yml"
   pull_request:
     branches: [main]
     paths:
       - "tools/**"
+      - "games/**"
       - ".github/workflows/publisher_tests.yml"
   workflow_dispatch:
 
@@ -29,3 +31,7 @@ jobs:
           python-version: "3.12"
       - name: Run publisher tests
         run: python -m unittest discover -s tools/tests -v
+      - name: Check game JavaScript syntax
+        run: node --check games/com.warp.riftsurvivors/scripts/game.js
+      - name: Validate and package game
+        run: python tools/publish_game.py package --game-dir games/com.warp.riftsurvivors --output /tmp/com.warp.riftsurvivors-1.0.0.zip --game-id com.warp.riftsurvivors --version 1.0.0
