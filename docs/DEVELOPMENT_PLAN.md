@@ -1,24 +1,27 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.0.0  
-**Current stage:** 0 — Project foundation
+**Version:** 1.1.0  
+**Current stage:** 0 — Foundation and build validation
 
 ## Stage 0 — Foundation and validation
 
 - [x] Create repository documentation structure.
 - [x] Establish project rules and task handoff format.
 - [x] Record initial technical architecture.
-- [ ] Validate a phone-accessible Android build environment.
-- [ ] Select and pin initial toolchain versions after testing.
-- [ ] Create a minimal Android APK and install it on the target phone.
+- [x] Add Android project skeleton.
+- [x] Add GitHub Actions debug build workflow.
+- [x] Pin prototype build toolchain.
+- [ ] Confirm the first successful GitHub Actions build.
+- [ ] Download and install the APK on the target phone.
 - [ ] Record baseline device performance.
 
-**Exit condition:** A repeatable build produces an APK that installs and launches on the target Android phone.
+**Exit condition:** A repeatable cloud build produces an APK that installs and launches on the target Android phone.
 
 ## Stage 1 — Android application shell
 
-- [ ] Create the Android project and application entry point.
-- [ ] Add basic navigation and settings screen.
+- [ ] Create the main navigation structure.
+- [ ] Add initial catalog screen.
+- [ ] Add settings screen.
 - [ ] Add persistent local database foundation.
 - [ ] Add structured logging and error handling.
 - [ ] Verify lifecycle and basic offline startup.
@@ -27,8 +30,8 @@
 
 ## Stage 2 — Game runtime proof of concept
 
+- [ ] Add AndroidX WebKit and use WebViewAssetLoader for local content.
 - [ ] Load one local HTML5 test game in a restricted WebView.
-- [ ] Use AndroidX WebViewAssetLoader.
 - [ ] Verify touch input, screen adaptation and lifecycle behavior.
 - [ ] Test SDK bridge restrictions.
 - [ ] Measure memory, frame rate and heat on target devices.
