@@ -12,6 +12,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import java.util.concurrent.Executors
 
 class MainActivity : Activity() {
 
@@ -35,6 +36,8 @@ class MainActivity : Activity() {
     private lateinit var platformStorage: PlatformStorage
     private lateinit var warpDatabase: WarpDatabase
     private lateinit var gameManager: GameManager
+    private val backgroundExecutor = Executors.newSingleThreadExecutor()
+    private var testInstallInProgress = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -380,6 +383,44 @@ class MainActivity : Activity() {
             .show()
     }
 
+    private fun installBundledTestGame() {
+        if (testInstallInProgress) return
+        testInstallInProgress = true
+        android.widget.Toast.makeText(
+            this,
+            "Проверка и установка пакета…",
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+
+        backgroundExecutor.execute {
+            try {
+                val installedGame = BundledTestGameInstaller(this).install()
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Тестовая игра установлена",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    navigateTo("library")
+                }
+                WarpLogger.info("Installer", "Bundled test game installed: " + installedGame.gameId)
+            } catch (error: Exception) {
+                WarpLogger.error("Installer", "Bundled test game installation failed", error)
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Не удалось установить тестовую игру",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     private fun renderSettings() {
         pageHeading("Настройки", "Информация о приложении и его состоянии.")
         val appCard = panel()
@@ -394,6 +435,13 @@ class MainActivity : Activity() {
         pageContent.addView(appCard)
 
         sectionTitle("Разработка")
+        pageContent.addView(actionCard(
+            "Установить тестовую игру",
+            "Проверить ZIP, SHA-256, установку и запуск",
+            "PKG"
+        ) {
+            installBundledTestGame()
+        })
         pageContent.addView(actionCard(
             "Тест игрового движка",
             "Проверить локальный HTML5, касания и WebGL",
@@ -533,6 +581,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        backgroundExecutor.shutdownNow()
         if (::warpDatabase.isInitialized) {
             warpDatabase.close()
         }
