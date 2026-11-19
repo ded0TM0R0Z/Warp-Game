@@ -39,7 +39,6 @@
             this.waveClock = 0;
             this.spawnClock = 0;
             this.fireClock = 0;
-            this.dashCooldown = 0;
             this.invulnerable = 0;
             this.level = 1;
             this.xp = 0;
@@ -51,12 +50,10 @@
             this.hud = {};
             this.overlay = [];
             this.target = null;
-            this.targetMark = null;
             this.elapsedMs = 0; this.lastBossMinute = 0; this.selectedUpgrades = [];
             this.worldChunks = new Map(); this.ground = null; this.bossBar = null; this.bossLabel = null;
             this.earthClock = 0; this.windAngle = 0; this.windOrb = null; this.pauseButton = null;
             this.aimLine = null;
-            this.dashButton = null;
             this.lastMoveX = 1;
             this.lastMoveY = 0;
         }
@@ -64,6 +61,7 @@
         create() {
             this.physics.world.setBounds(-100000, -100000, 200000, 200000);
             this.createTextures();
+            this.obstacles = this.physics.add.staticGroup();
             this.createWorld();
             this.enemies = this.physics.add.group({ runChildUpdate: true });
             this.bullets = this.physics.add.group();
@@ -72,6 +70,7 @@
             this.createHud();
             this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
             this.physics.add.overlap(this.player, this.enemies, this.hitPlayer, null, this);
+            this.physics.add.collider(this.player, this.obstacles);
             this.physics.add.overlap(this.player, this.orbs, this.collectXp, null, this);
             this.input.on("pointerdown", this.pointerDown, this);
             this.input.on("pointermove", this.pointerMove, this);
@@ -87,22 +86,26 @@
                 g.generateTexture(key, width, height);
                 g.destroy();
             };
-            make("ground", 32, 32, g => {
-                g.fillStyle(0x426b3e); g.fillRect(0, 0, 32, 32);
-                g.fillStyle(0x4e7946); g.fillRect(2, 3, 5, 3); g.fillRect(18, 8, 4, 3);
-                g.fillStyle(0x365d38); g.fillRect(10, 17, 5, 2); g.fillRect(25, 25, 4, 3);
-                g.fillStyle(0x6b8a4b); g.fillRect(24, 2, 2, 2); g.fillRect(5, 25, 2, 2);
+            make("ground", 48, 48, g => {
+                g.fillStyle(0x426b3e); g.fillRect(0, 0, 48, 48);
+                g.fillStyle(0x4e7946); g.fillRect(2, 3, 5, 3); g.fillRect(18, 8, 4, 3); g.fillRect(34, 29, 5, 3);
+                g.fillStyle(0x365d38); g.fillRect(10, 17, 5, 2); g.fillRect(25, 25, 4, 3); g.fillRect(4,38,7,3);
+                g.fillStyle(0x6b8a4b); g.fillRect(24, 2, 2, 2); g.fillRect(5, 25, 2, 2); g.fillRect(41,8,3,2);
+                g.fillStyle(0x557b43); g.fillRect(29,39,4,2); g.fillRect(13,31,3,2);
             });
             make("hero", 24, 28, g => {
                 g.fillStyle(0x302b28); g.fillRect(6, 2, 12, 5);
                 g.fillStyle(0xc6c6bb); g.fillRect(5, 6, 14, 12); g.fillRect(7, 4, 10, 3);
                 g.fillStyle(0x596b78); g.fillRect(7, 9, 10, 8);
                 g.fillStyle(0xd9b98a); g.fillRect(9, 7, 6, 5);
-                g.fillStyle(0x443a32); g.fillRect(5, 18, 6, 8); g.fillRect(13, 18, 6, 8);
-                g.fillStyle(0x8a5838); g.fillRect(4, 25, 8, 3); g.fillRect(12, 25, 8, 3);
                 g.fillStyle(0xe3c36d); g.fillRect(10, 13, 4, 3);
                 g.fillStyle(0xddd7c6); g.fillRect(18, 10, 3, 13);
                 g.fillStyle(0x8e9699); g.fillRect(19, 5, 2, 7);
+            });
+            make("heroLeg", 10, 15, g => {
+                g.fillStyle(0x443a32); g.fillRect(2, 0, 6, 10);
+                g.fillStyle(0x8a5838); g.fillRect(1, 9, 8, 5);
+                g.fillStyle(0xc59a60); g.fillRect(2, 9, 5, 1);
             });
             make("slime", 22, 20, g => {
                 g.fillStyle(0x253b2c); g.fillRect(4, 16, 14, 3);
@@ -145,11 +148,12 @@
                 g.fillStyle(0x1d3a29); g.fillRect(5, 26, 8, 7); g.fillRect(26, 24, 7, 7);
             });
             make("ruin", 44, 50, g => {
-                g.fillStyle(0x55534d); g.fillRect(3, 7, 38, 40);
-                g.fillStyle(0x858176); g.fillRect(7, 4, 30, 8);
-                g.fillStyle(0x393a38); g.fillRect(14, 20, 16, 27);
-                g.fillStyle(0xa29b88); g.fillRect(7, 15, 8, 5); g.fillRect(29, 15, 8, 5);
-                g.fillStyle(0x68665d); g.fillRect(3, 34, 38, 5);
+                g.fillStyle(0x55534d); g.fillRect(3, 15, 10, 32); g.fillRect(13, 21, 9, 26); g.fillRect(29, 12, 12, 35);
+                g.fillStyle(0x858176); g.fillRect(2, 12, 12, 6); g.fillRect(12, 18, 11, 5); g.fillRect(28, 9, 14, 6);
+                g.fillStyle(0x393a38); g.fillRect(31, 23, 7, 24); g.fillRect(17, 29, 8, 18);
+                g.fillStyle(0xa29b88); g.fillRect(5, 22, 5, 4); g.fillRect(31, 17, 7, 4);
+                g.fillStyle(0x68665d); g.fillRect(1, 43, 42, 5);
+                g.fillStyle(0x343532); g.fillRect(17, 34, 8, 13);
             });
             make("torch", 12, 22, g => {
                 g.fillStyle(0x62452e); g.fillRect(5, 7, 3, 15);
@@ -157,10 +161,31 @@
                 g.fillStyle(0xf3c45d); g.fillRect(4, 1, 5, 6);
                 g.fillStyle(0xffed9b); g.fillRect(5, 2, 2, 3);
             });
+            make("dirt", 64, 48, g => {
+                g.fillStyle(0x66513a); g.fillEllipse(32,24,62,43);
+                g.fillStyle(0x806447); g.fillEllipse(17,15,25,12); g.fillEllipse(43,32,29,13);
+                g.fillStyle(0x4e402f); g.fillEllipse(27,27,20,8); g.fillEllipse(51,13,12,7);
+                g.fillStyle(0x9a7950); g.fillRect(19,12,4,3); g.fillRect(39,29,5,3); g.fillRect(10,28,3,2);
+                g.fillStyle(0x3f392d); g.fillRect(29,8,4,2); g.fillRect(48,37,5,2);
+            });
+            make("rubble", 28, 22, g => {
+                g.fillStyle(0x514f49); g.fillRect(2,10,9,8); g.fillRect(12,5,10,12); g.fillRect(21,12,6,7);
+                g.fillStyle(0x898477); g.fillRect(4,8,5,3); g.fillRect(14,3,6,4); g.fillRect(22,10,4,3);
+                g.fillStyle(0x353632); g.fillRect(7,17,17,3);
+            });
+            make("pillar", 22, 40, g => {
+                g.fillStyle(0x777267); g.fillRect(4,8,14,29); g.fillRect(1,5,20,5);
+                g.fillStyle(0xa29b88); g.fillRect(6,10,4,24); g.fillRect(3,35,16,4);
+                g.fillStyle(0x45443f); g.fillRect(12,14,4,17);
+            });
+            make("grassTuft", 20, 16, g => {
+                g.fillStyle(0x294b30); g.fillTriangle(2,15,7,2,9,15); g.fillTriangle(8,15,13,0,15,15);
+                g.fillStyle(0x8aa65a); g.fillTriangle(5,15,8,6,10,15); g.fillTriangle(12,15,15,5,17,15);
+            });
         }
 
         createWorld() {
-            this.ground = this.add.tileSprite(W / 2, H / 2, 2200, 1400, "ground").setDepth(-20);
+            this.ground = null;
             const deco = this.add.graphics().setDepth(-10);
             for (let i = 0; i < 210; i++) {
                 const x = Phaser.Math.Between(8, W - 8), y = Phaser.Math.Between(8, H - 8);
@@ -174,18 +199,35 @@
                 [24, 425, "tree"], [150, 490, "tree"], [795, 490, "tree"],
                 [920, 420, "tree"], [310, 25, "tree"], [650, 20, "tree"]
             ];
-            placements.forEach(p => this.add.image(p[0], p[1], p[2]).setDepth(2 + p[1] / 100));
+            placements.forEach(p => this.addObstacle(p[0], p[1], p[2], 1));
             this.add.image(72, 220, "torch").setDepth(5);
             this.add.image(888, 260, "torch").setDepth(5);
+            this.add.image(245, 405, "rubble").setDepth(4).setAlpha(0.9);
+            this.add.image(710, 130, "rubble").setDepth(4).setAngle(18);
+            this.add.image(610, 455, "pillar").setDepth(4).setAngle(-8);
+            this.add.image(345, 115, "grassTuft").setDepth(3).setAlpha(0.9);
             const vignette = this.add.graphics().setDepth(10);
             vignette.fillStyle(0x182017, 0.08);
             vignette.fillRect(0, 0, W, 8); vignette.fillRect(0, H - 8, W, 8);
         }
 
+        addObstacle(x, y, key, scale) {
+            const obj = this.obstacles.create(x, y, key);
+            obj.setScale(scale || 1).setDepth(2 + y / 100000);
+            obj.refreshBody();
+            const width = key === "ruin" ? 32 : 23;
+            const height = key === "ruin" ? 35 : 31;
+            obj.body.setSize(width, height);
+            obj.body.setOffset((obj.width - width) / 2, obj.height - height);
+            return obj;
+        }
+
         createPlayer() {
             this.player = this.add.container(W / 2, H / 2).setDepth(15);
-            this.playerSprite = this.add.image(0, 0, "hero").setOrigin(0.5);
-            this.player.add(this.playerSprite);
+            this.playerLegLeft = this.add.image(-4, 10, "heroLeg").setOrigin(0.5, 0.15);
+            this.playerLegRight = this.add.image(4, 10, "heroLeg").setOrigin(0.5, 0.15);
+            this.playerSprite = this.add.image(0, -2, "hero").setOrigin(0.5);
+            this.player.add([this.playerLegLeft, this.playerLegRight, this.playerSprite]);
             this.physics.add.existing(this.player);
             this.player.body.setSize(16, 20).setOffset(-8, -10);
             this.player.body.setCollideWorldBounds(true);
@@ -195,7 +237,7 @@
             this.cameras.main.setBounds(-100000,-100000,200000,200000);
             this.cameras.main.startFollow(this.player,true,0.085,0.085);
             this.cameras.main.setDeadzone(170,100);
-            this.playerWalkTween=this.tweens.add({targets:this.playerSprite,y:1.5,duration:150,yoyo:true,repeat:-1,paused:true});
+            this.playerWalkTween=this.tweens.add({targets:this.playerSprite,y:0,duration:150,yoyo:true,repeat:-1,paused:true});
         }
 
         createHud() {
@@ -220,18 +262,10 @@
             this.hud.joyKnob = this.add.circle(0, 0, 25, 0xc3ad78, 0.8).setStrokeStyle(3, 0xf1e2bb, 0.95);
             this.hud.joy.add([this.hud.joyBase, this.hud.joyInner, this.hud.joyKnob]);
 
-            this.hud.dash = this.add.container(W - 92, H - 88).setDepth(50).setScrollFactor(0);
-            const dashBase = this.add.circle(0, 0, 43, 0x493b2a, 0.94).setStrokeStyle(3, C.gold, 0.95);
-            const dashLabel = this.add.text(0, -2, "РЫВОК", this.style(12, C.parchment, true)).setOrigin(0.5);
-            this.dashButton = this.add.circle(0, 0, 46, 0xffffff, 0.001).setInteractive();
-            this.dashButton.on("pointerdown", pointer => { pointer.event.stopPropagation(); this.dash(); });
-            this.hud.dash.add([dashBase, dashLabel, this.dashButton]);
-
-            this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40).setScrollFactor(0);
+             this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40).setScrollFactor(0);
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
-            this.hud.dash.setVisible(false);
-            this.hud.help.setVisible(false);
+             this.hud.help.setVisible(false);
             this.layoutJoystick();
         }
 
@@ -260,10 +294,12 @@
         panel(title, subtitle) {
             this.clearOverlay();
             this.addOverlay(this.add.rectangle(W / 2, H / 2, W, H, 0x10150f, 0.78));
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, 540, 360, 0x29251e, 0.98).setStrokeStyle(4, 0xc3a46a, 1));
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, 526, 346, 0x403628, 0.24).setStrokeStyle(1, 0x796442, 0.9));
-            this.addOverlay(this.add.text(W / 2, H / 2 - 135, title, this.style(30, C.parchment, true)).setOrigin(0.5));
-            if (subtitle) this.addOverlay(this.add.text(W / 2, H / 2 - 92, subtitle, this.style(14, C.gold, true)).setOrigin(0.5));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 700, 470, 0x29251e, 0.985).setStrokeStyle(4, 0xc3a46a, 1));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, 684, 454, 0x403628, 0.22).setStrokeStyle(1, 0x796442, 0.9));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2 - 206, 180, 4, 0xb89556, 0.9));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2 + 206, 180, 4, 0xb89556, 0.9));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 194, title, this.style(30, C.parchment, true)).setOrigin(0.5));
+            if (subtitle) this.addOverlay(this.add.text(W / 2, H / 2 - 153, subtitle, this.style(14, C.gold, true)).setOrigin(0.5));
         }
 
         makeButton(x, y, label, callback, width) {
@@ -278,14 +314,38 @@
             this.mode = "menu";
             this.physics.pause();
             this.panel("RIFT SURVIVORS", "ПРОКЛЯТЫЕ РУИНЫ");
-            this.addOverlay(this.add.text(W / 2, H / 2 - 30,
-                "Ты — последний рыцарь у древнего разлома.\nОтбивайся от тварей, собирай эссенцию и усиливай клинок.",
-                this.style(15, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(8));
-            this.addOverlay(this.add.text(W / 2, H / 2 + 35, "РЕКОРД: " + this.best, this.style(14, C.gold, true)).setOrigin(0.5));
-            this.makeButton(W / 2, H / 2 + 105, "НАЧАТЬ ЗАБЕГ", () => this.startRun());
-            this.addOverlay(this.add.text(W / 2, H - 24,
-                "Левый стик — движение   •   Рыцарь сам атакует ближайшего врага",
-                this.style(11, C.muted, false)).setOrigin(0.5));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 100,
+                "Последний рыцарь у древнего разлома.\nВыдержи волны тварей, собирай эссенцию и открывай\nновые боевые навыки с каждым уровнем.",
+                this.style(16, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(10));
+            const statsY = H / 2 - 10;
+            [["РЕКОРД", this.best.toLocaleString("ru-RU")], ["БОССЫ", "КАЖДЫЕ 3 МИН."], ["АТАКА", "АВТОМАТИЧЕСКАЯ"]].forEach((item, i) => {
+                const x = W / 2 - 205 + i * 205;
+                this.addOverlay(this.add.rectangle(x, statsY, 184, 52, 0x393326, 0.98).setStrokeStyle(1, 0x806c48, 0.9));
+                this.addOverlay(this.add.text(x, statsY - 10, item[0], this.style(10, C.muted, true)).setOrigin(0.5));
+                this.addOverlay(this.add.text(x, statsY + 10, String(item[1]), this.style(13, C.gold, true)).setOrigin(0.5));
+            });
+            this.makeButton(W / 2, H / 2 + 90, "НАЧАТЬ ЗАБЕГ", () => this.startRun(), 290);
+            this.makeButton(W / 2, H / 2 + 151, "КАК ИГРАТЬ", () => this.showControls(), 220);
+            this.addOverlay(this.add.text(W / 2, H - 22,
+                "ЛЕВЫЙ СТИК — ДВИЖЕНИЕ     •     РЫЦАРЬ САМ ВЫБИРАЕТ ЦЕЛЬ",
+                this.style(10, C.muted, false)).setOrigin(0.5));
+        }
+
+        showControls() {
+            this.panel("УПРАВЛЕНИЕ", "ПРОСТЫЕ ПРАВИЛА ВЫЖИВАНИЯ");
+            const rows = [
+                ["ПЕРЕДВИЖЕНИЕ", "Удерживай левый виртуальный стик"],
+                ["СТРЕЛЬБА", "Рыцарь автоматически стреляет в ближайшего врага"],
+                ["УСИЛЕНИЯ", "После повышения уровня выбери одну из трёх карт"],
+                ["БОССЫ", "Новый босс появляется каждые три минуты"],
+                ["ПАУЗА", "Кнопка II в верхней части экрана"]
+            ];
+            rows.forEach((row, i) => {
+                const y = H / 2 - 82 + i * 48;
+                this.addOverlay(this.add.text(W / 2 - 275, y, row[0], this.style(12, C.gold, true)));
+                this.addOverlay(this.add.text(W / 2 - 80, y, row[1], this.style(12, C.parchment, false)));
+            });
+            this.makeButton(W / 2, H / 2 + 175, "НАЗАД", () => this.showMenu(), 220);
         }
 
         startRun() {
@@ -300,19 +360,24 @@
             this.player.body.setVelocity(0, 0);
             this.player.body.setAcceleration(0, 0);
             this.wave = 1; this.waveClock = 0; this.spawnClock = 0;
-            this.fireClock = 250; this.dashCooldown = 0; this.invulnerable = 0;
+            this.fireClock = 250; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
             this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,earthUnlocked:false,earthDamage:42,earthDelay:8500,windUnlocked:false,windDamage:18,windDelay:650,windRadius:76 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
-            this.worldChunks.clear(); this.cameras.main.stopFollow(); this.cameras.main.startFollow(this.player,true,0.085,0.085);
-            this.player.body.setMaxVelocity(180); this.playerWalkTween.pause(); this.playerSprite.setPosition(0,0).setAngle(0);
+            this.worldChunks.forEach(items => items.forEach(obj => obj.destroy()));
+            this.worldChunks.clear();
+            this.player.body.reset(W / 2, H / 2);
+            this.cameras.main.stopFollow(); this.cameras.main.startFollow(this.player,true,0.085,0.085);
+            this.player.body.setMaxVelocity(180); this.playerWalkTween.pause(); this.playerSprite.setPosition(0,-2).setAngle(0);
+            this.playerLegLeft.setPosition(-4,10).setAngle(0);
+            this.playerLegRight.setPosition(4,10).setAngle(0);
             this.joy.active = false; this.joy.pointerId = null; this.joy.dx = 0; this.joy.dy = 0;
             this.joy.baseX = 100; this.joy.baseY = H - 120;
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             this.hud.joyKnob.setPosition(0, 0);
             this.hud.top.setVisible(true); this.hud.joy.setVisible(true);
-            this.hud.dash.setVisible(true); this.hud.help.setVisible(true);
+            this.hud.help.setVisible(true);
             this.refreshHud();
             this.spawnEnemy("slime"); this.spawnEnemy("slime"); this.spawnEnemy("skeleton");
         }
@@ -350,25 +415,7 @@
             this.hud.joyKnob.setPosition(this.joy.dx * 39, this.joy.dy * 39);
         }
 
-        dash() {
-            if (this.mode !== "playing" || this.dashCooldown > 0) return;
-            let dx = this.joy.dx, dy = this.joy.dy;
-            if (Math.hypot(dx, dy) < 0.15) {
-                const enemy = this.nearestEnemy();
-                if (enemy) {
-                    dx = this.player.x - enemy.x; dy = this.player.y - enemy.y;
-                    const length = Math.max(1, Math.hypot(dx, dy));
-                    dx /= length; dy /= length;
-                } else { dx = this.lastMoveX; dy = this.lastMoveY; }
-            }
-            this.player.body.setVelocity(dx * 590, dy * 590);
-            this.invulnerable = 430;
-            this.dashCooldown = 2600;
-            this.cameras.main.shake(100, 0.0025);
-            if (sdk) sdk.vibrate(35);
-        }
-
-        spawnEnemy(type) {
+         spawnEnemy(type) {
             if (this.mode !== "playing" || this.enemies.countActive(true) >= 65) return;
             const side = Phaser.Math.Between(0, 3);
             const view=this.cameras.main.worldView;
@@ -424,25 +471,18 @@
                 const spread = (i - (this.projectiles - 1) / 2) * 0.11;
                 const a = angle + spread;
                 const bolt = this.add.image(this.player.x + Math.cos(a) * 17, this.player.y + Math.sin(a) * 17, "bolt").setDepth(18).setRotation(a).setScale(1.15);
-                this.physics.add.existing(bolt);
+                this.bullets.add(bolt);
+                if (!bolt.body) this.physics.add.existing(bolt);
+                bolt.body.enable = true;
+                bolt.body.moves = true;
                 bolt.body.setAllowGravity(false);
                 bolt.body.setVelocity(Math.cos(a) * this.stats.bulletSpeed, Math.sin(a) * this.stats.bulletSpeed);
+                bolt.body.setMaxSpeed(this.stats.bulletSpeed);
                 bolt.damage = this.stats.damage;
-                bolt.life = 1300;
-                this.bullets.add(bolt);
+                bolt.life = 1600;
+                bolt.setData("velocityX", Math.cos(a) * this.stats.bulletSpeed);
+                bolt.setData("velocityY", Math.sin(a) * this.stats.bulletSpeed);
             }
-            this.showTarget(target);
-        }
-
-        showTarget(target) {
-            if (!this.targetMark || !this.targetMark.active) {
-                this.targetMark = this.add.graphics().setDepth(30);
-            }
-            this.targetMark.clear();
-            this.targetMark.lineStyle(2, 0xffe18a, 0.9);
-            this.targetMark.strokeCircle(target.x, target.y, 20);
-            this.targetMark.lineBetween(target.x - 25, target.y, target.x - 16, target.y);
-            this.targetMark.lineBetween(target.x + 16, target.y, target.x + 25, target.y);
         }
 
         hitEnemy(bolt, enemy) {
@@ -528,12 +568,12 @@
             this.mode = "upgrade";
             this.physics.pause();
             this.panel("НОВЫЙ УРОВЕНЬ", "ВЫБЕРИ ОДНО УЛУЧШЕНИЕ");
-            this.addOverlay(this.add.text(W / 2, H / 2 - 40, "УРОВЕНЬ " + this.level, this.style(13, C.gold, true)).setOrigin(0.5));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 105, "УРОВЕНЬ " + this.level, this.style(13, C.gold, true)).setOrigin(0.5));
             this.upgradeOptions().forEach((option, index) => {
-                const y = H / 2 + 20 + index * 67;
-                const bg = this.add.rectangle(W / 2, y, 410, 56, 0x493a29).setStrokeStyle(2, 0xb99a62, 0.95).setInteractive();
-                const title = this.add.text(W / 2 - 180, y - 9, option.title, this.style(13, C.parchment, true));
-                const desc = this.add.text(W / 2 - 180, y + 12, option.desc, this.style(11, C.muted, false));
+                const y = H / 2 - 48 + index * 72;
+                const bg = this.add.rectangle(W / 2, y, 520, 58, 0x493a29).setStrokeStyle(2, 0xb99a62, 0.95).setInteractive();
+                const title = this.add.text(W / 2 - 235, y - 9, option.title, this.style(13, C.parchment, true));
+                const desc = this.add.text(W / 2 - 235, y + 12, option.desc, this.style(11, C.muted, false));
                 bg.on("pointerdown", () => {
                     option.apply(); this.selectedUpgrades.push(option.title);
                     this.mode = "playing";
@@ -575,7 +615,6 @@
         hideHud() {
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
-            this.hud.dash.setVisible(false);
             this.hud.help.setVisible(false);
         }
 
@@ -586,23 +625,32 @@
             this.updateWorldChunks(this.player.x,this.player.y);
             this.spawnClock += dt;
             this.fireClock += dt;
-            this.dashCooldown = Math.max(0, this.dashCooldown - dt);
-            this.invulnerable = Math.max(0, this.invulnerable - dt);
+             this.invulnerable = Math.max(0, this.invulnerable - dt);
             this.player.setAlpha(this.invulnerable > 0 && Math.floor(this.time.now / 75) % 2 ? 0.48 : 1);
 
             if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
-            if (this.target && this.target.active) this.showTarget(this.target);
-            else if (this.targetMark) { this.target = null; this.targetMark.clear(); }
+            if (this.target && !this.target.active) this.target = null;
 
             const moving = Math.hypot(this.joy.dx, this.joy.dy) > 0.08;
             if (moving) {
-                this.playerWalkTween.resume(); this.playerSprite.setAngle(Phaser.Math.Clamp(this.joy.dx*0.08,-0.08,0.08));
+                this.playerWalkTween.resume();
+                this.playerSprite.setAngle(Phaser.Math.Clamp(this.joy.dx * 0.045, -0.045, 0.045));
+                this.playerSprite.setFlipX(this.joy.dx < -0.08);
+                const step = Math.sin(this.time.now * 0.018);
+                this.playerLegLeft.setAngle(step * 0.42);
+                this.playerLegRight.setAngle(-step * 0.42);
+                this.playerLegLeft.y = 10 + Math.max(0, step) * 1.4;
+                this.playerLegRight.y = 10 + Math.max(0, -step) * 1.4;
                 this.lastMoveX = this.joy.dx;
                 this.lastMoveY = this.joy.dy;
                 this.player.body.setVelocity(this.joy.dx * this.stats.moveSpeed, this.joy.dy * this.stats.moveSpeed);
             } else {
-                this.playerWalkTween.pause(); this.playerSprite.y=0; this.playerSprite.angle=0;
-                this.player.body.setVelocity(this.player.body.velocity.x*0.82,this.player.body.velocity.y*0.82);
+                this.playerWalkTween.pause();
+                this.playerSprite.y = -2;
+                this.playerSprite.angle = 0;
+                this.playerLegLeft.setAngle(0).setY(10);
+                this.playerLegRight.setAngle(0).setY(10);
+                this.player.body.setVelocity(this.player.body.velocity.x * 0.82, this.player.body.velocity.y * 0.82);
             }
 
             if (this.spawnClock > Math.max(390, 1500 - this.wave * 48)) {
@@ -642,14 +690,14 @@
             this.bullets.children.iterate(bolt => {
                 if (!bolt || !bolt.active) return;
                 bolt.life -= dt;
+                if (bolt.body && bolt.body.enable) {
+                    bolt.body.moves = true;
+                    if (bolt.body.speed < 1) bolt.body.setVelocity(bolt.getData("velocityX"), bolt.getData("velocityY"));
+                }
                 const v=this.cameras.main.worldView;
-                if(bolt.life<=0||bolt.x<v.x-80||bolt.x>v.right+80||bolt.y<v.y-80||bolt.y>v.bottom+80)bolt.destroy();
+                if(bolt.life<=0||bolt.x<v.x-100||bolt.x>v.right+100||bolt.y<v.y-100||bolt.y>v.bottom+100)bolt.destroy();
             });
-            if (this.dashButton && this.hud.dash) {
-                const base = this.hud.dash.getAt(0);
-                base.setFillStyle(this.dashCooldown <= 0 ? 0x493b2a : 0x29251f, 0.94);
-            }
-        }
+         }
 
 
         formatTime(ms){const n=Math.floor(ms/1000);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");}
@@ -657,16 +705,32 @@
             const size=520,cx=Math.floor(x/size),cy=Math.floor(y/size);
             for(let gx=cx-2;gx<=cx+2;gx++)for(let gy=cy-2;gy<=cy+2;gy++){
                 const key=gx+":"+gy;if(this.worldChunks.has(key))continue;
-                const objs=[];let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
+                const objs=[];
+                const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,"ground").setDepth(-20).setTilePosition(gx*size,gy*size);
+                objs.push(ground);
+                let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
                 const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
-                for(let i=0,n=5+Math.floor(rand()*7);i<n;i++){
+                for(let i=0,n=7+Math.floor(rand()*8);i<n;i++){
                     const px=gx*size+25+rand()*(size-50),py=gy*size+25+rand()*(size-50);
-                    if(Phaser.Math.Distance.Between(px,py,x,y)<130)continue;
-                    const obj=this.add.image(px,py,rand()<0.17?"ruin":"tree").setDepth(2+py/100000).setScale(.8+rand()*.45);objs.push(obj);
-                }this.worldChunks.set(key,objs);
+                    if(Phaser.Math.Distance.Between(px,py,x,y)<155)continue;
+                    const roll=rand();
+                    if(roll<0.13){
+                        const obj=this.add.image(px,py,"dirt").setDepth(-5).setScale(0.65+rand()*0.8).setAlpha(0.92).setRotation(rand()*Math.PI);objs.push(obj);
+                    }else if(roll<0.23){
+                        const obj=this.add.image(px,py,"rubble").setDepth(3+py/100000).setScale(0.7+rand()*0.8).setRotation(rand()*0.8);objs.push(obj);
+                    }else if(roll<0.29){
+                        const obj=this.add.image(px,py,"grassTuft").setDepth(3+py/100000).setScale(0.8+rand()*0.7);objs.push(obj);
+                    }else{
+                        const obj=this.addObstacle(px,py,roll<0.39?"ruin":"tree",0.8+rand()*0.45);objs.push(obj);
+                    }
+                }
+                if(rand()<0.48){
+                    const px=gx*size+80+rand()*(size-160),py=gy*size+80+rand()*(size-160);
+                    const obj=this.add.image(px,py,"pillar").setDepth(3+py/100000).setAngle(rand()*0.5-0.25).setScale(0.8+rand()*0.4);objs.push(obj);
+                }
+                this.worldChunks.set(key,objs);
             }
-            for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>3||Math.abs(gy-cy)>3){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
-            if(this.ground){this.ground.setPosition(x,y);this.ground.setTilePosition(x*.35,y*.35);}
+            for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>2||Math.abs(gy-cy)>2){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
         }
         damageSkillEnemy(enemy,damage,knockbackX,knockbackY) {
             if(!enemy||!enemy.active)return;
@@ -788,11 +852,21 @@
             if(this.mode!=="playing")return;this.mode="paused";this.physics.pause();this.playerWalkTween.pause();
             this.joy.active=false;this.joy.dx=0;this.joy.dy=0;this.hud.joyKnob.setPosition(0,0);
             this.panel("ПАУЗА","ЗАБЕГ ПРИОСТАНОВЛЕН");
-            this.addOverlay(this.add.text(W/2,H/2-53,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
-                "\nСЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(15,C.parchment,true)).setOrigin(.5).setAlign("center").setLineSpacing(7));
-            this.addOverlay(this.add.text(W/2,H/2+12,"ВЫБРАННЫЕ УСИЛЕНИЯ\n"+(this.selectedUpgrades.length?this.selectedUpgrades.join("\n"):"Пока нет выбранных усилений"),this.style(12,C.gold,true)).setOrigin(.5).setAlign("center").setLineSpacing(5));
-            this.makeButton(W/2,H/2+105,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},210);
-            this.makeButton(W/2,H/2+160,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},210);
+            this.addOverlay(this.add.text(W/2,H/2-111,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
+                "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/180000)+1)*180000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
+            this.addOverlay(this.add.text(W/2,H/2-75,"УСИЛЕНИЯ, ВЫБРАННЫЕ ПРИ ПОВЫШЕНИИ УРОВНЯ",this.style(12,C.gold,true)).setOrigin(.5));
+            const recent = this.selectedUpgrades.slice(-6);
+            if (!recent.length) {
+                this.addOverlay(this.add.text(W/2,H/2+10,"Пока не выбрано ни одного усиления",this.style(13,C.muted,false)).setOrigin(.5));
+            } else {
+                recent.forEach((name,i)=>{
+                    const col=i%2,row=Math.floor(i/2),x=W/2-155+col*310,y=H/2-32+row*48;
+                    this.addOverlay(this.add.rectangle(x,y,286,38,0x3b3428,0.98).setStrokeStyle(1,0x8b744c,0.9));
+                    this.addOverlay(this.add.text(x,y,(this.selectedUpgrades.length-recent.length+i+1)+".  "+name,this.style(11,C.parchment,true)).setOrigin(.5));
+                });
+            }
+            this.makeButton(W/2,H/2+153,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},250);
+            this.makeButton(W/2,H/2+207,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},250);
         }
 
         addWaveNotice() {
