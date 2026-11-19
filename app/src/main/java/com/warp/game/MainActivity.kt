@@ -296,8 +296,9 @@ class MainActivity : Activity() {
         if (catalogLoading) {
             pageContent.addView(emptyState(
                 "Загрузка каталога",
-                "Получаем список доступных игр."
+                "Получаем список доступных игр. Встроенные демо уже доступны."
             ))
+            addBuiltInDemoCards(pageContent)
             return
         }
 
