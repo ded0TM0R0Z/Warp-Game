@@ -77,7 +77,7 @@ class GameRuntimeActivity : Activity() {
             mediaPlaybackRequiresUserGesture = true
         }
 
-        val domain = isolatedDomain(gameId)
+        val domain = isolatedDomain(game.gameId)
         val assetLoader = WebViewAssetLoader.Builder()
             .setDomain(domain)
             .addPathHandler("/game/", GameDirectoryPathHandler(gameDirectory))
