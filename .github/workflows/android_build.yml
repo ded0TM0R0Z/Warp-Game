@@ -86,8 +86,19 @@ jobs:
                     exit 1
                   fi
 
+                  KEY_BASE64="$(printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]')"
+                  echo "Keystore Base64 length: ${#KEY_BASE64} characters (expected 4820)."
+                  if [[ ! "$KEY_BASE64" =~ ^[A-Za-z0-9+/]*={0,2}$ ]]; then
+                    echo "::error::ANDROID_KEYSTORE_BASE64 contains characters that are not valid Base64."
+                    exit 1
+                  fi
+                  if (( ${#KEY_BASE64} % 4 != 0 )); then
+                    echo "::error::ANDROID_KEYSTORE_BASE64 is incomplete; its length is not divisible by 4."
+                    exit 1
+                  fi
+
                   mkdir -p "$RUNNER_TEMP/warp-signing"
-                  printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$RUNNER_TEMP/warp-signing/warp-game.p12"
+                  printf '%s' "$KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/warp-signing/warp-game.p12"
                   chmod 600 "$RUNNER_TEMP/warp-signing/warp-game.p12"
                   test -s "$RUNNER_TEMP/warp-signing/warp-game.p12"
                   keytool -list -keystore "$RUNNER_TEMP/warp-signing/warp-game.p12" -storetype PKCS12 -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null
