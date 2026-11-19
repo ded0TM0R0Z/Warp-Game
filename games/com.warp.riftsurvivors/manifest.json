@@ -2,7 +2,7 @@
     "game_id": "com.warp.riftsurvivors",
     "name": "Rift Survivors",
     "description": "Средневековая пиксельная арена: сражайся с монстрами, собирай эссенцию и усиливай оружие.",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "engine": "phaser",
     "engine_version": "3.90.0",
     "game_type": "2d",
