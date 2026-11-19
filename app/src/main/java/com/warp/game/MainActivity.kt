@@ -461,7 +461,7 @@ class MainActivity : Activity() {
                 "Вращающийся 3D-объект · управление касанием · офлайн",
                 "3D"
             )),
-            Triple("2d", "html5", Triple(
+            Triple("all", "html5", Triple(
                 "HTML5 Runtime-тест",
                 "Проверка установки, SDK, касаний и локального запуска",
                 "HTML"
@@ -469,7 +469,7 @@ class MainActivity : Activity() {
         )
         val query = catalogSearchQuery.trim()
         val visibleDemos = demos.filter { (type, engine, card) ->
-            (catalogTypeFilter == "all" || catalogTypeFilter == type) &&
+            (type == "all" || catalogTypeFilter == "all" || catalogTypeFilter == type) &&
                 (catalogEngineFilter == "all" || catalogEngineFilter.equals(engine, ignoreCase = true)) &&
                 (query.isEmpty() || card.first.contains(query, ignoreCase = true) ||
                     card.second.contains(query, ignoreCase = true) ||
