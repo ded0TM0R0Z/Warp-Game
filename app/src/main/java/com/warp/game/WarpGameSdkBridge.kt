@@ -184,8 +184,12 @@ class WarpGameSdkBridge(
                 if (!target.exists()) backup.renameTo(target) else backup.delete()
             }
             FileOutputStreamCompat.write(temporary, bytes)
-            if (target.exists() && !target.renameTo(backup)) return false
+            if (target.exists() && !target.renameTo(backup)) {
+                temporary.delete()
+                return false
+            }
             if (!temporary.renameTo(target)) {
+                temporary.delete()
                 if (backup.exists()) backup.renameTo(target)
                 return false
             }
