@@ -48,6 +48,7 @@ class MainActivity : Activity() {
     private lateinit var gameManager: GameManager
     private lateinit var downloadQueueStore: DownloadQueueStore
     private val backgroundExecutor = Executors.newSingleThreadExecutor()
+    private val downloadExecutor = Executors.newSingleThreadExecutor()
     private var testInstallInProgress = false
     private var catalogLoadRequested = false
     private var catalogLoading = false
@@ -801,7 +802,7 @@ class MainActivity : Activity() {
         downloadProgressPercent = 0
         renderCatalogResults()
 
-        backgroundExecutor.execute {
+        downloadExecutor.execute {
             var attempt = 1
             var lastReportedPercent = -5
             try {
@@ -1540,6 +1541,7 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         activeDownloadToken?.cancel()
         backgroundExecutor.shutdownNow()
+        downloadExecutor.shutdownNow()
         if (::warpDatabase.isInitialized) {
             warpDatabase.close()
         }
