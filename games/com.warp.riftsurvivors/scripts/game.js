@@ -54,7 +54,7 @@
             this.targetMark = null;
             this.elapsedMs = 0; this.lastBossMinute = 0; this.selectedUpgrades = [];
             this.worldChunks = new Map(); this.ground = null; this.bossBar = null; this.bossLabel = null;
-            this.magicClock = 0; this.lightningClock = 0; this.pauseButton = null;
+            this.earthClock = 0; this.windAngle = 0; this.windOrb = null; this.pauseButton = null;
             this.aimLine = null;
             this.dashButton = null;
             this.lastMoveX = 1;
@@ -131,7 +131,7 @@
                 g.fillStyle(0xf0d18a); g.fillRect(7, 1, 4, 6);
                 g.fillStyle(0xffffff); g.fillRect(9, 2, 2, 2);
             });
-            make("fireball", 18, 18, g => { g.fillStyle(0x9c351f); g.fillCircle(9,9,8); g.fillStyle(0xe85d24); g.fillCircle(9,9,6); g.fillStyle(0xffc45c); g.fillCircle(8,8,3); g.fillStyle(0xffefb0); g.fillRect(7,5,3,3); });
+            make("windorb", 20, 20, g => { g.fillStyle(0x315e70,0.65); g.fillCircle(10,10,9); g.fillStyle(0x71d7df,0.9); g.fillCircle(10,10,6); g.fillStyle(0xd9ffff,1); g.fillCircle(8,7,3); g.lineStyle(2,0xa6f4ee,0.9); g.strokeCircle(10,10,8); });
             make("orb", 12, 12, g => {
                 g.fillStyle(0x426a37); g.fillRect(3, 1, 6, 10);
                 g.fillStyle(0x9ddc72); g.fillRect(2, 2, 8, 8);
@@ -293,6 +293,7 @@
             this.mode = "playing";
             this.physics.resume();
             this.enemies.clear(true, true);
+            if(this.windOrb){this.windOrb.destroy();this.windOrb=null;}
             this.bullets.clear(true, true);
             this.orbs.clear(true, true);
             this.player.setPosition(W / 2, H / 2);
@@ -302,8 +303,8 @@
             this.fireClock = 250; this.dashCooldown = 0; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
-            this.stats = { hp:100,maxHp:100,damage:24,fireDelay:720,moveSpeed:145,bulletSpeed:590,magnet:115 };
-            this.elapsedMs=0; this.lastBossMinute=0; this.magicClock=0; this.lightningClock=0; this.selectedUpgrades=[];
+            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,earthUnlocked:false,earthDamage:42,earthDelay:8500,windUnlocked:false,windDamage:18,windDelay:650,windRadius:76 };
+            this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
             this.worldChunks.clear(); this.cameras.main.stopFollow(); this.cameras.main.startFollow(this.player,true,0.085,0.085);
             this.player.body.setMaxVelocity(180); this.playerWalkTween.pause(); this.playerSprite.setPosition(0,0).setAngle(0);
             this.joy.active = false; this.joy.pointerId = null; this.joy.dx = 0; this.joy.dy = 0;
@@ -415,10 +416,15 @@
             if (!target) return;
             const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
             this.playerSprite.setFlipX(target.x < this.player.x);
+            this.tweens.killTweensOf(this.playerSprite);
+            this.playerSprite.setScale(1.08,0.94);
+            this.tweens.add({targets:this.playerSprite,scaleX:1,scaleY:1,duration:130,ease:"Back.Out"});
+            const flash=this.add.circle(this.player.x+Math.cos(angle)*18,this.player.y+Math.sin(angle)*18,5,0xffe3a0,0.9).setDepth(19);
+            this.tweens.add({targets:flash,alpha:0,scale:2.2,duration:130,onComplete:()=>flash.destroy()});
             for (let i = 0; i < this.projectiles; i++) {
                 const spread = (i - (this.projectiles - 1) / 2) * 0.11;
                 const a = angle + spread;
-                const bolt = this.add.image(this.player.x + Math.cos(a) * 17, this.player.y + Math.sin(a) * 17, "bolt").setDepth(18).setRotation(a);
+                const bolt = this.add.image(this.player.x + Math.cos(a) * 17, this.player.y + Math.sin(a) * 17, "bolt").setDepth(18).setRotation(a).setScale(1.15);
                 this.physics.add.existing(bolt);
                 bolt.body.setAllowGravity(false);
                 bolt.body.setVelocity(Math.cos(a) * this.stats.bulletSpeed, Math.sin(a) * this.stats.bulletSpeed);
@@ -497,16 +503,25 @@
 
         upgradeOptions() {
             const all = [
-                { title: "ЗАТОЧЕННЫЙ КЛИНОК", desc: "+35% урон снарядов", apply: () => { this.stats.damage *= 1.35; } },
-                { title: "БЫСТРАЯ РУКА", desc: "Атака на 18% быстрее", apply: () => { this.stats.fireDelay *= 0.82; } },
-                { title: "ЛЁГКИЕ САПОГИ", desc: "+14% скорость движения", apply: () => { this.stats.moveSpeed *= 1.14; } },
-                { title: "КРЕПКИЕ ДОСПЕХИ", desc: "+25 к максимуму здоровья и лечение", apply: () => { this.stats.maxHp += 25; this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + 35); } },
-                { title: "МАГНИТ ЭССЕНЦИИ", desc: "Сильнее притягивает опыт", apply: () => { this.stats.magnet += 65; } },
-                { title: "ЗАЛП ИЗ АРБАЛЕТА", desc: "+1 снаряд за атаку", apply: () => { this.projectiles = Math.min(5, this.projectiles + 1); } },
-                {title:"ОГНЕННЫЙ ШАР",desc:"Усилить магический огненный шар",apply:()=>{this.stats.fireDamage=(this.stats.fireDamage||45)*1.35;}},
-                {title:"ГРОЗОВОЙ РАЗРЯД",desc:"Усилить молнию и ускорить перезарядку",apply:()=>{this.stats.lightningDamage=(this.stats.lightningDamage||34)*1.35;this.stats.lightningDelay=Math.max(2600,(this.stats.lightningDelay||6500)*0.88);}}
+                { title: "ОСТРЫЕ СТРЕЛЫ", desc: "+30% урон обычных стрел", apply: () => { this.stats.damage *= 1.30; } },
+                { title: "БЫСТРАЯ ТЕТИВА", desc: "Стрелы выпускаются на 16% быстрее", apply: () => { this.stats.fireDelay = Math.max(260,this.stats.fireDelay*0.84); } },
+                { title: "ЗАЛП ИЗ ЛУКА", desc: "+1 стрела за атаку (максимум 5)", apply: () => { this.projectiles = Math.min(5,this.projectiles+1); } },
+                { title: "ЛЁГКИЕ САПОГИ", desc: "+12% скорость движения", apply: () => { this.stats.moveSpeed *= 1.12; } },
+                { title: "КРЕПКИЕ ДОСПЕХИ", desc: "+25 к максимуму здоровья и лечение", apply: () => { this.stats.maxHp += 25; this.stats.hp = Math.min(this.stats.maxHp,this.stats.hp+35); } },
+                { title: "МАГНИТ ЭССЕНЦИИ", desc: "Сильнее притягивает опыт", apply: () => { this.stats.magnet += 55; } }
             ];
-            return Phaser.Utils.Array.Shuffle(all).slice(0, 3);
+            if(!this.stats.earthUnlocked) all.push({title:"ЗЕМЛЯНОЙ РАЗЛОМ",desc:"Открывает круговую волну земли вокруг героя",apply:()=>{this.stats.earthUnlocked=true;this.stats.earthClock=0;}});
+            else {
+                all.push({title:"СИЛА ЗЕМЛИ",desc:"+35% урон волны и +12% радиус",apply:()=>{this.stats.earthDamage*=1.35;this.stats.earthRadius=(this.stats.earthRadius||145)*1.12;}});
+                all.push({title:"ДРЕВНИЙ ИМПУЛЬС",desc:"Волна земли перезаряжается на 18% быстрее",apply:()=>{this.stats.earthDelay=Math.max(3200,this.stats.earthDelay*0.82);}});
+            }
+            if(!this.stats.windUnlocked) all.push({title:"ДУХ ВЕТРА",desc:"Открывает вращающийся вокруг героя шар ветра",apply:()=>{this.stats.windUnlocked=true;this.stats.windOrbCount=1;this.stats.windDamage=18;this.stats.windDelay=650;this.stats.windRadius=76;}});
+            else {
+                all.push({title:"ШТОРМОВОЙ ШАР",desc:"+35% урон ветра и +12% скорость вращения",apply:()=>{this.stats.windDamage*=1.35;this.stats.windDelay=Math.max(260,this.stats.windDelay*0.88);}});
+                all.push({title:"ВТОРОЙ ПОТОК",desc:"Добавляет второй шар ветра на другой стороне орбиты",apply:()=>{this.stats.windOrbCount=Math.min(3,(this.stats.windOrbCount||1)+1);}});
+                all.push({title:"ВОРОНКА ВЕТРА",desc:"+18% радиус вращения и +20% урон",apply:()=>{this.stats.windRadius*=1.18;this.stats.windDamage*=1.2;}});
+            }
+            return Phaser.Utils.Array.Shuffle(all).slice(0,3);
         }
 
         openUpgrade() {
@@ -568,7 +583,7 @@
         update(_, delta) {
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
-            this.elapsedMs+=dt; this.hud.timer.setText(this.formatTime(this.elapsedMs)); this.waveClock+=dt; this.magicClock+=dt; this.lightningClock+=dt;
+            this.elapsedMs+=dt; this.hud.timer.setText(this.formatTime(this.elapsedMs)); this.waveClock+=dt; this.earthClock+=dt;
             this.updateWorldChunks(this.player.x,this.player.y);
             this.spawnClock += dt;
             this.fireClock += dt;
@@ -597,8 +612,8 @@
                 for (let i = 0; i < count; i++) this.spawnEnemy();
             }
             if(this.elapsedMs>=180000 && Math.floor(this.elapsedMs/180000)>this.lastBossMinute){this.lastBossMinute=Math.floor(this.elapsedMs/180000);this.spawnBoss(this.lastBossMinute);}
-            if(this.magicClock>=4200){this.magicClock=0;this.castFireball();}
-            if(this.lightningClock>=(this.stats.lightningDelay||6500)){this.lightningClock=0;this.castLightning();}
+            if(this.stats.earthUnlocked && this.earthClock>=this.stats.earthDelay){this.earthClock=0;this.castEarthWave();}
+            this.updateWindOrbs(dt);
             if (this.fireClock >= this.stats.fireDelay) {
                 this.fireClock = 0;
                 this.fire();
@@ -654,29 +669,79 @@
             for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>3||Math.abs(gy-cy)>3){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
             if(this.ground){this.ground.setPosition(x,y);this.ground.setTilePosition(x*.35,y*.35);}
         }
-        castFireball(){
-            const target=this.nearestEnemy();if(!target)return;
-            const a=Phaser.Math.Angle.Between(this.player.x,this.player.y,target.x,target.y);
-            const fire=this.add.image(this.player.x,this.player.y,"fireball").setDepth(22).setScale(1.25);
-            this.physics.add.existing(fire);fire.body.setAllowGravity(false);fire.body.setCircle(8);fire.body.setVelocity(Math.cos(a)*330,Math.sin(a)*330);
-            fire.damage=this.stats.fireDamage||45;fire.life=1900;fire.isFireball=true;this.bullets.add(fire);
-            this.tweens.add({targets:fire,angle:360,scale:1.6,duration:420,repeat:-1});
-            fire.trail=this.add.particles(fire.x,fire.y,"fireball",{speed:18,scale:{start:.45,end:0},lifespan:260,frequency:35,tint:[0xffa13b,0xffd36b],blendMode:"ADD"}).setDepth(20);
+        damageSkillEnemy(enemy,damage,knockbackX,knockbackY) {
+            if(!enemy||!enemy.active)return;
+            enemy.hp-=damage;
+            enemy.healthBack.setVisible(true);enemy.healthBar.setVisible(true);
+            enemy.healthBar.width=Math.max(1,28*enemy.hp/enemy.maxHp);
+            enemy.sprite.setTint(0xb9f4ef);
+            this.time.delayedCall(100,()=>{if(enemy.active)enemy.sprite.clearTint();});
+            if(knockbackX||knockbackY)enemy.body.setVelocity(knockbackX,knockbackY);
+            if(enemy.hp<=0)this.killEnemy(enemy);
         }
-        castLightning(){
-            const first=this.nearestEnemy();if(!first)return;const hit=new Set(),damage=this.stats.lightningDamage||34;
-            const strike=(enemy,fx,fy)=>{if(!enemy||!enemy.active||hit.has(enemy))return;hit.add(enemy);
-                const g=this.add.graphics().setDepth(28);g.lineStyle(4,0x9ce9ff,.95);let px=fx,py=fy;
-                for(let i=1;i<=7;i++){const t=i/7,nx=fx+(enemy.x-fx)*t+(i===7?0:Phaser.Math.Between(-16,16)),ny=fy+(enemy.y-fy)*t+(i===7?0:Phaser.Math.Between(-13,13));g.lineBetween(px,py,nx,ny);px=nx;py=ny;}
-                g.lineStyle(1.5,0xffffff,1);g.lineBetween(fx,fy,enemy.x,enemy.y);this.tweens.add({targets:g,alpha:0,duration:190,onComplete:()=>g.destroy()});
-                enemy.hp-=damage;enemy.healthBack.setVisible(true);enemy.healthBar.setVisible(true);enemy.healthBar.width=Math.max(1,28*enemy.hp/enemy.maxHp);
-                enemy.sprite.setTint(0x9ce9ff);this.time.delayedCall(100,()=>{if(enemy.active)enemy.sprite.clearTint();});if(enemy.hp<=0)this.killEnemy(enemy);
-            };
-            strike(first,this.player.x,this.player.y);
-            const second=this.enemies.getChildren().filter(e=>e.active&&!hit.has(e)&&Phaser.Math.Distance.Between(first.x,first.y,e.x,e.y)<155)
-                .sort((a,b)=>Phaser.Math.Distance.Between(first.x,first.y,a.x,a.y)-Phaser.Math.Distance.Between(first.x,first.y,b.x,b.y))[0];
-            if(second)strike(second,first.x,first.y);this.cameras.main.shake(90,.0018);
+
+        castEarthWave(){
+            const radius=this.stats.earthRadius||145;
+            const ring=this.add.circle(this.player.x,this.player.y,24,0xb18a55,0.12).setStrokeStyle(5,0xd7bd82,0.95).setDepth(21);
+            const inner=this.add.circle(this.player.x,this.player.y,12,0xe7d3a1,0.28).setDepth(21);
+            const cracks=this.add.graphics().setDepth(20);
+            cracks.lineStyle(3,0xc7a66c,0.9);
+            for(let i=0;i<12;i++){
+                const a=i*Math.PI/6, r1=18, r2=Phaser.Math.Between(55,105);
+                const ex=this.player.x+Math.cos(a)*r2,ey=this.player.y+Math.sin(a)*r2;
+                cracks.lineBetween(this.player.x+Math.cos(a)*r1,this.player.y+Math.sin(a)*r1,ex,ey);
+                cracks.lineBetween(ex,ey,ex+Math.cos(a+0.45)*14,ey+Math.sin(a+0.45)*14);
+            }
+            this.tweens.add({targets:ring,scale:radius/24,alpha:0,duration:520,ease:"Cubic.Out",onComplete:()=>ring.destroy()});
+            this.tweens.add({targets:inner,scale:5,alpha:0,duration:350,onComplete:()=>inner.destroy()});
+            this.tweens.add({targets:cracks,alpha:0,duration:520,onComplete:()=>cracks.destroy()});
+            this.cameras.main.shake(110,0.0028);
+            this.enemies.getChildren().slice().forEach(enemy=>{
+                if(!enemy.active)return;
+                const dx=enemy.x-this.player.x,dy=enemy.y-this.player.y,d=Math.hypot(dx,dy);
+                if(d<=radius){const force=180,den=Math.max(1,d);this.damageSkillEnemy(enemy,this.stats.earthDamage,dx/den*force,dy/den*force);}
+            });
         }
+
+        updateWindOrbs(dt){
+            if(!this.stats||!this.stats.windUnlocked){
+                if(this.windOrb){this.windOrb.destroy();this.windOrb=null;}
+                return;
+            }
+            const count=this.stats.windOrbCount||1,orbit=this.stats.windRadius||76;
+            this.windAngle+=dt*0.00165;
+            if(!this.windOrb||!this.windOrb.active){
+                this.windOrb=this.add.container(this.player.x,this.player.y).setDepth(23);
+                this.windOrb.items=[];
+                for(let i=0;i<count;i++){
+                    const orb=this.add.image(0,0,"windorb").setScale(1.15);
+                    this.windOrb.add(orb);this.windOrb.items.push(orb);
+                    this.tweens.add({targets:orb,scale:1.38,duration:420,yoyo:true,repeat:-1,ease:"Sine.InOut"});
+                }
+            }
+            while(this.windOrb.items.length<count){
+                const orb=this.add.image(0,0,"windorb").setScale(1.15);
+                this.windOrb.add(orb);this.windOrb.items.push(orb);
+                this.tweens.add({targets:orb,scale:1.38,duration:420,yoyo:true,repeat:-1,ease:"Sine.InOut"});
+            }
+            while(this.windOrb.items.length>count)this.windOrb.items.pop().destroy();
+            this.windOrb.setPosition(this.player.x,this.player.y);
+            this.windOrb.items.forEach((orb,i)=>{
+                const a=this.windAngle+(Math.PI*2*i/count);
+                const x=Math.cos(a)*orbit,y=Math.sin(a)*orbit;
+                orb.setPosition(x,y).setRotation(a+Math.PI/2);
+                this.enemies.getChildren().forEach(enemy=>{
+                    if(!enemy.active)return;
+                    if(Phaser.Math.Distance.Between(this.player.x+x,this.player.y+y,enemy.x,enemy.y)<25){
+                        if(!enemy.windHitAt||this.time.now-enemy.windHitAt>=this.stats.windDelay){
+                            enemy.windHitAt=this.time.now;
+                            this.damageSkillEnemy(enemy,this.stats.windDamage,Math.cos(a)*55,Math.sin(a)*55);
+                        }
+                    }
+                });
+            });
+        }
+
         spawnBoss(stage){
             const types=[{name:"МАЛЫЙ СТРАЖ РАЗЛОМА",kind:"brute",hp:290,speed:43,damage:19,scale:1.55,tint:0x9c7052},
                 {name:"КОСТЯНОЙ ПАЛАЧ",kind:"skeleton",hp:520,speed:68,damage:25,scale:2.0,tint:0xc8c0a9},
