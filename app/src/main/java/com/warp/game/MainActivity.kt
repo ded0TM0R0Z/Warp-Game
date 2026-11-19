@@ -36,6 +36,7 @@ class MainActivity : Activity() {
 
     private lateinit var pageContent: LinearLayout
     private lateinit var backButton: TextView
+    private lateinit var navHome: TextView
     private lateinit var navCatalog: TextView
     private lateinit var navLibrary: TextView
     private lateinit var navSettings: TextView
@@ -66,7 +67,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.statusBarColor = bg
         window.navigationBarColor = bg
-        window.decorView.systemUiVisibility = 0
+        applyImmersiveMode()
         initializePlatformServices()
         buildShell()
         renderPage(false)
@@ -103,7 +104,7 @@ class MainActivity : Activity() {
         val topBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(8), 0, dp(12))
+            setPadding(0, dp(8), 0, dp(14))
         }
 
         backButton = TextView(this).apply {
@@ -117,14 +118,26 @@ class MainActivity : Activity() {
         }
         topBar.addView(backButton)
 
+        val logo = TextView(this).apply {
+            text = "W"
+            textSize = 25f
+            setTypeface(typeface, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(42, 211, 255), Color.rgb(100, 78, 255), Color.rgb(42, 35, 94))
+            ).apply { cornerRadius = dp(15).toFloat() }
+        }
+        topBar.addView(logo, LinearLayout.LayoutParams(dp(46), dp(46)).apply { rightMargin = dp(12) })
         val brand = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setOnClickListener { navigateTo("home") }
         }
-        brand.addView(label("WARP GAME", 19f, textMain, true))
+        brand.addView(label("WARP GAME", 18f, textMain, true))
         brand.addView(label("ИГРОВАЯ ПЛАТФОРМА", 9f, textMuted, true).apply {
             letterSpacing = 0.13f
-            setPadding(0, dp(2), 0, 0)
+            setPadding(0, dp(3), 0, 0)
         })
         topBar.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         topBar.addView(label("●", 11f, green, true))
@@ -150,18 +163,39 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(0, dp(8), 0, 0)
         }
-        navCatalog = navItem("Каталог")
-        navLibrary = navItem("Мои игры")
-        navSettings = navItem("Настройки")
+        navHome = navItem("⌂\nГлавная")
+        navCatalog = navItem("▦\nКаталог")
+        navLibrary = navItem("▣\nМои игры")
+        navSettings = navItem("⚙\nНастройки")
+        navHome.setOnClickListener { navigateTo("home") }
         navCatalog.setOnClickListener { navigateTo("catalog") }
         navLibrary.setOnClickListener { navigateTo("library") }
         navSettings.setOnClickListener { navigateTo("settings") }
-        bottomNav.addView(navCatalog, LinearLayout.LayoutParams(0, dp(52), 1f))
-        bottomNav.addView(navLibrary, LinearLayout.LayoutParams(0, dp(52), 1f))
-        bottomNav.addView(navSettings, LinearLayout.LayoutParams(0, dp(52), 1f))
+        bottomNav.addView(navHome, LinearLayout.LayoutParams(0, dp(56), 1f))
+        bottomNav.addView(navCatalog, LinearLayout.LayoutParams(0, dp(56), 1f))
+        bottomNav.addView(navLibrary, LinearLayout.LayoutParams(0, dp(56), 1f))
+        bottomNav.addView(navSettings, LinearLayout.LayoutParams(0, dp(56), 1f))
         root.addView(bottomNav)
 
         setContentView(root)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun applyImmersiveMode() {
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applyImmersiveMode()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyImmersiveMode()
     }
 
     override fun onNewIntent(intent: android.content.Intent) {
@@ -205,9 +239,11 @@ class MainActivity : Activity() {
             else -> renderHome()
         }
 
+        navHome.isSelected = currentPage == "home"
         navCatalog.isSelected = currentPage == "catalog"
         navLibrary.isSelected = currentPage == "library"
         navSettings.isSelected = currentPage == "settings"
+        styleNav(navHome)
         styleNav(navCatalog)
         styleNav(navLibrary)
         styleNav(navSettings)
@@ -226,11 +262,11 @@ class MainActivity : Activity() {
     }
 
     private fun renderHome() {
-        pageContent.addView(label("ТВОЯ БИБЛИОТЕКА ИГР", 10f, accent, true).apply {
-            letterSpacing = 0.12f
+        pageContent.addView(label("ПЛАТФОРМА ДЛЯ ТВОИХ ИГР", 10f, accent, true).apply {
+            letterSpacing = 0.14f
         })
-        pageContent.addView(label("Играй. Открывай. Исследуй.", 27f, textMain, true).apply {
-            setPadding(0, dp(8), 0, dp(7))
+        pageContent.addView(label("Играй без границ", 30f, textMain, true).apply {
+            setPadding(0, dp(9), 0, dp(7))
         })
         pageContent.addView(label(
             "Единая платформа для мобильных 2D- и 3D-игр.",
@@ -242,8 +278,10 @@ class MainActivity : Activity() {
             background = gradientCard()
             setPadding(dp(20), dp(20), dp(20), dp(20))
         }
-        hero.addView(label("WARP  /  PLATFORM", 10f, Color.rgb(205, 196, 255), true))
-        hero.addView(label("Игры в одном месте", 23f, textMain, true).apply {
+        hero.addView(label("W  /  WARP GAME", 10f, Color.rgb(205, 196, 255), true).apply {
+            letterSpacing = 0.12f
+        })
+        hero.addView(label("Твоя игровая вселенная", 23f, textMain, true).apply {
             setPadding(0, dp(10), 0, dp(7))
         })
         hero.addView(label(
@@ -256,6 +294,21 @@ class MainActivity : Activity() {
         }
         hero.addView(status)
         pageContent.addView(hero)
+
+        val featureStrip = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            background = rounded(surfaceAlt, 14)
+            setPadding(dp(8), dp(13), dp(8), dp(13))
+        }
+        listOf("2D ИГРЫ", "3D ИГРЫ", "ОФЛАЙН").forEachIndexed { index, value ->
+            val item = label(value, 10f, if (index == 1) Color.rgb(76, 205, 255) else textMuted, true)
+            item.gravity = Gravity.CENTER
+            featureStrip.addView(item, LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        val featureParams = LinearLayout.LayoutParams(-1, -2)
+        featureParams.topMargin = dp(14)
+        pageContent.addView(featureStrip, featureParams)
 
         sectionTitle("Быстрый доступ")
         pageContent.addView(actionCard(
@@ -274,7 +327,7 @@ class MainActivity : Activity() {
         info.setPadding(dp(16), dp(16), dp(16), dp(16))
         info.addView(label("Платформа развивается", 16f, textMain, true))
         info.addView(label(
-            "Следующий этап — подключение каталога, установка игровых пакетов и запуск первой встроенной игры.",
+            "Каталог, локальная библиотека, установка игровых пакетов и запуск 2D- и 3D-игр собраны в одном приложении.",
             13f, textMuted, false
         ).apply { setPadding(0, dp(7), 0, 0) })
         pageContent.addView(info)
@@ -1059,7 +1112,7 @@ class MainActivity : Activity() {
     private fun navItem(title: String): TextView {
         return TextView(this).apply {
             text = title
-            textSize = 12f
+            textSize = 10f
             gravity = Gravity.CENTER
             setTextColor(textMuted)
             isClickable = true
