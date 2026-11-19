@@ -38,6 +38,12 @@ The application rejects invalid identifiers, duplicate game IDs, unsupported gam
 
 ## 3. Package hosting
 
+The repository workflow **Publish Game Package** automates packaging, SHA-256 calculation, GitHub Release asset upload and catalog registration. Source packages live under `games/<game_id>/`. See [REMOTE GAME DISTRIBUTION](REMOTE_GAME_DISTRIBUTION.md) for the complete publication procedure.
+
+Published game archives are remote Release assets; they are not bundled into the Android APK. The app downloads them only after the user selects Install or Update.
+
+
+
 For each game release:
 
 1. Build a ZIP that follows [GAME PACKAGE SPEC](GAME_PACKAGE_SPEC.md).
@@ -68,4 +74,6 @@ When the remote catalog is empty or unavailable, the app still shows three local
 - Cancellation is disabled once package verification succeeds and local installation begins.
 - Pause and resume, accounts, ratings, reviews, payments and user submissions are not implemented.
 - Retry and cancellation behavior still requires physical-device testing.
-- GitHub Releases are an MVP hosting service, not the final large-scale game distribution backend.
+- GitHub Releases are the initial remote file host/CDN, not a dedicated multiplayer or account backend.
+- The catalog is hosted as a public static JSON file; publication is automated through GitHub Actions.
+- No published production game is registered yet; the catalog remains empty until the first game is developed and published.
