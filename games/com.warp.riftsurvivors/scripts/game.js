@@ -71,6 +71,7 @@
             this.createHud();
             this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
             this.physics.add.overlap(this.player, this.enemies, this.hitPlayer, null, this);
+            this.physics.add.collider(this.player, this.obstacles);
             this.physics.add.overlap(this.player, this.orbs, this.collectXp, null, this);
             this.input.on("pointerdown", this.pointerDown, this);
             this.input.on("pointermove", this.pointerMove, this);
@@ -260,18 +261,10 @@
             this.hud.joyKnob = this.add.circle(0, 0, 25, 0xc3ad78, 0.8).setStrokeStyle(3, 0xf1e2bb, 0.95);
             this.hud.joy.add([this.hud.joyBase, this.hud.joyInner, this.hud.joyKnob]);
 
-            this.hud.dash = this.add.container(W - 92, H - 88).setDepth(50).setScrollFactor(0);
-            const dashBase = this.add.circle(0, 0, 43, 0x493b2a, 0.94).setStrokeStyle(3, C.gold, 0.95);
-            const dashLabel = this.add.text(0, -2, "РЫВОК", this.style(12, C.parchment, true)).setOrigin(0.5);
-            this.dashButton = this.add.circle(0, 0, 46, 0xffffff, 0.001).setInteractive();
-            this.dashButton.on("pointerdown", pointer => { pointer.event.stopPropagation(); this.dash(); });
-            this.hud.dash.add([dashBase, dashLabel, this.dashButton]);
-
-            this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40).setScrollFactor(0);
+             this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40).setScrollFactor(0);
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
-            this.hud.dash.setVisible(false);
-            this.hud.help.setVisible(false);
+             this.hud.help.setVisible(false);
             this.layoutJoystick();
         }
 
@@ -340,7 +333,7 @@
             this.player.body.setVelocity(0, 0);
             this.player.body.setAcceleration(0, 0);
             this.wave = 1; this.waveClock = 0; this.spawnClock = 0;
-            this.fireClock = 250; this.dashCooldown = 0; this.invulnerable = 0;
+            this.fireClock = 250; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
             this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,earthUnlocked:false,earthDamage:42,earthDelay:8500,windUnlocked:false,windDamage:18,windDelay:650,windRadius:76 };
@@ -355,7 +348,7 @@
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             this.hud.joyKnob.setPosition(0, 0);
             this.hud.top.setVisible(true); this.hud.joy.setVisible(true);
-            this.hud.dash.setVisible(true); this.hud.help.setVisible(true);
+            this.hud.help.setVisible(true);
             this.refreshHud();
             this.spawnEnemy("slime"); this.spawnEnemy("slime"); this.spawnEnemy("skeleton");
         }
@@ -393,25 +386,7 @@
             this.hud.joyKnob.setPosition(this.joy.dx * 39, this.joy.dy * 39);
         }
 
-        dash() {
-            if (this.mode !== "playing" || this.dashCooldown > 0) return;
-            let dx = this.joy.dx, dy = this.joy.dy;
-            if (Math.hypot(dx, dy) < 0.15) {
-                const enemy = this.nearestEnemy();
-                if (enemy) {
-                    dx = this.player.x - enemy.x; dy = this.player.y - enemy.y;
-                    const length = Math.max(1, Math.hypot(dx, dy));
-                    dx /= length; dy /= length;
-                } else { dx = this.lastMoveX; dy = this.lastMoveY; }
-            }
-            this.player.body.setVelocity(dx * 590, dy * 590);
-            this.invulnerable = 430;
-            this.dashCooldown = 2600;
-            this.cameras.main.shake(100, 0.0025);
-            if (sdk) sdk.vibrate(35);
-        }
-
-        spawnEnemy(type) {
+         spawnEnemy(type) {
             if (this.mode !== "playing" || this.enemies.countActive(true) >= 65) return;
             const side = Phaser.Math.Between(0, 3);
             const view=this.cameras.main.worldView;
@@ -618,7 +593,6 @@
         hideHud() {
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
-            this.hud.dash.setVisible(false);
             this.hud.help.setVisible(false);
         }
 
@@ -629,8 +603,7 @@
             this.updateWorldChunks(this.player.x,this.player.y);
             this.spawnClock += dt;
             this.fireClock += dt;
-            this.dashCooldown = Math.max(0, this.dashCooldown - dt);
-            this.invulnerable = Math.max(0, this.invulnerable - dt);
+             this.invulnerable = Math.max(0, this.invulnerable - dt);
             this.player.setAlpha(this.invulnerable > 0 && Math.floor(this.time.now / 75) % 2 ? 0.48 : 1);
 
             if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
@@ -688,11 +661,7 @@
                 const v=this.cameras.main.worldView;
                 if(bolt.life<=0||bolt.x<v.x-80||bolt.x>v.right+80||bolt.y<v.y-80||bolt.y>v.bottom+80)bolt.destroy();
             });
-            if (this.dashButton && this.hud.dash) {
-                const base = this.hud.dash.getAt(0);
-                base.setFillStyle(this.dashCooldown <= 0 ? 0x493b2a : 0x29251f, 0.94);
-            }
-        }
+         }
 
 
         formatTime(ms){const n=Math.floor(ms/1000);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");}
