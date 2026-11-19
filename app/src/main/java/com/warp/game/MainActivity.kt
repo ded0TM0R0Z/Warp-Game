@@ -648,7 +648,7 @@ class MainActivity : Activity() {
             .create()
         dialog.setOnShowListener {
             val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            button.isEnabled = !isCurrentVersionInstalled && downloadingGameId == null
+            button.isEnabled = !isCurrentVersionInstalled
             button.setOnClickListener {
                 dialog.dismiss()
                 if (!isCurrentVersionInstalled) downloadGame(game)
@@ -725,7 +725,7 @@ class MainActivity : Activity() {
             setTextColor(if (isCurrentVersionInstalled) textMuted else textMain)
             background = rounded(if (isCurrentVersionInstalled) surfaceAlt else accentSoft, 11)
             setPadding(dp(14), dp(11), dp(14), dp(11))
-            isClickable = !isCurrentVersionInstalled && !isQueued && !isFailedInQueue && !anotherDownloadActive && !isDownloading
+            isClickable = !isCurrentVersionInstalled && !isQueued && !isFailedInQueue && !isDownloading
             isFocusable = isClickable
             setOnClickListener {
                 if (isClickable) downloadGame(game)
