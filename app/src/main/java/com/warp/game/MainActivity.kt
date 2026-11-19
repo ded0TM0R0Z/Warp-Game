@@ -76,6 +76,7 @@ class MainActivity : Activity() {
         initializePlatformServices()
         buildShell()
         renderPage(false)
+        startNextQueuedDownload()
     }
 
     private fun initializePlatformServices() {
@@ -697,6 +698,11 @@ class MainActivity : Activity() {
         }
         val isCurrentVersionInstalled = installedGame?.version == game.version
         val isDownloading = downloadingGameId == game.gameId
+        val queuedEntry = if (::downloadQueueStore.isInitialized) {
+            downloadQueueStore.getEntries().firstOrNull { it.game.gameId == game.gameId }
+        } else null
+        val isQueued = queuedEntry?.status == DownloadQueueStore.STATUS_PENDING
+        val isFailedInQueue = queuedEntry?.status == DownloadQueueStore.STATUS_FAILED
         val anotherDownloadActive = downloadingGameId != null && !isDownloading
 
         val buttonText = when {
@@ -704,8 +710,10 @@ class MainActivity : Activity() {
             isDownloading && downloadAttempt > 1 ->
                 "Повтор $downloadAttempt/$MAX_DOWNLOAD_ATTEMPTS · $downloadProgressPercent%"
             isDownloading -> "Загрузка: $downloadProgressPercent%"
+            isQueued -> "В очереди"
+            isFailedInQueue -> "Ошибка · открыть загрузки"
             isCurrentVersionInstalled -> "Установлено"
-            anotherDownloadActive -> "Другая загрузка"
+            anotherDownloadActive -> "Добавить в очередь"
             installedGame != null -> "Обновить"
             else -> "Установить"
         }
@@ -717,7 +725,7 @@ class MainActivity : Activity() {
             setTextColor(if (isCurrentVersionInstalled) textMuted else textMain)
             background = rounded(if (isCurrentVersionInstalled) surfaceAlt else accentSoft, 11)
             setPadding(dp(14), dp(11), dp(14), dp(11))
-            isClickable = !isCurrentVersionInstalled && !anotherDownloadActive && !isDownloading
+            isClickable = !isCurrentVersionInstalled && !isQueued && !isFailedInQueue && !anotherDownloadActive && !isDownloading
             isFocusable = isClickable
             setOnClickListener {
                 if (isClickable) downloadGame(game)
@@ -951,6 +959,89 @@ class MainActivity : Activity() {
             current = current.cause
         }
         return false
+    }
+
+    private fun renderDownloads() {
+        pageHeading("Загрузки", "Очередь установок, текущий прогресс и история операций.")
+        if (!::downloadQueueStore.isInitialized) {
+            pageContent.addView(emptyState("Очередь недоступна", "Локальное хранилище загрузок не инициализировано."))
+            return
+        }
+
+        val entries = downloadQueueStore.getEntries().sortedByDescending { it.updatedAt }
+        if (entries.isEmpty()) {
+            pageContent.addView(emptyState("Очередь пуста", "Добавляй игры в очередь из каталога. Загрузки будут выполняться по одной."))
+            pageContent.addView(actionCard("Открыть каталог", "Выбрать игру для установки", "01") { navigateTo("catalog") })
+            return
+        }
+
+        val activeCount = entries.count { it.status == DownloadQueueStore.STATUS_DOWNLOADING }
+        val pendingCount = entries.count { it.status == DownloadQueueStore.STATUS_PENDING }
+        pageContent.addView(label("АКТИВНО: $activeCount  •  В ОЧЕРЕДИ: $pendingCount", 10f, accent, true).apply {
+            setPadding(0, 0, 0, dp(12))
+        })
+        entries.forEach { entry ->
+            val card = panel().apply { setPadding(dp(15), dp(14), dp(15), dp(14)) }
+            card.addView(label(entry.game.name, 16f, textMain, true))
+            card.addView(label(
+                entry.game.gameType.uppercase() + " • " + entry.game.engine + " • " + entry.game.version,
+                10f, accent, true
+            ).apply { setPadding(0, dp(5), 0, dp(8)) })
+            val statusText = when (entry.status) {
+                DownloadQueueStore.STATUS_PENDING -> "Ожидает загрузки"
+                DownloadQueueStore.STATUS_DOWNLOADING -> "Загрузка: ${entry.progressPercent}%"
+                DownloadQueueStore.STATUS_COMPLETED -> "Установлено"
+                DownloadQueueStore.STATUS_FAILED -> "Ошибка загрузки"
+                DownloadQueueStore.STATUS_CANCELLED -> "Отменено"
+                else -> entry.status
+            }
+            card.addView(label(statusText, 12f, if (entry.status == DownloadQueueStore.STATUS_COMPLETED) green else textMain, true))
+            if (entry.status == DownloadQueueStore.STATUS_DOWNLOADING) {
+                val progress = android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+                    max = 100
+                    this.progress = entry.progressPercent
+                    progressTintList = android.content.res.ColorStateList.valueOf(accent)
+                    progressBackgroundTintList = android.content.res.ColorStateList.valueOf(surfaceAlt)
+                }
+                val progressParams = LinearLayout.LayoutParams(-1, dp(6))
+                progressParams.topMargin = dp(10)
+                card.addView(progress, progressParams)
+            }
+            if (entry.message.isNotBlank()) {
+                card.addView(label(entry.message, 11f, textMuted, false).apply { setPadding(0, dp(7), 0, 0) })
+            }
+            val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+            when (entry.status) {
+                DownloadQueueStore.STATUS_DOWNLOADING -> {
+                    actions.addView(filterChip("Отменить", false) { cancelGameDownload() }, LinearLayout.LayoutParams(0, dp(38), 1f))
+                }
+                DownloadQueueStore.STATUS_FAILED -> {
+                    actions.addView(filterChip("Повторить", true) { retryQueuedDownload(entry.game.gameId) }, LinearLayout.LayoutParams(0, dp(38), 1f).apply { rightMargin = dp(6) })
+                    actions.addView(filterChip("Убрать", false) { removeQueuedDownload(entry.game.gameId) }, LinearLayout.LayoutParams(0, dp(38), 1f))
+                }
+                else -> {
+                    actions.addView(filterChip("Убрать", false) { removeQueuedDownload(entry.game.gameId) }, LinearLayout.LayoutParams(0, dp(38), 1f))
+                }
+            }
+            val actionParams = LinearLayout.LayoutParams(-1, -2)
+            actionParams.topMargin = dp(12)
+            card.addView(actions, actionParams)
+            val cardParams = LinearLayout.LayoutParams(-1, -2)
+            cardParams.bottomMargin = dp(10)
+            pageContent.addView(card, cardParams)
+        }
+    }
+
+    private fun retryQueuedDownload(gameId: String) {
+        if (!::downloadQueueStore.isInitialized || !downloadQueueStore.retry(gameId)) return
+        startNextQueuedDownload()
+        renderDownloads()
+    }
+
+    private fun removeQueuedDownload(gameId: String) {
+        if (!::downloadQueueStore.isInitialized) return
+        downloadQueueStore.remove(gameId)
+        renderDownloads()
     }
 
     private fun renderLibrary() {
