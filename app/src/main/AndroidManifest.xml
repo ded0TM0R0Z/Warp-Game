@@ -13,10 +13,6 @@
         android:theme="@style/WarpGameTheme">
 
         <activity
-            android:name=".RuntimeTestActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".GameRuntimeActivity"
             android:exported="false" />
 

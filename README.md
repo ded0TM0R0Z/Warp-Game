@@ -6,7 +6,7 @@ The platform targets modern mid-range Android phones and above, supports both 2D
 
 ## Project status
 
-**Current stage:** Persistent serial download queue and Downloads screen are implemented in PR #13; physical-device validation remains pending.  
+**Current stage:** Remote game hosting and automated package publishing are prepared; the first production game is the next milestone.  
 **Implemented:** Catalog discovery, package installer, isolated offline WebView runtime, Game SDK, engine registry, main-menu Back navigation and persistent download queue.
 
 ## Documentation
@@ -18,6 +18,7 @@ The platform targets modern mid-range Android phones and above, supports both 2D
 - [Phone development workflow](docs/PHONE_WORKFLOW.md)
 - [Build environment](docs/BUILD_ENVIRONMENT.md)
 - [Development plan](docs/DEVELOPMENT_PLAN.md)
+- [Game source directory](games/README.md)
 - [Game package specification](docs/GAME_PACKAGE_SPEC.md)
 - [Catalog backend](docs/CATALOG_BACKEND.md)
 - [Game SDK](docs/GAME_SDK_SPEC.md)
@@ -26,10 +27,11 @@ The platform targets modern mid-range Android phones and above, supports both 2D
 - [WebGL 3D demo and acceptance checks](docs/WEBGL_3D_DEMO.md)
 - [Catalog search and download controls](docs/CATALOG_SEARCH_DOWNLOADS.md)
 - [Persistent download queue](docs/DOWNLOAD_QUEUE.md)
+- [Remote game hosting and publishing](docs/REMOTE_GAME_DISTRIBUTION.md)
 
 ## Build
 
-Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #78](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44593062877). The Phaser and WebGL demo packages are included in the latest main-branch build. PR #13 adds the persistent download queue and requires a successful pull-request build before merge. New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
+Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #78](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44593062877). Published games are hosted as GitHub Release assets and discovered through the remote catalog. The Android APK contains the platform runtime, not the remote game library. New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
 
 ## Core principles
 

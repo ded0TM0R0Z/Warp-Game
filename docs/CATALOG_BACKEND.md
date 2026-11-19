@@ -1,7 +1,7 @@
 # WARP GAME — CATALOG BACKEND
 
 **Version:** 1.0.0  
-**Status:** Provisional MVP backend; catalog search and cancellable downloads implemented
+**Status:** Remote static catalog and automated GitHub Release package publishing prepared
 
 ## 1. Data source
 
@@ -38,6 +38,10 @@ The application rejects invalid identifiers, duplicate game IDs, unsupported gam
 
 ## 3. Package hosting
 
+The repository workflow **Publish Game Package** automates packaging, SHA-256 calculation, GitHub Release asset upload and catalog registration. Source packages live under `games/<game_id>/`. See [REMOTE GAME DISTRIBUTION](REMOTE_GAME_DISTRIBUTION.md) for the complete publication procedure.
+
+Published game archives are remote Release assets; they are not bundled into the Android APK. The app downloads them only after the user selects Install or Update.
+
 For each game release:
 
 1. Build a ZIP that follows [GAME PACKAGE SPEC](GAME_PACKAGE_SPEC.md).
@@ -55,9 +59,9 @@ The initial package URL must use HTTPS and a trusted GitHub host. Redirects are 
 - Installed games do not depend on the catalog to launch.
 - Package checksums and manifest metadata are verified before installation.
 
-## 5. Built-in demos
+## 5. Archived prototype packages
 
-When the remote catalog is empty or unavailable, the app still shows three locally bundled demo packages in the Catalog screen: the Phaser 2D demo, native WebGL 3D test and HTML5 runtime test. These are installed through the same local package installer but are not entries in the remote JSON catalog and do not require a network connection.
+The previous Phaser, WebGL and HTML5 test packages have been moved to `dev-tools/legacy-demos/` and are no longer bundled in the Android app. The production catalog displays only remotely published games. The catalog can remain empty until the first game is published.
 
 ## 6. Current limitations
 
@@ -68,4 +72,6 @@ When the remote catalog is empty or unavailable, the app still shows three local
 - Cancellation is disabled once package verification succeeds and local installation begins.
 - Pause and resume, accounts, ratings, reviews, payments and user submissions are not implemented.
 - Retry and cancellation behavior still requires physical-device testing.
-- GitHub Releases are an MVP hosting service, not the final large-scale game distribution backend.
+- GitHub Releases are the initial remote file host/CDN, not a dedicated multiplayer or account backend.
+- The catalog is hosted as a public static JSON file; publication is automated through GitHub Actions.
+- No published production game is registered yet; the catalog remains empty until the first game is developed and published.

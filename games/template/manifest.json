@@ -1,0 +1,13 @@
+{
+    "game_id": "com.warp.template",
+    "name": "Название игры",
+    "description": "Краткое описание игры до 500 символов.",
+    "version": "1.0.0",
+    "engine": "phaser",
+    "engine_version": "3.90.0",
+    "game_type": "2d",
+    "entry_point": "index.html",
+    "orientation": "landscape",
+    "offline_supported": true,
+    "minimum_platform_version": "0.2.0"
+}

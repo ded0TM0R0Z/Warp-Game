@@ -1,0 +1,106 @@
+name: Publish Game Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      game_id:
+        description: Permanent game_id from games/<game_id>/manifest.json
+        required: true
+        type: string
+      version:
+        description: Package version (MAJOR.MINOR.PATCH)
+        required: true
+        type: string
+
+concurrency:
+  group: warp-game-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Validate, package and publish game
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate inputs and package game
+        id: package
+        env:
+          GAME_ID: ${{ inputs.game_id }}
+          GAME_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$GAME_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{2,127}$ ]]; then
+            echo "::error::Invalid game_id."
+            exit 1
+          fi
+          if [[ ! "$GAME_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must use MAJOR.MINOR.PATCH."
+            exit 1
+          fi
+          PACKAGE_PATH="$RUNNER_TEMP/$GAME_ID-$GAME_VERSION.zip"
+          python tools/publish_game.py package \
+            --game-dir "games/$GAME_ID" \
+            --output "$PACKAGE_PATH" \
+            --game-id "$GAME_ID" \
+            --version "$GAME_VERSION" \
+            --github-output "$GITHUB_OUTPUT"
+          echo "package_path=$PACKAGE_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GAME_ID: ${{ inputs.game_id }}
+          GAME_VERSION: ${{ inputs.version }}
+          PACKAGE_PATH: ${{ steps.package.outputs.package_path }}
+        run: |
+          set -euo pipefail
+          TAG="warp-game-$GAME_ID-v$GAME_VERSION"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$PACKAGE_PATH" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "$PACKAGE_PATH" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$GAME_ID $GAME_VERSION" \
+              --notes "WARP GAME package release. SHA-256 and size are recorded in the public catalog."
+          fi
+          echo "Release asset published: $TAG"
+
+      - name: Update remote catalog
+        env:
+          GAME_ID: ${{ inputs.game_id }}
+          GAME_VERSION: ${{ inputs.version }}
+          PACKAGE_PATH: ${{ steps.package.outputs.package_path }}
+        run: |
+          set -euo pipefail
+          TAG="warp-game-$GAME_ID-v$GAME_VERSION"
+          RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
+          python tools/publish_game.py update-catalog \
+            --catalog catalog/catalog.json \
+            --manifest "games/$GAME_ID/manifest.json" \
+            --package "$PACKAGE_PATH" \
+            --release-url "$RELEASE_URL"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add catalog/catalog.json
+          if git diff --cached --quiet; then
+            echo "Catalog already contains this exact release."
+            exit 0
+          fi
+          git commit -m "Publish game $GAME_ID v$GAME_VERSION to catalog"
+          git push origin HEAD:main

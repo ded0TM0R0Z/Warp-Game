@@ -1,7 +1,7 @@
 # WARP GAME — DEVELOPMENT PLAN
 
 **Version:** 1.3.0  
-**Current stage:** 7 — Catalog discovery, downloads and 3D runtime validation
+**Current stage:** 8 — Remote game publishing and first production games
 
 ## Stage 0 — Foundation and validation
 
@@ -81,8 +81,8 @@
 - [x] Pin Phaser 3.90.0 and register the engine in the installer.
 - [x] Include the official Phaser minified runtime locally; no CDN is required.
 - [x] Create the small playable "Кристальный рейд" demo.
-- [x] Package the manifest, game code, styles, engine and MIT license into an offline ZIP.
-- [x] Add an in-app action to install the Phaser demo.
+- [x] Package the manifest, game code, styles, engine and MIT license into an offline ZIP for runtime proof of concept.
+- [x] Move prototype game assets out of the Android APK; production games are delivered as remote packages.
 - [ ] Verify Phaser rendering, touch movement, save/load and offline launch on the target phone.
 - [ ] Measure performance on the target phone and weaker devices.
 
@@ -107,7 +107,9 @@
 - [x] Add a dedicated downloads screen and persistent download state.
 - [x] Implement a serial download queue with duplicate prevention, cancellation, retry and process-restart recovery.
 - [ ] Implement pause/resume only after transfer state and partial-file integrity are designed.
-- [ ] Publish real game packages and validate catalog search, filters and installs.
+- [x] Prepare remote GitHub Release package hosting and static catalog distribution.
+- [x] Add automated ZIP validation, SHA-256 generation, release upload and catalog publishing workflow.
+- [ ] Publish the first production game and validate remote catalog discovery, download and install.
 
 **Exit condition:** Users can discover, inspect, install and manage multiple published games reliably.
 
