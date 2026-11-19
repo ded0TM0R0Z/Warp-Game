@@ -333,13 +333,7 @@ class MainActivity : Activity() {
                 "Каталог пока пуст",
                 "Новые игры появятся здесь после публикации пакетов."
             ))
-            pageContent.addView(actionCard(
-                "Установить тестовую игру",
-                "Встроенная демонстрация установки и запуска",
-                "2D"
-            ) {
-                installBundledTestGame()
-            })
+            addBuiltInDemoCards(pageContent)
             return
         }
 
