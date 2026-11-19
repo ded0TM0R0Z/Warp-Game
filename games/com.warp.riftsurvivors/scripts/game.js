@@ -199,7 +199,7 @@
         }
 
         createHud() {
-            this.hud.top = this.add.container(0, 0).setDepth(40);
+            this.hud.top = this.add.container(0, 0).setDepth(40).setScrollFactor(0);
             const plate = this.add.rectangle(W / 2, 28, 360, 48, 0x29251f, 0.94).setStrokeStyle(2, 0xb79a5e, 0.95);
             this.hud.wave = this.add.text(28, 16, "ВОЛНА 1", this.style(16, C.parchment, true));
             this.hud.level = this.add.text(28, 39, "УР. 1", this.style(11, C.gold, true));
@@ -214,20 +214,20 @@
             this.hud.pauseBg.on("pointerdown",()=>this.pauseRun()); this.pauseButton=this.hud.pauseBg;
             this.hud.top.add([plate,this.hud.wave,this.hud.level,this.hud.score,this.hud.hpBack,this.hud.hp,this.hud.xpBack,this.hud.xp,this.hud.timer,this.hud.pauseBg,this.hud.pauseText]);
 
-            this.hud.joy = this.add.container(100, 420).setDepth(50);
+            this.hud.joy = this.add.container(100, 420).setDepth(50).setScrollFactor(0);
             this.hud.joyBase = this.add.circle(0, 0, 66, 0x242d20, 0.55).setStrokeStyle(3, 0xcab77f, 0.78);
             this.hud.joyInner = this.add.circle(0, 0, 43, 0x536344, 0.28).setStrokeStyle(1, 0xe3d4a9, 0.35);
             this.hud.joyKnob = this.add.circle(0, 0, 25, 0xc3ad78, 0.8).setStrokeStyle(3, 0xf1e2bb, 0.95);
             this.hud.joy.add([this.hud.joyBase, this.hud.joyInner, this.hud.joyKnob]);
 
-            this.hud.dash = this.add.container(W - 92, H - 88).setDepth(50);
+            this.hud.dash = this.add.container(W - 92, H - 88).setDepth(50).setScrollFactor(0);
             const dashBase = this.add.circle(0, 0, 43, 0x493b2a, 0.94).setStrokeStyle(3, C.gold, 0.95);
             const dashLabel = this.add.text(0, -2, "РЫВОК", this.style(12, C.parchment, true)).setOrigin(0.5);
             this.dashButton = this.add.circle(0, 0, 46, 0xffffff, 0.001).setInteractive();
             this.dashButton.on("pointerdown", pointer => { pointer.event.stopPropagation(); this.dash(); });
             this.hud.dash.add([dashBase, dashLabel, this.dashButton]);
 
-            this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40);
+            this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40).setScrollFactor(0);
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
             this.hud.dash.setVisible(false);
@@ -370,8 +370,9 @@
         spawnEnemy(type) {
             if (this.mode !== "playing" || this.enemies.countActive(true) >= 65) return;
             const side = Phaser.Math.Between(0, 3);
-            const x = side === 0 ? -24 : side === 1 ? W + 24 : Phaser.Math.Between(25, W - 25);
-            const y = side === 2 ? -24 : side === 3 ? H + 24 : Phaser.Math.Between(75, H - 30);
+            const view=this.cameras.main.worldView;
+            const x=side===0?view.x-35:side===1?view.right+35:Phaser.Math.Between(view.x+25,view.right-25);
+            const y=side===2?view.y-35:side===3?view.bottom+35:Phaser.Math.Between(view.y+75,view.bottom-30);
             const kind = type || (this.wave >= 4 && Math.random() < 0.12 ? "brute" : this.wave >= 2 && Math.random() < 0.34 ? "skeleton" : "slime");
             const key = kind === "brute" ? "brute" : kind === "skeleton" ? "skeleton" : "slime";
             const scale = kind === "brute" ? 1.45 : kind === "skeleton" ? 1.15 : 1.2;
@@ -441,6 +442,7 @@
 
         hitEnemy(bolt, enemy) {
             if (!bolt.active || !enemy.active) return;
+            if(bolt.trail)bolt.trail.destroy();
             bolt.destroy();
             enemy.hp -= bolt.damage;
             enemy.healthBack.setVisible(true);
@@ -574,6 +576,7 @@
             this.invulnerable = Math.max(0, this.invulnerable - dt);
             this.player.setAlpha(this.invulnerable > 0 && Math.floor(this.time.now / 75) % 2 ? 0.48 : 1);
 
+            if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
             if (this.target && this.target.active) this.showTarget(this.target);
             else if (this.targetMark) { this.target = null; this.targetMark.clear(); }
 
@@ -674,9 +677,9 @@
             if(second)strike(second,first.x,first.y);this.cameras.main.shake(90,.0018);
         }
         spawnBoss(stage){
-            const types=[{name:"ПЕПЕЛЬНЫЙ КОЛОСС",kind:"brute",hp:520,speed:38,damage:28,scale:2.35,tint:0x9c7052},
-                {name:"КОСТЯНОЙ ПАЛАЧ",kind:"skeleton",hp:390,speed:72,damage:22,scale:2.1,tint:0xc8c0a9},
-                {name:"СТРАЖ РАЗЛОМА",kind:"brute",hp:680,speed:48,damage:32,scale:2.55,tint:0x806a9b}];
+            const types=[{name:"МАЛЫЙ СТРАЖ РАЗЛОМА",kind:"brute",hp:290,speed:43,damage:19,scale:1.55,tint:0x9c7052},
+                {name:"КОСТЯНОЙ ПАЛАЧ",kind:"skeleton",hp:520,speed:68,damage:25,scale:2.0,tint:0xc8c0a9},
+                {name:"ДРЕВНИЙ КОЛОСС",kind:"brute",hp:820,speed:48,damage:34,scale:2.55,tint:0x806a9b}];
             const b=types[(stage-1)%types.length],factor=1+(stage-1)*.42,v=this.cameras.main.worldView,side=Phaser.Math.Between(0,3);
             const x=side===0?v.x-50:side===1?v.right+50:Phaser.Math.Between(v.x+50,v.right-50);
             const y=side===2?v.y-50:side===3?v.bottom+50:Phaser.Math.Between(v.y+80,v.bottom-50);
