@@ -59,8 +59,9 @@
 - [x] Implement catalog browsing and package download progress.
 - [x] Handle offline catalog access through a local cache and show server errors.
 - [x] Verify package size, SHA-256 and manifest metadata before installation.
-- [ ] Implement catalog search.
-- [ ] Implement download retry and cancellation.
+- [x] Implement catalog search by game name, description, engine, type and ID.
+- [x] Implement automatic retry for transient network failures and user cancellation during download.
+- [ ] Verify search, retry, cancellation and update flows on the target phone.
 
 **Exit condition:** A catalog game can be downloaded and installed reliably.
 
