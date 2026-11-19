@@ -1,7 +1,7 @@
 # WARP GAME — ENGINE SUPPORT
 
-**Version:** 1.0.0  
-**Status:** Engine registry and offline package validation implemented
+**Version:** 1.1.0  
+**Status:** Engine registry implemented; Phaser demo packaged; physical-device validation pending
 
 ## 1. Supported package engines
 
@@ -34,7 +34,11 @@ Babylon.js package example:
 <script src="scripts/game.js"></script>
 ```
 
-All engine files, models, textures, fonts, audio and other resources must be included in the package.
+The installer validates the exact engine version and required local library. It does not download engines automatically.
+
+The bundled development demo "Кристальный рейд" uses Phaser 3.90.0. Its complete runtime is stored under `app/src/main/assets/phaser_demo/` and packed into an offline game ZIP by `BundledPhaserDemoInstaller`. The upstream MIT license is included in the package. See [PHASER_DEMO.md](PHASER_DEMO.md).
+
+Babylon.js packages can be installed when they include the required `libraries/babylon.js` file. The platform registry does not yet include a bundled Babylon runtime or a verified Babylon demo package.
 
 ## 3. Runtime behavior
 
@@ -44,8 +48,10 @@ All engine files, models, textures, fonts, audio and other resources must be inc
 - Network access and external navigation remain blocked.
 - 3D rendering requires WebGL support and hardware acceleration on the Android device.
 
-## 4. Version policy
+## 4. Version policy and validation limits
 
-The package manifest must declare the exact engine version. The installer rejects Phaser and Babylon.js packages whose declared version does not match the registry or whose required local engine file is missing. This validates package structure and version declarations; it does not by itself prove that a real Phaser or Babylon.js game renders correctly on a phone. Device-level WebGL, touch, performance and thermal tests remain required.
+The package manifest must declare the exact engine version. The installer rejects Phaser and Babylon.js packages whose declared version does not match the registry or whose required local engine file is missing.
+
+This validates package structure and version declarations; it does not by itself prove that the engine renders correctly on a phone. Device-level WebGL, touch, performance, memory and thermal tests remain required.
 
 Engine upgrades are handled by updating the registry and validating compatibility before publishing games built for the new version.
