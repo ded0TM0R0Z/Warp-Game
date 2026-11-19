@@ -60,13 +60,17 @@ jobs:
                   cache-provider: basic
 
             - name: Prepare stable signing key
-              if: ${{ github.event_name != 'pull_request' && secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+              if: ${{ github.event_name != 'pull_request' }}
               env:
                   ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
               run: |
-                  mkdir -p "$RUNNER_TEMP/warp-signing"
-                  echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/warp-signing/warp-game.p12"
-                  chmod 600 "$RUNNER_TEMP/warp-signing/warp-game.p12"
+                  if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+                    mkdir -p "$RUNNER_TEMP/warp-signing"
+                    echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/warp-signing/warp-game.p12"
+                    chmod 600 "$RUNNER_TEMP/warp-signing/warp-game.p12"
+                  else
+                    echo "Stable signing key is not configured yet; using temporary debug signing."
+                  fi
 
             - name: Build debug APK
               env:
