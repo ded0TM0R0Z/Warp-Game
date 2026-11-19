@@ -105,7 +105,7 @@ Manifest compatibility rules:
 - `offline_supported` must be `true`; packages that cannot start offline are rejected.
 - `minimum_platform_version` must contain three numeric components and must not exceed the installed platform version.
 - `orientation` must be a non-empty string. Mapping it to Android orientation constants remains an open decision.
-- The platform version is currently `0.1.0`.
+- The platform version is currently `0.2.0`.
 
 ## 7. Save data
 
