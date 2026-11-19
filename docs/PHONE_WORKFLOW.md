@@ -1,6 +1,6 @@
 # WARP GAME — PHONE DEVELOPMENT WORKFLOW
 
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **Target:** Android phone as the primary work device.
 
 ## 1. Rules
@@ -9,7 +9,7 @@
 - GitHub is the shared source of truth.
 - Do not assume a desktop computer is available.
 - The primary build path is GitHub Actions cloud builds. A local Android IDE is not required for the basic workflow.
-- Do not report the platform as buildable until an APK has been built and installed successfully on the target phone.
+- A successful cloud build does not replace installation and testing on the physical phone.
 
 ## 2. Repository workflow
 
@@ -19,7 +19,7 @@
 4. Make only the changes allowed by the task.
 5. Review the complete changed file before saving.
 6. Commit changes with a clear message.
-7. GitHub Actions automatically attempts an Android debug build after a push to `main`.
+7. GitHub Actions automatically builds Android source/build changes pushed to `main`.
 8. Return to MAIN CONTROL with the commit SHA and test results.
 
 For large code changes, MAIN CONTROL may edit and commit files directly through the connected GitHub integration.
@@ -58,4 +58,4 @@ For each installable build:
 
 ## 6. Current status
 
-The Android project skeleton and cloud build workflow have been committed. The first successful workflow run and installation on the target phone are still required before the build environment is considered validated.
+The Android project skeleton has built successfully in GitHub Actions and the APK artifact is available. The first installation and launch test on the target phone are still pending.
