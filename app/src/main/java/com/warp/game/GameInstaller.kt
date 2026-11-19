@@ -34,6 +34,11 @@ class GameInstaller(
         if (!SHA256_PATTERN.matches(expectedSha256)) {
             throw GamePackageException("A trusted SHA-256 checksum is required")
         }
+        if (expectedSizeBytes != null && (
+            expectedSizeBytes <= 0L || expectedSizeBytes > MAX_ARCHIVE_BYTES
+        )) {
+            throw GamePackageException("Expected package size is outside supported limits")
+        }
 
         storage.initialize()
         val packageFile = File(storage.cacheDirectory, "package-" + UUID.randomUUID() + ".zip")
