@@ -1071,7 +1071,7 @@ class MainActivity : Activity() {
     }
 
     private fun renderSettings() {
-        pageHeading("Настройки", "Информация о приложении и его состоянии.")
+        pageHeading("Настройки", "Состояние платформы и инструменты разработчика.")
         val appCard = panel()
         appCard.setPadding(dp(16), dp(16), dp(16), dp(16))
         appCard.addView(label("WARP GAME", 18f, textMain, true))
@@ -1083,7 +1083,7 @@ class MainActivity : Activity() {
         })
         pageContent.addView(appCard)
 
-        sectionTitle("Разработка")
+        sectionTitle("Инструменты разработчика")
         pageContent.addView(actionCard(
             "Установить тестовую игру",
             "Проверить ZIP, SHA-256, установку и запуск",
@@ -1113,7 +1113,7 @@ class MainActivity : Activity() {
             startActivity(android.content.Intent(this, RuntimeTestActivity::class.java))
         })
 
-        sectionTitle("Принципы платформы")
+        sectionTitle("Возможности платформы")
         pageContent.addView(detailRow("Офлайн-режим", "Игры должны запускаться без интернета после установки."))
         pageContent.addView(detailRow("Сохранения", "Сохранения хранятся отдельно от файлов игры."))
         pageContent.addView(detailRow("Совместимость", "Приоритет — телефоны Android, включая устройства начального уровня."))
