@@ -26,8 +26,12 @@ class WarpDatabase(context: Context) : SQLiteOpenHelper(
                 name TEXT NOT NULL,
                 version TEXT NOT NULL,
                 engine TEXT NOT NULL,
+                engine_version TEXT NOT NULL,
                 game_type TEXT NOT NULL CHECK(game_type IN ('2d', '3d')),
                 entry_point TEXT NOT NULL,
+                orientation TEXT NOT NULL,
+                offline_supported INTEGER NOT NULL CHECK(offline_supported IN (0, 1)),
+                minimum_platform_version TEXT NOT NULL,
                 install_directory TEXT NOT NULL,
                 package_sha256 TEXT NOT NULL,
                 installed_at INTEGER NOT NULL,
@@ -42,7 +46,18 @@ class WarpDatabase(context: Context) : SQLiteOpenHelper(
 
     override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) {
-            // Future schema migrations must be added here without deleting installed data.
+            database.execSQL(
+                "ALTER TABLE $TABLE_INSTALLED_GAMES ADD COLUMN engine_version TEXT NOT NULL DEFAULT ''"
+            )
+            database.execSQL(
+                "ALTER TABLE $TABLE_INSTALLED_GAMES ADD COLUMN orientation TEXT NOT NULL DEFAULT 'landscape'"
+            )
+            database.execSQL(
+                "ALTER TABLE $TABLE_INSTALLED_GAMES ADD COLUMN offline_supported INTEGER NOT NULL DEFAULT 1"
+            )
+            database.execSQL(
+                "ALTER TABLE $TABLE_INSTALLED_GAMES ADD COLUMN minimum_platform_version TEXT NOT NULL DEFAULT '0.1.0'"
+            )
         }
     }
 
@@ -56,8 +71,12 @@ class WarpDatabase(context: Context) : SQLiteOpenHelper(
             put(COLUMN_NAME, game.name)
             put(COLUMN_VERSION, game.version)
             put(COLUMN_ENGINE, game.engine)
+            put(COLUMN_ENGINE_VERSION, game.engineVersion)
             put(COLUMN_GAME_TYPE, game.gameType)
             put(COLUMN_ENTRY_POINT, game.entryPoint)
+            put(COLUMN_ORIENTATION, game.orientation)
+            put(COLUMN_OFFLINE_SUPPORTED, if (game.offlineSupported) 1 else 0)
+            put(COLUMN_MINIMUM_PLATFORM_VERSION, game.minimumPlatformVersion)
             put(COLUMN_INSTALL_DIRECTORY, game.installDirectory)
             put(COLUMN_PACKAGE_SHA256, game.packageSha256)
             put(COLUMN_INSTALLED_AT, game.installedAt)
@@ -121,8 +140,12 @@ class WarpDatabase(context: Context) : SQLiteOpenHelper(
             name = getString(getColumnIndexOrThrow(COLUMN_NAME)),
             version = getString(getColumnIndexOrThrow(COLUMN_VERSION)),
             engine = getString(getColumnIndexOrThrow(COLUMN_ENGINE)),
+            engineVersion = getString(getColumnIndexOrThrow(COLUMN_ENGINE_VERSION)),
             gameType = getString(getColumnIndexOrThrow(COLUMN_GAME_TYPE)),
             entryPoint = getString(getColumnIndexOrThrow(COLUMN_ENTRY_POINT)),
+            orientation = getString(getColumnIndexOrThrow(COLUMN_ORIENTATION)),
+            offlineSupported = getInt(getColumnIndexOrThrow(COLUMN_OFFLINE_SUPPORTED)) == 1,
+            minimumPlatformVersion = getString(getColumnIndexOrThrow(COLUMN_MINIMUM_PLATFORM_VERSION)),
             installDirectory = getString(getColumnIndexOrThrow(COLUMN_INSTALL_DIRECTORY)),
             packageSha256 = getString(getColumnIndexOrThrow(COLUMN_PACKAGE_SHA256)),
             installedAt = getLong(getColumnIndexOrThrow(COLUMN_INSTALLED_AT)),
@@ -132,15 +155,19 @@ class WarpDatabase(context: Context) : SQLiteOpenHelper(
 
     private companion object {
         const val DATABASE_NAME = "warp_game.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
         const val TABLE_INSTALLED_GAMES = "installed_games"
 
         const val COLUMN_GAME_ID = "game_id"
         const val COLUMN_NAME = "name"
         const val COLUMN_VERSION = "version"
         const val COLUMN_ENGINE = "engine"
+        const val COLUMN_ENGINE_VERSION = "engine_version"
         const val COLUMN_GAME_TYPE = "game_type"
         const val COLUMN_ENTRY_POINT = "entry_point"
+        const val COLUMN_ORIENTATION = "orientation"
+        const val COLUMN_OFFLINE_SUPPORTED = "offline_supported"
+        const val COLUMN_MINIMUM_PLATFORM_VERSION = "minimum_platform_version"
         const val COLUMN_INSTALL_DIRECTORY = "install_directory"
         const val COLUMN_PACKAGE_SHA256 = "package_sha256"
         const val COLUMN_INSTALLED_AT = "installed_at"
