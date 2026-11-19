@@ -342,7 +342,9 @@
             this.worldChunks.clear();
             this.player.body.reset(W / 2, H / 2);
             this.cameras.main.stopFollow(); this.cameras.main.startFollow(this.player,true,0.085,0.085);
-            this.player.body.setMaxVelocity(180); this.playerWalkTween.pause(); this.playerSprite.setPosition(0,0).setAngle(0);
+            this.player.body.setMaxVelocity(180); this.playerWalkTween.pause(); this.playerSprite.setPosition(0,-2).setAngle(0);
+            this.playerLegLeft.setPosition(-4,10).setAngle(0);
+            this.playerLegRight.setPosition(4,10).setAngle(0);
             this.joy.active = false; this.joy.pointerId = null; this.joy.dx = 0; this.joy.dy = 0;
             this.joy.baseX = 100; this.joy.baseY = H - 120;
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
@@ -442,25 +444,18 @@
                 const spread = (i - (this.projectiles - 1) / 2) * 0.11;
                 const a = angle + spread;
                 const bolt = this.add.image(this.player.x + Math.cos(a) * 17, this.player.y + Math.sin(a) * 17, "bolt").setDepth(18).setRotation(a).setScale(1.15);
-                this.physics.add.existing(bolt);
+                this.bullets.add(bolt);
+                if (!bolt.body) this.physics.add.existing(bolt);
+                bolt.body.enable = true;
+                bolt.body.moves = true;
                 bolt.body.setAllowGravity(false);
                 bolt.body.setVelocity(Math.cos(a) * this.stats.bulletSpeed, Math.sin(a) * this.stats.bulletSpeed);
+                bolt.body.setMaxSpeed(this.stats.bulletSpeed);
                 bolt.damage = this.stats.damage;
-                bolt.life = 1300;
-                this.bullets.add(bolt);
+                bolt.life = 1600;
+                bolt.setData("velocityX", Math.cos(a) * this.stats.bulletSpeed);
+                bolt.setData("velocityY", Math.sin(a) * this.stats.bulletSpeed);
             }
-            this.showTarget(target);
-        }
-
-        showTarget(target) {
-            if (!this.targetMark || !this.targetMark.active) {
-                this.targetMark = this.add.graphics().setDepth(30);
-            }
-            this.targetMark.clear();
-            this.targetMark.lineStyle(2, 0xffe18a, 0.9);
-            this.targetMark.strokeCircle(target.x, target.y, 20);
-            this.targetMark.lineBetween(target.x - 25, target.y, target.x - 16, target.y);
-            this.targetMark.lineBetween(target.x + 16, target.y, target.x + 25, target.y);
         }
 
         hitEnemy(bolt, enemy) {
@@ -607,18 +602,28 @@
             this.player.setAlpha(this.invulnerable > 0 && Math.floor(this.time.now / 75) % 2 ? 0.48 : 1);
 
             if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
-            if (this.target && this.target.active) this.showTarget(this.target);
-            else if (this.targetMark) { this.target = null; this.targetMark.clear(); }
+            if (this.target && !this.target.active) this.target = null;
 
             const moving = Math.hypot(this.joy.dx, this.joy.dy) > 0.08;
             if (moving) {
-                this.playerWalkTween.resume(); this.playerSprite.setAngle(Phaser.Math.Clamp(this.joy.dx*0.08,-0.08,0.08));
+                this.playerWalkTween.resume();
+                this.playerSprite.setAngle(Phaser.Math.Clamp(this.joy.dx * 0.045, -0.045, 0.045));
+                this.playerSprite.setFlipX(this.joy.dx < -0.08);
+                const step = Math.sin(this.time.now * 0.018);
+                this.playerLegLeft.setAngle(step * 0.42);
+                this.playerLegRight.setAngle(-step * 0.42);
+                this.playerLegLeft.y = 10 + Math.max(0, step) * 1.4;
+                this.playerLegRight.y = 10 + Math.max(0, -step) * 1.4;
                 this.lastMoveX = this.joy.dx;
                 this.lastMoveY = this.joy.dy;
                 this.player.body.setVelocity(this.joy.dx * this.stats.moveSpeed, this.joy.dy * this.stats.moveSpeed);
             } else {
-                this.playerWalkTween.pause(); this.playerSprite.y=0; this.playerSprite.angle=0;
-                this.player.body.setVelocity(this.player.body.velocity.x*0.82,this.player.body.velocity.y*0.82);
+                this.playerWalkTween.pause();
+                this.playerSprite.y = -2;
+                this.playerSprite.angle = 0;
+                this.playerLegLeft.setAngle(0).setY(10);
+                this.playerLegRight.setAngle(0).setY(10);
+                this.player.body.setVelocity(this.player.body.velocity.x * 0.82, this.player.body.velocity.y * 0.82);
             }
 
             if (this.spawnClock > Math.max(390, 1500 - this.wave * 48)) {
@@ -658,8 +663,12 @@
             this.bullets.children.iterate(bolt => {
                 if (!bolt || !bolt.active) return;
                 bolt.life -= dt;
+                if (bolt.body && bolt.body.enable) {
+                    bolt.body.moves = true;
+                    if (bolt.body.speed < 1) bolt.body.setVelocity(bolt.getData("velocityX"), bolt.getData("velocityY"));
+                }
                 const v=this.cameras.main.worldView;
-                if(bolt.life<=0||bolt.x<v.x-80||bolt.x>v.right+80||bolt.y<v.y-80||bolt.y>v.bottom+80)bolt.destroy();
+                if(bolt.life<=0||bolt.x<v.x-100||bolt.x>v.right+100||bolt.y<v.y-100||bolt.y>v.bottom+100)bolt.destroy();
             });
          }
 
