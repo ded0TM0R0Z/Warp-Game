@@ -524,11 +524,11 @@
             enemy.animTween=this.tweens.add({targets:enemy.sprite,y:2,duration:kind==="brute"?260:190,yoyo:true,repeat:-1});
             enemy.isBoss=false; enemy.bossName="";
             enemy.kind = kind;
-            enemy.hp = kind === "brute" ? 150 + this.wave * 12 : kind === "beetle" ? 190 + this.wave * 13 : kind === "cultist" ? 92 + this.wave * 8 : kind === "wraith" ? 72 + this.wave * 7 : kind === "skeleton" ? 64 + this.wave * 6 : 42 + this.wave * 4;
+            enemy.hp = kind === "brute" ? 112 + this.wave * 7 : kind === "beetle" ? 142 + this.wave * 8 : kind === "cultist" ? 76 + this.wave * 5 : kind === "wraith" ? 58 + this.wave * 4 : kind === "skeleton" ? 46 + this.wave * 4 : 32 + this.wave * 3;
             enemy.maxHp = enemy.hp;
-            enemy.speed = kind === "brute" ? 48 + this.wave : kind === "beetle" ? 38 + this.wave * 0.8 : kind === "cultist" ? 54 + this.wave : kind === "wraith" ? 105 + this.wave * 1.8 : kind === "skeleton" ? 82 + this.wave * 1.5 : 65 + this.wave * 1.5;
-            enemy.damage = kind === "brute" ? 25 : kind === "beetle" ? 30 : kind === "cultist" ? 18 : kind === "wraith" ? 16 : 14;
-            enemy.xpValue = kind === "brute" ? 5 : kind === "beetle" ? 7 : kind === "cultist" ? 4 : kind === "wraith" ? 3 : kind === "skeleton" ? 2 : 1;
+            enemy.speed = kind === "brute" ? 44 + this.wave * 0.7 : kind === "beetle" ? 36 + this.wave * 0.6 : kind === "cultist" ? 48 + this.wave * 0.7 : kind === "wraith" ? 86 + this.wave * 0.9 : kind === "skeleton" ? 68 + this.wave : 58 + this.wave;
+            enemy.damage = kind === "brute" ? 18 : kind === "beetle" ? 22 : kind === "cultist" ? 14 : kind === "wraith" ? 12 : kind === "skeleton" ? 10 : 8;
+            enemy.xpValue = kind === "brute" ? 5 : kind === "beetle" ? 6 : kind === "cultist" ? 4 : kind === "wraith" ? 3 : kind === "skeleton" ? 2 : 1;
             enemy.radius = radius;
             enemy.hitFlash = 0;
             enemy.skillClock=Phaser.Math.Between(2600,4600);enemy.skillState="idle";enemy.skillDuration=0;
