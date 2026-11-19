@@ -74,8 +74,8 @@ class GameDownloadManager(context: Context) {
         onInstallStarted: () -> Unit = {},
         onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit
     ): InstalledGame {
-        storage.initialize()
         try {
+            storage.initialize()
             var currentUrl = URL(game.packageUrl)
             var redirectCount = 0
 
