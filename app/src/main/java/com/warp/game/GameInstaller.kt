@@ -1,11 +1,13 @@
 package com.warp.game
 
+import android.os.StatFs
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
 import java.util.UUID
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 class GameInstaller(
@@ -33,6 +35,8 @@ class GameInstaller(
             if (!actualSha256.equals(expectedSha256, ignoreCase = true)) {
                 throw GamePackageException("Package SHA-256 checksum does not match")
             }
+
+            validateStorageCapacity(packageFile)
 
             if (!stagingDirectory.mkdirs()) {
                 throw GamePackageException("Could not create temporary installation directory")
@@ -122,6 +126,45 @@ class GameInstaller(
         } finally {
             if (packageFile.exists()) packageFile.delete()
             if (stagingDirectory.exists()) stagingDirectory.deleteRecursively()
+        }
+    }
+
+    private fun validateStorageCapacity(archiveFile: File) {
+        var expandedBytes = 0L
+        var entryCount = 0
+
+        try {
+            ZipFile(archiveFile).use { zip ->
+                val entries = zip.entries()
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement()
+                    entryCount += 1
+                    if (entryCount > MAX_ENTRIES) {
+                        throw GamePackageException("Game package contains too many files")
+                    }
+                    if (entry.size < 0L) {
+                        throw GamePackageException("Game package contains an entry with unknown size")
+                    }
+                    if (!entry.isDirectory) {
+                        if (entry.size > MAX_ENTRY_BYTES) {
+                            throw GamePackageException("Package file exceeds the file size limit")
+                        }
+                        expandedBytes += entry.size
+                        if (expandedBytes > MAX_EXPANDED_BYTES) {
+                            throw GamePackageException("Expanded game package is too large")
+                        }
+                    }
+                }
+            }
+        } catch (error: GamePackageException) {
+            throw error
+        } catch (error: Exception) {
+            throw GamePackageException("Game package archive is invalid", error)
+        }
+
+        val availableBytes = StatFs(storage.gamesDirectory.path).availableBytes
+        if (availableBytes < expandedBytes + MIN_FREE_SPACE_RESERVE) {
+            throw GamePackageException("Not enough free storage to install this game")
         }
     }
 
@@ -258,6 +301,7 @@ class GameInstaller(
         const val MAX_ENTRY_BYTES = 128L * 1024L * 1024L
         const val MAX_MANIFEST_BYTES = 64L * 1024L
         const val MAX_ENTRIES = 10000
+        const val MIN_FREE_SPACE_RESERVE = 16L * 1024L * 1024L
 
         val SHA256_PATTERN = Regex("[A-Fa-f0-9]{64}")
     }
