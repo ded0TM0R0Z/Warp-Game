@@ -363,11 +363,13 @@
 
         panel(title, subtitle) {
             this.clearOverlay();
-            this.addOverlay(this.add.rectangle(W / 2, H / 2, W, H, 0x10150f, 0.78));
+            this.addOverlay(this.add.rectangle(W / 2, H / 2, W, H, 0x10150f, 0.84));
+            this.addOverlay(this.add.rectangle(W / 2+7, H / 2+9, 700, 470, 0x080b10, 0.72));
             this.addOverlay(this.add.rectangle(W / 2, H / 2, 700, 470, 0x29251e, 0.985).setStrokeStyle(4, 0xc3a46a, 1));
             this.addOverlay(this.add.rectangle(W / 2, H / 2, 684, 454, 0x403628, 0.22).setStrokeStyle(1, 0x796442, 0.9));
             this.addOverlay(this.add.rectangle(W / 2, H / 2 - 206, 180, 4, 0xb89556, 0.9));
             this.addOverlay(this.add.rectangle(W / 2, H / 2 + 206, 180, 4, 0xb89556, 0.9));
+            [[W/2-337,H/2-222],[W/2+337,H/2-222],[W/2-337,H/2+222],[W/2+337,H/2+222]].forEach(([x,y])=>this.addOverlay(this.add.rectangle(x,y,10,10,0xd8b66f,0.95).setAngle(45)));
             this.addOverlay(this.add.text(W / 2, H / 2 - 194, title, this.style(30, C.parchment, true)).setOrigin(0.5));
             if (subtitle) this.addOverlay(this.add.text(W / 2, H / 2 - 153, subtitle, this.style(14, C.gold, true)).setOrigin(0.5));
         }
@@ -376,6 +378,8 @@
             const w = width || 250;
             const bg = this.add.rectangle(x, y, w, 48, 0x665032).setStrokeStyle(2, 0xd0b174, 1).setInteractive({ useHandCursor: true });
             const text = this.add.text(x, y, label, this.style(16, C.parchment, true)).setOrigin(0.5);
+            bg.on("pointerover",()=>{bg.setFillStyle(0x80633d);bg.setStrokeStyle(2,0xf1d28e,1);text.setScale(1.04);});
+            bg.on("pointerout",()=>{bg.setFillStyle(0x665032);bg.setStrokeStyle(2,0xd0b174,1);text.setScale(1);});
             bg.on("pointerdown", callback);
             this.addOverlay(bg); this.addOverlay(text);
         }
@@ -384,6 +388,9 @@
             this.mode = "menu";
             this.physics.pause();
             this.panel("RIFT SURVIVORS", "ПРОКЛЯТЫЕ РУИНЫ");
+            const halo=this.add.circle(W/2,H/2-91,70,0x8f48d4,0.08).setStrokeStyle(3,0x9c70d0,0.75);
+            this.addOverlay(halo);
+            this.tweens.add({targets:halo,scale:1.13,alpha:0.55,duration:1800,yoyo:true,repeat:-1,ease:"Sine.InOut"});
             this.addOverlay(this.add.image(W/2,H/2-91,"gameIcon").setDisplaySize(116,116).setDepth(101));
             this.addOverlay(this.add.text(W / 2, H / 2 - 25,
                 "СОБИРАЙ РЕЛИКВИИ • ОСВАИВАЙ МАГИЮ • УБИВАЙ БОССОВ\nКаждый забег — новая сборка и новые угрозы.",
