@@ -185,7 +185,7 @@
         }
 
         createWorld() {
-            this.ground = this.add.tileSprite(W / 2, H / 2, 2400, 1600, "ground").setDepth(-20);
+            this.ground = null;
             const deco = this.add.graphics().setDepth(-10);
             for (let i = 0; i < 210; i++) {
                 const x = Phaser.Math.Between(8, W - 8), y = Phaser.Math.Between(8, H - 8);
@@ -705,7 +705,10 @@
             const size=520,cx=Math.floor(x/size),cy=Math.floor(y/size);
             for(let gx=cx-2;gx<=cx+2;gx++)for(let gy=cy-2;gy<=cy+2;gy++){
                 const key=gx+":"+gy;if(this.worldChunks.has(key))continue;
-                const objs=[];let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
+                const objs=[];
+                const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,"ground").setDepth(-20);
+                objs.push(ground);
+                let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
                 const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
                 for(let i=0,n=7+Math.floor(rand()*8);i<n;i++){
                     const px=gx*size+25+rand()*(size-50),py=gy*size+25+rand()*(size-50);
@@ -727,8 +730,7 @@
                 }
                 this.worldChunks.set(key,objs);
             }
-            for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>3||Math.abs(gy-cy)>3){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
-            if(this.ground){this.ground.setPosition(x,y);this.ground.setTilePosition(x,y);}
+            for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>2||Math.abs(gy-cy)>2){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
         }
         damageSkillEnemy(enemy,damage,knockbackX,knockbackY) {
             if(!enemy||!enemy.active)return;
