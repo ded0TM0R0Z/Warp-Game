@@ -6,13 +6,22 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import java.io.EOFException
+import java.net.ConnectException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.concurrent.Executors
+import javax.net.ssl.SSLException
 
 class MainActivity : Activity() {
 
@@ -44,6 +53,14 @@ class MainActivity : Activity() {
     private var catalogEntries: List<CatalogGame> = emptyList()
     private var downloadingGameId: String? = null
     private var downloadProgressPercent = 0
+    private var catalogSearchQuery = ""
+    private lateinit var catalogResultsContainer: LinearLayout
+    private var activeDownloadToken: DownloadCancellationToken? = null
+    private var downloadCancelRequested = false
+    private var downloadIsInstalling = false
+    private var downloadAttempt = 1
+    private var activeDownloadStatusView: TextView? = null
+    private var activeDownloadCancelView: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -332,8 +349,66 @@ class MainActivity : Activity() {
             return
         }
 
-        catalogEntries.forEach { game ->
-            pageContent.addView(catalogCard(game))
+        val searchField = EditText(this).apply {
+            setSingleLine(true)
+            setText(catalogSearchQuery)
+            hint = "Поиск по названию, описанию или движку"
+            textSize = 14f
+            setTextColor(textMain)
+            setHintTextColor(textMuted)
+            background = rounded(surfaceAlt, 12)
+            setPadding(dp(13), dp(11), dp(13), dp(11))
+        }
+        searchField.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                catalogSearchQuery = s?.toString().orEmpty()
+                renderCatalogResults()
+            }
+        })
+        val searchParams = LinearLayout.LayoutParams(-1, -2)
+        searchParams.bottomMargin = dp(12)
+        pageContent.addView(searchField, searchParams)
+
+        catalogResultsContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        pageContent.addView(catalogResultsContainer)
+        renderCatalogResults()
+    }
+
+    private fun renderCatalogResults() {
+        if (!::catalogResultsContainer.isInitialized) return
+        catalogResultsContainer.removeAllViews()
+        activeDownloadStatusView = null
+        activeDownloadCancelView = null
+
+        val query = catalogSearchQuery.trim()
+        val filteredGames = catalogEntries.filter { game ->
+            game.gameId == downloadingGameId ||
+                query.isEmpty() ||
+                game.name.contains(query, ignoreCase = true) ||
+                game.description.contains(query, ignoreCase = true) ||
+                game.engine.contains(query, ignoreCase = true) ||
+                game.gameType.contains(query, ignoreCase = true) ||
+                game.gameId.contains(query, ignoreCase = true)
+        }
+
+        if (filteredGames.isEmpty()) {
+            catalogResultsContainer.addView(emptyState(
+                if (query.isEmpty()) "Каталог пока пуст" else "Ничего не найдено",
+                if (query.isEmpty()) {
+                    "Новые игры появятся здесь после публикации пакетов."
+                } else {
+                    "Измени поисковый запрос и попробуй ещё раз."
+                }
+            ))
+            return
+        }
+
+        filteredGames.forEach { game ->
+            catalogResultsContainer.addView(catalogCard(game))
         }
     }
 
@@ -397,7 +472,10 @@ class MainActivity : Activity() {
         val anotherDownloadActive = downloadingGameId != null && !isDownloading
 
         val buttonText = when {
-            isDownloading -> "Загрузка: " + downloadProgressPercent + "%"
+            isDownloading && downloadIsInstalling -> "Проверка и установка…"
+            isDownloading && downloadAttempt > 1 ->
+                "Повтор $downloadAttempt/$MAX_DOWNLOAD_ATTEMPTS · $downloadProgressPercent%"
+            isDownloading -> "Загрузка: $downloadProgressPercent%"
             isCurrentVersionInstalled -> "Установлено"
             anotherDownloadActive -> "Другая загрузка"
             installedGame != null -> "Обновить"
@@ -421,6 +499,29 @@ class MainActivity : Activity() {
         buttonParams.topMargin = dp(12)
         card.addView(installButton, buttonParams)
 
+        if (isDownloading) {
+            activeDownloadStatusView = installButton
+            if (!downloadIsInstalling) {
+                val cancelButton = TextView(this).apply {
+                    text = if (downloadCancelRequested) "Отмена…" else "Отменить загрузку"
+                    textSize = 12f
+                    gravity = Gravity.CENTER
+                    setTextColor(textMuted)
+                    background = rounded(surfaceAlt, 10)
+                    setPadding(dp(12), dp(9), dp(12), dp(9))
+                    isClickable = !downloadCancelRequested
+                    isFocusable = isClickable
+                    setOnClickListener {
+                        if (isClickable) cancelGameDownload()
+                    }
+                }
+                val cancelParams = LinearLayout.LayoutParams(-1, -2)
+                cancelParams.topMargin = dp(7)
+                card.addView(cancelButton, cancelParams)
+                activeDownloadCancelView = cancelButton
+            }
+        }
+
         val params = LinearLayout.LayoutParams(-1, -2)
         params.bottomMargin = dp(10)
         card.layoutParams = params
@@ -429,56 +530,152 @@ class MainActivity : Activity() {
 
     private fun downloadGame(game: CatalogGame) {
         if (downloadingGameId != null || testInstallInProgress) return
+
+        val cancellationToken = DownloadCancellationToken()
+        activeDownloadToken = cancellationToken
+        downloadCancelRequested = false
+        downloadIsInstalling = false
+        downloadAttempt = 1
         downloadingGameId = game.gameId
         downloadProgressPercent = 0
-        renderPage(true)
+        renderCatalogResults()
 
         backgroundExecutor.execute {
+            var attempt = 1
             var lastReportedPercent = -5
             try {
-                val installedGame = GameDownloadManager(this).downloadAndInstall(game) { downloaded, total ->
-                    val percent = if (total > 0L) {
-                        ((downloaded * 100L) / total).toInt().coerceIn(0, 100)
-                    } else {
-                        0
-                    }
-                    if (percent >= lastReportedPercent + 5 || percent == 100) {
-                        lastReportedPercent = percent
-                        runOnUiThread {
-                            downloadProgressPercent = percent
-                            if (!isFinishing && !isDestroyed && currentPage == "catalog") {
-                                renderPage(false)
+                var installedGame: InstalledGame? = null
+                while (installedGame == null) {
+                    cancellationToken.throwIfCancelled()
+                    try {
+                        installedGame = GameDownloadManager(this).downloadAndInstall(
+                            game = game,
+                            cancellationToken = cancellationToken,
+                            onInstallStarted = {
+                                runOnUiThread {
+                                    downloadIsInstalling = true
+                                    activeDownloadStatusView?.text = "Проверка и установка…"
+                                    activeDownloadCancelView?.visibility = View.GONE
+                                }
+                            }
+                        ) { downloaded, total ->
+                            val percent = if (total > 0L) {
+                                ((downloaded * 100L) / total).toInt().coerceIn(0, 100)
+                            } else {
+                                0
+                            }
+                            if (percent >= lastReportedPercent + 5 || percent == 100) {
+                                lastReportedPercent = percent
+                                runOnUiThread {
+                                    downloadProgressPercent = percent
+                                    if (!downloadIsInstalling) {
+                                        activeDownloadStatusView?.text = when {
+                                            downloadAttempt > 1 ->
+                                                "Повтор $downloadAttempt/$MAX_DOWNLOAD_ATTEMPTS · $percent%"
+                                            else -> "Загрузка: $percent%"
+                                        }
+                                    }
+                                }
                             }
                         }
+                    } catch (error: Exception) {
+                        if (cancellationToken.isCancelled || error is DownloadCancelledException) {
+                            throw DownloadCancelledException()
+                        }
+                        if (
+                            cancellationToken.isInstalling ||
+                            attempt >= MAX_DOWNLOAD_ATTEMPTS ||
+                            !isRetryableDownloadError(error)
+                        ) {
+                            throw error
+                        }
+
+                        attempt += 1
+                        lastReportedPercent = -5
+                        runOnUiThread {
+                            downloadAttempt = attempt
+                            downloadProgressPercent = 0
+                            activeDownloadStatusView?.text =
+                                "Повторная попытка $attempt/$MAX_DOWNLOAD_ATTEMPTS…"
+                        }
+                        Thread.sleep(RETRY_DELAY_MS * (attempt - 1L))
                     }
                 }
 
+                val completedGame = installedGame
+                    ?: throw IllegalStateException("Download finished without an installed game")
                 runOnUiThread {
+                    activeDownloadToken = null
                     downloadingGameId = null
                     downloadProgressPercent = 0
+                    downloadAttempt = 1
+                    downloadCancelRequested = false
+                    downloadIsInstalling = false
+                    activeDownloadStatusView = null
+                    activeDownloadCancelView = null
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     android.widget.Toast.makeText(
                         this,
-                        "Игра установлена: " + installedGame.name,
+                        "Игра установлена: " + completedGame.name,
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
                     navigateTo("library")
                 }
             } catch (error: Exception) {
-                WarpLogger.error("Download", "Game download or installation failed", error)
+                val wasCancelled = cancellationToken.isCancelled ||
+                    error is DownloadCancelledException
+                WarpLogger.error(
+                    "Download",
+                    if (wasCancelled) "Game download cancelled" else "Game download or installation failed",
+                    error
+                )
                 runOnUiThread {
+                    activeDownloadToken = null
                     downloadingGameId = null
                     downloadProgressPercent = 0
+                    downloadAttempt = 1
+                    downloadCancelRequested = false
+                    downloadIsInstalling = false
+                    activeDownloadStatusView = null
+                    activeDownloadCancelView = null
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     android.widget.Toast.makeText(
                         this,
-                        "Не удалось скачать или установить игру",
+                        if (wasCancelled) "Загрузка отменена"
+                        else "Не удалось скачать или установить игру",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
-                    if (currentPage == "catalog") renderPage(true)
+                    if (currentPage == "catalog") renderCatalogResults()
                 }
             }
         }
+    }
+
+    private fun cancelGameDownload() {
+        if (downloadIsInstalling || activeDownloadToken?.isInstalling == true || downloadCancelRequested) return
+        downloadCancelRequested = true
+        activeDownloadCancelView?.text = "Отмена…"
+        activeDownloadCancelView?.isClickable = false
+        activeDownloadToken?.cancel()
+    }
+
+    private fun isRetryableDownloadError(error: Throwable): Boolean {
+        var current: Throwable? = error
+        while (current != null) {
+            if (
+                current is TransientDownloadException ||
+                current is EOFException ||
+                current is ConnectException ||
+                current is SocketException ||
+                current is SocketTimeoutException ||
+                current is UnknownHostException ||
+                current is SSLException
+            ) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
     }
 
     private fun renderLibrary() {
@@ -889,6 +1086,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        activeDownloadToken?.cancel()
         backgroundExecutor.shutdownNow()
         if (::warpDatabase.isInitialized) {
             warpDatabase.close()
@@ -898,6 +1096,8 @@ class MainActivity : Activity() {
 
     internal companion object {
         const val EXTRA_RETURN_HOME = "com.warp.game.extra.RETURN_HOME"
+        const val MAX_DOWNLOAD_ATTEMPTS = 3
+        const val RETRY_DELAY_MS = 750L
     }
 
     private fun dp(value: Int): Int =

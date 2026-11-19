@@ -30,7 +30,8 @@ class GameInstaller(
         packageStream: InputStream,
         expectedSha256: String,
         expectedSizeBytes: Long? = null,
-        expectedMetadata: ExpectedGameMetadata? = null
+        expectedMetadata: ExpectedGameMetadata? = null,
+        onPackageVerified: (() -> Unit)? = null
     ): InstalledGame {
         if (!SHA256_PATTERN.matches(expectedSha256)) {
             throw GamePackageException("A trusted SHA-256 checksum is required")
@@ -58,6 +59,7 @@ class GameInstaller(
                 throw GamePackageException("Package SHA-256 checksum does not match")
             }
 
+            onPackageVerified?.invoke()
             validateStorageCapacity(packageFile)
 
             if (!stagingDirectory.mkdirs()) {
