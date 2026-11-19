@@ -31,7 +31,7 @@ The platform targets modern mid-range Android phones and above, supports both 2D
 
 ## Build
 
-Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #78](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44593062877). Published games are hosted as GitHub Release assets and discovered through the remote catalog. The Android APK contains the platform runtime, not the remote game library. New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
+Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a permanent signing key. The latest confirmed main-branch build is [Android Build #83](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44604901892). Published games are hosted as GitHub Release assets and discovered through the remote catalog. The Android APK contains the platform runtime, not the remote game library. New changes must pass their pull-request build before merge. See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details.
 
 ## Core principles
 
