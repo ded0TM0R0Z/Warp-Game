@@ -6,8 +6,8 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Stage:** Foundation and build validation  
-**Current priority:** Confirm the cloud build and install the first APK on the target phone.
+**Stage:** Foundation and device validation  
+**Current priority:** Install and test the first APK on the target phone.
 
 ## Documentation
 
@@ -21,7 +21,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Build
 
-Android debug builds are configured through GitHub Actions. See [Build environment](docs/BUILD_ENVIRONMENT.md) for pinned versions and APK download instructions.
+Android debug builds run through GitHub Actions. The first build succeeded and produced an APK artifact. See [Build environment](docs/BUILD_ENVIRONMENT.md) for pinned versions and download instructions.
 
 ## Core principles
 
