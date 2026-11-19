@@ -160,7 +160,8 @@ class CatalogRepository(context: Context) {
         }
         if (
             url.protocol != "https" ||
-            url.host.lowercase() !in ALLOWED_PACKAGE_HOSTS ||
+            url.host.lowercase() != "github.com" ||
+            !url.path.startsWith("/ded0TM0R0Z/Warp-Game/releases/download/") ||
             url.userInfo != null ||
             (url.port != -1 && url.port != 443)
         ) {
@@ -228,10 +229,5 @@ class CatalogRepository(context: Context) {
         val GAME_ID_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9._-]{2,127}")
         val SHA256_PATTERN = Regex("[A-Fa-f0-9]{64}")
         val PLATFORM_VERSION_PATTERN = Regex("\\d+\\.\\d+\\.\\d+")
-        val ALLOWED_PACKAGE_HOSTS = setOf(
-            "github.com",
-            "objects.githubusercontent.com",
-            "release-assets.githubusercontent.com"
-        )
     }
 }
