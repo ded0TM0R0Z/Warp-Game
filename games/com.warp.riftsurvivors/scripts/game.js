@@ -900,27 +900,41 @@
 
 
         formatTime(ms){const n=Math.floor(ms/1000);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");}
+        getBiomeAt(x,y){
+            const px=Math.floor(x/24)*24,py=Math.floor(y/24)*24;
+            const field=Math.sin(px/1450)+Math.cos(py/1320)+0.42*Math.sin((px+py)/760)+0.28*Math.cos((px-py)/510);
+            if(field<-0.48)return 1;
+            if(field>0.58)return 2;
+            return 0;
+        }
+
         updateWorldChunks(x,y){
             const size=520,cx=Math.floor(x/size),cy=Math.floor(y/size);
             for(let gx=cx-2;gx<=cx+2;gx++)for(let gy=cy-2;gy<=cy+2;gy++){
                 const key=gx+":"+gy;if(this.worldChunks.has(key))continue;
                 const objs=[];
-                const biome=Math.abs((gx*31+gy*17)%3);const groundKey=biome===1?"groundAsh":biome===2?"groundRift":"ground";
-                const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,groundKey).setDepth(-20).setTilePosition(gx*size,gy*size);
+                const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,"ground").setDepth(-20).setTilePosition(gx*size,gy*size);
                 objs.push(ground);
+                const biomePaint=this.add.graphics().setDepth(-19),cell=24;
+                for(let ox=0;ox<size;ox+=cell)for(let oy=0;oy<size;oy+=cell){
+                    const localBiome=this.getBiomeAt(gx*size+ox+cell/2,gy*size+oy+cell/2);
+                    if(localBiome===1){biomePaint.fillStyle(0x514b47,0.88);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell,cell);}
+                    else if(localBiome===2){biomePaint.fillStyle(0x263c3d,0.9);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell,cell);}
+                }
+                objs.push(biomePaint);
                 let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
                 const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
                 for(let i=0,n=3+Math.floor(rand()*3);i<n;i++){
                     const px=gx*size+25+rand()*(size-50),py=gy*size+25+rand()*(size-50);
                     if(Phaser.Math.Distance.Between(px,py,x,y)<155)continue;
-                    const roll=rand();
+                    const roll=rand(),localBiome=this.getBiomeAt(px,py);
                     if(roll<0.11){
                         const obj=this.add.image(px,py,"dirt").setDepth(-5).setScale(1.7+rand()*0.8).setAlpha(0.98).setRotation(0);objs.push(obj);
                     }else if(roll<0.20){
                         const obj=this.add.image(px,py,"rubble").setDepth(3+py/100000).setScale(0.7+rand()*0.8).setRotation(rand()*0.8);objs.push(obj);
                     }else if(roll<0.26){
                         const obj=this.add.image(px,py,"grassTuft").setDepth(3+py/100000).setScale(0.8+rand()*0.7);objs.push(obj);
-                    }else if(roll<0.34&&biome===2){
+                    }else if(roll<0.34&&localBiome===2){
                         const obj=this.add.image(px,py,"crystal").setDepth(3+py/100000).setScale(0.9+rand()*0.6);objs.push(obj);
                     }else{
                         const obj=this.addObstacle(px,py,roll<0.39?"ruin":"tree",0.8+rand()*0.45);objs.push(obj);
