@@ -1,6 +1,6 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.3  
+**Version:** 1.1.4  
 **Current stage:** 0 — Foundation and device validation
 
 ## Stage 0 — Foundation and validation
@@ -43,13 +43,13 @@
 
 ## Stage 3 — Game package and local management
 
-- [ ] Implement manifest parsing and validation.
-- [ ] Implement ZIP path and content validation.
-- [ ] Implement SHA-256 verification.
-- [ ] Implement temporary download and atomic installation.
-- [ ] Register installed games in local storage.
-- [ ] Implement launch and removal.
-- [ ] Keep saves separate from installation files.
+- [x] Implement manifest parsing and validation.
+- [x] Implement ZIP path and content validation with size limits.
+- [x] Implement SHA-256 verification against trusted metadata.
+- [x] Implement temporary package staging and atomic installation/update rollback.
+- [x] Register installed games in local storage.
+- [x] Implement launch and removal.
+- [x] Keep saves separate from installation files.
 
 **Exit condition:** A test package can be safely installed, launched, removed and reinstalled without accidental save deletion.
 
