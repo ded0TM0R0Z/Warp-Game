@@ -103,8 +103,12 @@ object GamePackageManifestParser {
     }
 
     private fun compareVersions(left: String, right: String): Int {
-        val leftParts = left.split(".").map { it.toInt() }
-        val rightParts = right.split(".").map { it.toInt() }
+        val leftParts = left.split(".").map {
+            it.toLongOrNull() ?: throw GamePackageException("Invalid minimum_platform_version")
+        }
+        val rightParts = right.split(".").map {
+            it.toLongOrNull() ?: throw GamePackageException("Invalid platform version")
+        }
         for (index in 0..2) {
             val result = leftParts[index].compareTo(rightParts[index])
             if (result != 0) return result
