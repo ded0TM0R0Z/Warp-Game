@@ -96,7 +96,17 @@ class GameInstaller(
             return installedGame
         } catch (error: Exception) {
             promotedDirectory?.let { directory ->
-                if (directory.exists()) directory.deleteRecursively()
+                if (directory.exists() && !directory.deleteRecursively()) {
+                    val failedDirectory = File(
+                        storage.gamesDirectory,
+                        ".failed-" + UUID.randomUUID()
+                    )
+                    if (directory.renameTo(failedDirectory)) {
+                        failedDirectory.deleteRecursively()
+                    } else {
+                        WarpLogger.error("Installer", "Could not clear failed installation directory")
+                    }
+                }
             }
             if (previousDirectoryBackedUp) {
                 val backup = backupDirectory
@@ -135,7 +145,7 @@ class GameInstaller(
         }
 
         return digest.digest().joinToString("") { byte ->
-            "%02x".format(byte)
+            "%02x".format(byte.toInt() and 0xff)
         }
     }
 
