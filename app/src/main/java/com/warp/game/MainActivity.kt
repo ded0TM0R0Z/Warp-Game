@@ -624,6 +624,47 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun installPhaserDemoGame() {
+        if (testInstallInProgress) return
+        testInstallInProgress = true
+        android.widget.Toast.makeText(
+            this,
+            "Подготовка Phaser 2D…",
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+
+        backgroundExecutor.execute {
+            try {
+                val installedGame = BundledPhaserDemoInstaller(this).install()
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Phaser-игра установлена офлайн",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    navigateTo("library")
+                }
+                WarpLogger.info(
+                    "Installer",
+                    "Bundled Phaser demo installed: " + installedGame.gameId
+                )
+            } catch (error: Exception) {
+                WarpLogger.error("Installer", "Phaser demo installation failed", error)
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Не удалось установить Phaser-игру",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     private fun renderSettings() {
         pageHeading("Настройки", "Информация о приложении и его состоянии.")
         val appCard = panel()
@@ -644,6 +685,13 @@ class MainActivity : Activity() {
             "PKG"
         ) {
             installBundledTestGame()
+        })
+        pageContent.addView(actionCard(
+            "Установить 2D-игру Phaser",
+            "Офлайн-демо с касаниями и сохранением рекорда",
+            "2D"
+        ) {
+            installPhaserDemoGame()
         })
         pageContent.addView(actionCard(
             "Тест игрового движка",
