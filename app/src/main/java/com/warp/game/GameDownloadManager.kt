@@ -21,7 +21,7 @@ class GameDownloadManager(context: Context) {
             var redirectCount = 0
 
             while (true) {
-                validateDownloadUrl(currentUrl)
+                validateDownloadUrl(currentUrl, redirectCount > 0)
                 val connection = currentUrl.openConnection() as HttpsURLConnection
                 connection.instanceFollowRedirects = false
                 connection.connectTimeout = CONNECT_TIMEOUT_MS
@@ -88,10 +88,15 @@ class GameDownloadManager(context: Context) {
         }
     }
 
-    private fun validateDownloadUrl(url: URL) {
+    private fun validateDownloadUrl(url: URL, isRedirect: Boolean) {
+        val host = url.host.lowercase()
+        val isOfficialReleaseUrl = host == "github.com" &&
+            url.path.startsWith("/ded0TM0R0Z/Warp-Game/releases/download/")
+        val isAllowedReleaseCdn = isRedirect && host in RELEASE_CDN_HOSTS
+
         if (
             url.protocol != "https" ||
-            url.host.lowercase() !in ALLOWED_HOSTS ||
+            (!isOfficialReleaseUrl && !isAllowedReleaseCdn) ||
             url.userInfo != null ||
             (url.port != -1 && url.port != 443)
         ) {
@@ -135,8 +140,7 @@ class GameDownloadManager(context: Context) {
         const val REDIRECT_MAX = 399
         const val MAX_PACKAGE_BYTES = 256L * 1024L * 1024L
 
-        val ALLOWED_HOSTS = setOf(
-            "github.com",
+        val RELEASE_CDN_HOSTS = setOf(
             "objects.githubusercontent.com",
             "release-assets.githubusercontent.com"
         )
