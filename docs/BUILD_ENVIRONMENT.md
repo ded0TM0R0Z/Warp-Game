@@ -1,6 +1,6 @@
 # WARP GAME — BUILD ENVIRONMENT
 
-**Version:** 1.0.7  
+**Version:** 1.0.8  
 **Status:** Stable signing key verified; local HTML5 runtime APK builds successfully. Physical-device runtime validation remains pending.
 
 ## 1. Decision
@@ -93,17 +93,23 @@ If the phone still has an APK signed with the old temporary debug key, uninstall
 
 ## 6. Latest main-branch build
 
-- Workflow run: [Android Build #59](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44579361476)
-- Commit: `b50797565b10afc3f7c6e855356216f6135480a8`
+- Workflow run: [Android Build #64](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44581070208)
+- Commit: `817fbf147e5fd999bfc2de361516b7d11f133aa1`
 - App version: `0.2.0` (`versionCode 2`).
 - Result: successful; stable signing key preparation and validation passed.
 - Artifact: `warp-game-debug-apk`
-- Artifact ID: `14558641364`
-- Artifact archive size: 1,779,248 bytes.
-- Artifact ZIP SHA-256: `94068111d4d07c7f250a26f148e531928b54bc28f06c3d593e471f6623e5fb38`
+- Artifact ID: `14559130767`
+- Artifact archive size: 1,786,146 bytes.
+- Artifact ZIP SHA-256: `91f000a79537721195f300c841b03502699e595ad450c4a371ec2fca75537558`
 - Artifact expiry: 2026-11-26.
 
-This build includes the Phaser 3.90.0 demo, native WebGL 1 3D test, offline package installers, and return-to-home navigation. The permanent signing key was validated by the workflow.
+This build includes:
+- Offline Phaser 3.90.0 2D demo and native WebGL 1 3D test.
+- Built-in demo cards in the Catalog screen, including while the remote catalog loads or is unavailable.
+- Local catalog search and cancellable downloads with transient network retries.
+- Secure package validation, per-game SDK and return-to-home navigation.
+
+The permanent signing key was validated by the workflow. Physical-device rendering, touch, save persistence, download cancellation and performance tests remain pending.
 
 ## 7. Downloading the APK on Android
 
