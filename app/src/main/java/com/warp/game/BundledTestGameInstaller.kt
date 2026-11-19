@@ -42,7 +42,7 @@ class BundledTestGameInstaller(context: Context) {
                 zip.putNextEntry(ZipEntry(packagePath))
                 if (packagePath == "index.html") {
                     val html = appContext.assets.open(assetPath).bufferedReader().use { it.readText() }
-                    val sdkScript = "<script src=\"/sdk/warp-game-sdk.js\"></script>\\n    "
+                    val sdkScript = "<script src=\"/sdk/warp-game-sdk.js\"></script>\n    "
                     val packagedHtml = html.replace(
                         "<script src=\"game.js\"></script>",
                         sdkScript + "<script src=\"game.js\"></script>"
