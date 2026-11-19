@@ -67,6 +67,24 @@ class PublishGameTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             publish_game.safe_relative_path("../outside.txt")
 
+    def test_production_apk_assets_contain_only_the_platform_sdk(self):
+        repository_root = Path(__file__).resolve().parents[2]
+        assets_root = repository_root / "app" / "src" / "main" / "assets"
+        packaged_files = {
+            path.relative_to(assets_root).as_posix()
+            for path in assets_root.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(packaged_files, {"warp-game-sdk.js"})
+
+    def test_rejects_template_game_id(self):
+        manifest_path = self.game_dir / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["game_id"] = "com.warp.template"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            publish_game.read_manifest(self.game_dir, "com.warp.template", "1.0.0")
+
     def test_rejects_non_offline_game(self):
         manifest_path = self.game_dir / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
