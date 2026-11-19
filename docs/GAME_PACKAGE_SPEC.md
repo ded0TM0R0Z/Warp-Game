@@ -1,7 +1,7 @@
 # WARP GAME — GAME PACKAGE SPECIFICATION
 
-**Version:** 1.0.0  
-**Status:** Initial contract; schema validation rules are subject to implementation tests.
+**Version:** 1.1.0  
+**Status:** Initial implementation contract; archive limits and validation rules are defined below.
 
 ## 1. Purpose
 
@@ -70,13 +70,41 @@ The installer must reject a package when:
 
 ## 6. Archive safety
 
+Initial platform limits:
+
+| Limit | Maximum |
+|---|---:|
+| Compressed ZIP size | 256 MiB |
+| Total expanded size | 512 MiB |
+| Single expanded file | 128 MiB |
+| Archive entries | 10,000 |
+| `manifest.json` size | 64 KiB |
+| Path length | 1,024 characters |
+| Path segment length | 240 characters |
+
+Validation rules:
+
+- Verify the complete ZIP SHA-256 against trusted catalog metadata before extraction.
 - Normalize and validate every archive path before extraction.
-- Reject absolute paths and traversal segments such as `..`.
-- Enforce package size and expanded-size limits.
+- Reject absolute paths, backslashes, drive prefixes, control characters, empty path segments, `.`, and `..`.
+- Reject duplicate archive paths.
+- Resolve every extracted path canonically and keep it inside the temporary installation directory.
+- Reject missing or invalid root `manifest.json`.
+- Reject a missing manifest entry point.
 - Do not overwrite files outside the game's temporary installation directory.
-- Extract into temporary storage first.
+- Extract into a staging directory first.
 - Promote the package to the installed location only after all checks pass.
-- Failed installation must leave no partially registered game.
+- When updating, keep the previous installation until the new directory and database record are committed.
+- Failed installation must restore the previous installation and leave no partially registered game.
+
+Manifest compatibility rules:
+
+- `game_id` must match `[A-Za-z0-9][A-Za-z0-9._-]{2,127}`.
+- `game_type` must be `2d` or `3d`.
+- `offline_supported` must be `true`; packages that cannot start offline are rejected.
+- `minimum_platform_version` must contain three numeric components and must not exceed the installed platform version.
+- `orientation` must be a non-empty string. Mapping it to Android orientation constants remains an open decision.
+- The platform version is currently `0.1.0`.
 
 ## 7. Save data
 
