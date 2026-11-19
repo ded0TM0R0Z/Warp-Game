@@ -90,6 +90,7 @@
 ## Stage 7 — 3D runtime validation and first 3D game
 
 - [x] Register Babylon.js 9.37.1 and require its local offline runtime library in packages.
+- [x] Add a small native WebGL 1 3D test package for device-level WebGL proof of concept.
 - [ ] Add and validate a local Babylon.js 3D demo package.
 - [ ] Compare Babylon.js/WebGL performance on target devices.
 - [ ] Test graphics limits, memory, heat and device compatibility.
