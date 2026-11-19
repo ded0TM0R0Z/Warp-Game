@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#090d17">
+  <title>3D WebGL тест</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="scene" aria-label="Вращающийся трёхмерный куб"></canvas>
+  <div class="hud">
+    <div class="title">WARP GAME / 3D</div>
+    <div id="status">Проверка WebGL…</div>
+    <div id="touch-count">Касаний: 0</div>
+    <div class="hint">Проводи пальцем по экрану, чтобы вращать куб</div>
+  </div>
+  <script src="/sdk/warp-game-sdk.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
