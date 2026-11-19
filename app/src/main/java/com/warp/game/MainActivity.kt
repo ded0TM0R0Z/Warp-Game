@@ -56,6 +56,8 @@ class MainActivity : Activity() {
     private var downloadProgressPercent = 0
     private var catalogSearchQuery = ""
     private var librarySearchQuery = ""
+    private var catalogTypeFilter = "all"
+    private var catalogEngineFilter = "all"
     private lateinit var catalogResultsContainer: LinearLayout
     private var activeDownloadToken: DownloadCancellationToken? = null
     private var downloadCancelRequested = false
@@ -414,6 +416,40 @@ class MainActivity : Activity() {
         searchParams.bottomMargin = dp(12)
         pageContent.addView(searchField, searchParams)
 
+        sectionTitle("Категории")
+        val typeFilters = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        listOf("all" to "Все", "2d" to "2D", "3d" to "3D").forEach { (key, title) ->
+            typeFilters.addView(filterChip(title, catalogTypeFilter == key) {
+                catalogTypeFilter = key
+                renderCatalogResults()
+                renderCatalogFilterStyles(typeFilters, catalogTypeFilter)
+            }, LinearLayout.LayoutParams(0, dp(40), 1f).apply {
+                rightMargin = dp(6)
+            })
+        }
+        pageContent.addView(typeFilters)
+
+        sectionTitle("Движок")
+        val engineFilters = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val availableEngines = listOf("all") + catalogEntries.map { it.engine }.distinct().sorted()
+        availableEngines.forEach { engine ->
+            val title = if (engine == "all") "Все" else engine
+            engineFilters.addView(filterChip(title, catalogEngineFilter == engine) {
+                catalogEngineFilter = engine
+                renderCatalogResults()
+                renderCatalogFilterStyles(engineFilters, catalogEngineFilter)
+            }, LinearLayout.LayoutParams(0, dp(38), 1f).apply {
+                rightMargin = dp(6)
+            })
+        }
+        pageContent.addView(engineFilters)
+
         catalogResultsContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
@@ -465,6 +501,9 @@ class MainActivity : Activity() {
                 game.engine.contains(query, ignoreCase = true) ||
                 game.gameType.contains(query, ignoreCase = true) ||
                 game.gameId.contains(query, ignoreCase = true)
+        }.filter { game ->
+            (catalogTypeFilter == "all" || game.gameType == catalogTypeFilter) &&
+                (catalogEngineFilter == "all" || game.engine.equals(catalogEngineFilter, ignoreCase = true))
         }
 
         if (filteredGames.isEmpty()) {
@@ -510,11 +549,103 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun filterChip(
+        title: String,
+        selected: Boolean,
+        onClick: () -> Unit
+    ): TextView {
+        return TextView(this).apply {
+            text = title
+            textSize = 11f
+            gravity = Gravity.CENTER
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(if (selected) Color.WHITE else textMuted)
+            background = rounded(if (selected) accentSoft else surfaceAlt, 10)
+            setPadding(dp(9), 0, dp(9), 0)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { onClick() }
+        }
+    }
+
+    private fun renderCatalogFilterStyles(container: LinearLayout, selected: String) {
+        for (index in 0 until container.childCount) {
+            val chip = container.getChildAt(index) as? TextView ?: continue
+            val key = when {
+                chip.text.toString() == "Все" -> "all"
+                chip.text.toString() == "2D" -> "2d"
+                chip.text.toString() == "3D" -> "3d"
+                else -> chip.text.toString()
+            }
+            val isSelected = key.equals(selected, ignoreCase = true)
+            chip.setTextColor(if (isSelected) Color.WHITE else textMuted)
+            chip.background = rounded(if (isSelected) accentSoft else surfaceAlt, 10)
+        }
+    }
+
+    private fun showCatalogGameDetails(game: CatalogGame) {
+        val installedGame = if (::gameManager.isInitialized) {
+            gameManager.getInstalledGame(game.gameId)
+        } else {
+            null
+        }
+        val isCurrentVersionInstalled = installedGame?.version == game.version
+        val sizeMb = String.format(
+            java.util.Locale.US,
+            "%.1f MB",
+            game.packageSizeBytes / (1024f * 1024f)
+        )
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(8), dp(20), dp(4))
+        }
+        content.addView(label(game.description, 14f, textMuted, false))
+        content.addView(detailRow("Тип", game.gameType.uppercase()))
+        content.addView(detailRow("Движок", game.engine + " " + game.engineVersion))
+        content.addView(detailRow("Версия игры", game.version))
+        content.addView(detailRow("Размер", sizeMb))
+        content.addView(detailRow("Офлайн-запуск", if (game.offlineSupported) "Поддерживается" else "Не поддерживается"))
+        content.addView(detailRow("Ориентация", game.orientation))
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(game.name)
+            .setView(content)
+            .setNegativeButton("Закрыть", null)
+            .setPositiveButton(
+                when {
+                    isCurrentVersionInstalled -> "Установлено"
+                    installedGame != null -> "Обновить"
+                    else -> "Установить"
+                },
+                null
+            )
+            .create()
+        dialog.setOnShowListener {
+            val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            button.isEnabled = !isCurrentVersionInstalled && downloadingGameId == null
+            button.setOnClickListener {
+                dialog.dismiss()
+                if (!isCurrentVersionInstalled) downloadGame(game)
+            }
+        }
+        dialog.show()
+    }
+
     private fun catalogCard(game: CatalogGame): LinearLayout {
         val card = panel().apply {
             setPadding(dp(16), dp(16), dp(16), dp(14))
         }
         card.addView(label(game.name, 17f, textMain, true))
+        val detailsButton = TextView(this).apply {
+            text = "Подробнее"
+            textSize = 11f
+            setTextColor(Color.rgb(112, 199, 255))
+            setPadding(0, dp(5), 0, dp(2))
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { showCatalogGameDetails(game) }
+        }
+        card.addView(detailsButton)
         card.addView(label(
             game.description,
             12f,
