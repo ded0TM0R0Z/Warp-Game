@@ -85,6 +85,7 @@ Initial platform limits:
 Validation rules:
 
 - Verify the complete ZIP SHA-256 against trusted catalog metadata before extraction.
+- Check available internal storage against the expanded package size plus a 16 MiB reserve.
 - Normalize and validate every archive path before extraction.
 - Reject absolute paths, backslashes, drive prefixes, control characters, empty path segments, `.`, and `..`.
 - Reject duplicate archive paths.
