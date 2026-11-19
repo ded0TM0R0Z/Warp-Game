@@ -1,48 +1,36 @@
-# WEBGL 3D DEMO — ROTATING CUBE
+# WEBGL 3D PROTOTYPE — ROTATING CUBE
 
 ## Purpose
 
-This package is a small native WebGL 1 proof of concept. It verifies that the restricted Android WebView can create a WebGL context, compile shaders, upload geometry and render a 3D scene locally.
+A small native WebGL 1 proof of concept used to check whether the Android WebView can create a WebGL context and render a local 3D scene.
 
-It is deliberately separate from the Babylon.js engine contract. It does not prove Babylon.js compatibility.
+It uses raw WebGL, not Babylon.js. It does not prove Babylon.js compatibility.
 
-## Package
+## Archive location
 
-- Game ID: `com.warp.demo.webgl3d`
-- Package version: `1.0.0`
-- Engine: `html5`
-- Game type: `3d`
-- Graphics API: WebGL 1
+The original source files are preserved under:
+
+`dev-tools/legacy-demos/webgl3d_demo/`
+
+They are excluded from the Android APK. A production 3D game must be created under `games/<game_id>/` and published as a remote release package.
+
+## Technical reference
+
+- Runtime: WebGL 1
+- Game type: 3D
 - Orientation: landscape
-- Offline: required
-- Entry point: `index.html`
+- Shader and geometry assets: local
+- Touch drag: cube rotation
+- SDK use: persisted touch counter
+- Network dependency: none during gameplay
 
-The original prototype files are archived under `dev-tools/legacy-demos/webgl3d_demo/`. They are excluded from the Android APK and retained as a reference for future remotely published 3D packages.
+## Production 3D acceptance
 
-## Test coverage
+1. Include the exact local engine runtime required by the manifest.
+2. For Babylon.js packages, include the supported local `libraries/babylon.js` runtime.
+3. Publish the game through the `Publish Game Package` workflow.
+4. Install it from the remote Catalog.
+5. Verify rendering, touch, lifecycle, saves and offline launch on physical Android devices.
+6. Measure sustained frame pacing, memory, heat and battery use on a mid-range phone and a higher-performance phone.
 
-- Creates a WebGL 1 context with low-power preference.
-- Compiles and links local vertex and fragment shaders.
-- Uploads cube vertices, colors and indices.
-- Uses perspective and rotation matrices to render a rotating 3D object.
-- Supports touch dragging to rotate the cube.
-- Persists touch count through `WarpGameSDK`.
-- Uses no CDN, network requests, external models or textures.
-
-## Physical-device acceptance checklist
-
-1. Package a 3D game following the game package specification.
-2. Publish it through the `Publish Game Package` workflow.
-3. Refresh the remote Catalog and install the package.
-4. Launch the installed game from Library.
-5. Confirm a colored 3D cube is visible and rotates.
-6. Drag across the screen and confirm the cube responds.
-7. Exit and relaunch; confirm the touch count is restored.
-8. Disable network access and repeat the test.
-9. Record WebGL renderer, frame pacing, memory use and device temperature.
-
-## Limits
-
-- This test uses raw WebGL 1, not Babylon.js.
-- It does not test model loading, PBR materials, shadows, post-processing or Babylon's engine layer.
-- Physical-device testing remains required before claiming production 3D compatibility.
+A successful Android build or the archived raw-WebGL prototype does not establish production 3D engine compatibility.
