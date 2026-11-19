@@ -325,6 +325,14 @@
             this.hud.joy.add([this.hud.joyBase, this.hud.joyInner, this.hud.joyKnob]);
 
              this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40).setScrollFactor(0);
+            this.hud.skills=this.add.container(W-105,H-70).setDepth(42).setScrollFactor(0);
+            this.hud.skillCards={};
+            [["wind","ВЕТЕР",0x65cbd0],["earth","ЗЕМЛЯ",0xc59a5d],["lightning","МОЛНИЯ",0x76dfff]].forEach((spec,i)=>{
+                const x=-154+i*77,card=this.add.container(x,0);const bg=this.add.rectangle(0,0,70,40,0x171d25,0.9).setStrokeStyle(2,spec[2],0.8);
+                const text=this.add.text(0,0,spec[1],this.style(9,spec[2],true)).setOrigin(0.5);card.add([bg,text]);card.setVisible(false);
+                this.hud.skills.add(card);this.hud.skillCards[spec[0]]=card;
+            });
+            this.hud.skills.setVisible(false);
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
              this.hud.help.setVisible(false);
@@ -442,6 +450,7 @@
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             this.hud.joyKnob.setPosition(0, 0);
             this.hud.top.setVisible(true); this.hud.joy.setVisible(true);
+            this.hud.skills.setVisible(true);
             this.hud.help.setVisible(true);
             this.refreshHud();
             this.spawnEnemy("slime"); this.spawnEnemy("slime"); this.spawnEnemy("skeleton");
@@ -678,7 +687,9 @@
 
         castChainLightning(){
             const targets=[];this.enemies.children.iterate(e=>{if(e&&e.active)targets.push(e);});
-            targets.sort((a,b)=>Phaser.Math.Distance.Between(this.player.x,this.player.y,a.x,a.y)-Phaser.Math.Distance.Between(this.player.x,this.player.y,b.x,b.y));
+            const reachable=targets.filter(e=>Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y)<590);
+            reachable.sort((a,b)=>Phaser.Math.Distance.Between(this.player.x,this.player.y,a.x,a.y)-Phaser.Math.Distance.Between(this.player.x,this.player.y,b.x,b.y));
+            targets.length=0;targets.push(...reachable);
             if(!targets.length)return;
             const graphics=this.add.graphics().setDepth(29);let sx=this.player.x,sy=this.player.y;
             const count=Math.min(this.lightningTargets,targets.length);
@@ -739,6 +750,7 @@
             this.hud.level.setText("УР. " + this.level);
             this.hud.hp.width = Math.max(0, 146 * this.stats.hp / this.stats.maxHp);
             this.hud.xp.width=Math.max(1,146*this.xp/this.xpNext);
+            if(this.hud.skillCards){this.hud.skillCards.wind.setVisible(!!this.stats.windUnlocked);this.hud.skillCards.earth.setVisible(!!this.stats.earthUnlocked);this.hud.skillCards.lightning.setVisible(!!this.lightningUnlocked);}
             if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
             else if(this.bossBar){this.bossBar.destroy();this.bossBar=null;if(this.bossLabel){this.bossLabel.destroy();this.bossLabel=null;}}
         }
@@ -762,6 +774,7 @@
         hideHud() {
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
+            if(this.hud.skills)this.hud.skills.setVisible(false);
             this.hud.help.setVisible(false);
         }
 
