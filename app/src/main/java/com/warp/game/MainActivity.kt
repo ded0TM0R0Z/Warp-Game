@@ -39,12 +39,14 @@ class MainActivity : Activity() {
     private lateinit var navHome: TextView
     private lateinit var navCatalog: TextView
     private lateinit var navLibrary: TextView
+    private lateinit var navDownloads: TextView
     private lateinit var navSettings: TextView
 
     private var currentPage = "home"
     private lateinit var platformStorage: PlatformStorage
     private lateinit var warpDatabase: WarpDatabase
     private lateinit var gameManager: GameManager
+    private lateinit var downloadQueueStore: DownloadQueueStore
     private val backgroundExecutor = Executors.newSingleThreadExecutor()
     private var testInstallInProgress = false
     private var catalogLoadRequested = false
@@ -88,6 +90,8 @@ class MainActivity : Activity() {
         try {
             warpDatabase = WarpDatabase(this)
             warpDatabase.readableDatabase
+            downloadQueueStore = DownloadQueueStore(this)
+            downloadQueueStore.recoverInterruptedDownloads()
             WarpLogger.info("Database", "Local database initialized")
             if (::platformStorage.isInitialized) {
                 gameManager = GameManager(platformStorage, warpDatabase)
@@ -169,14 +173,17 @@ class MainActivity : Activity() {
         navHome = navItem("⌂\nГлавная")
         navCatalog = navItem("▦\nКаталог")
         navLibrary = navItem("▣\nМои игры")
+        navDownloads = navItem("⇩\nЗагрузки")
         navSettings = navItem("⚙\nНастройки")
         navHome.setOnClickListener { navigateTo("home") }
         navCatalog.setOnClickListener { navigateTo("catalog") }
         navLibrary.setOnClickListener { navigateTo("library") }
+        navDownloads.setOnClickListener { navigateTo("downloads") }
         navSettings.setOnClickListener { navigateTo("settings") }
         bottomNav.addView(navHome, LinearLayout.LayoutParams(0, dp(56), 1f))
         bottomNav.addView(navCatalog, LinearLayout.LayoutParams(0, dp(56), 1f))
         bottomNav.addView(navLibrary, LinearLayout.LayoutParams(0, dp(56), 1f))
+        bottomNav.addView(navDownloads, LinearLayout.LayoutParams(0, dp(56), 1f))
         bottomNav.addView(navSettings, LinearLayout.LayoutParams(0, dp(56), 1f))
         root.addView(bottomNav)
 
@@ -239,16 +246,19 @@ class MainActivity : Activity() {
             "catalog" -> renderCatalog()
             "library" -> renderLibrary()
             "settings" -> renderSettings()
+            "downloads" -> renderDownloads()
             else -> renderHome()
         }
 
         navHome.isSelected = currentPage == "home"
         navCatalog.isSelected = currentPage == "catalog"
         navLibrary.isSelected = currentPage == "library"
+        navDownloads.isSelected = currentPage == "downloads"
         navSettings.isSelected = currentPage == "settings"
         styleNav(navHome)
         styleNav(navCatalog)
         styleNav(navLibrary)
+        styleNav(navDownloads)
         styleNav(navSettings)
 
         if (animate) {
@@ -324,6 +334,11 @@ class MainActivity : Activity() {
             "Открыть установленную библиотеку",
             "02"
         ) { navigateTo("library") })
+        pageContent.addView(actionCard(
+            "Загрузки",
+            "Очередь, ход загрузки и повтор неудачных установок",
+            "03"
+        ) { navigateTo("downloads") })
 
         sectionTitle("Что дальше")
         val info = panel()
@@ -742,7 +757,32 @@ class MainActivity : Activity() {
     }
 
     private fun downloadGame(game: CatalogGame) {
+        if (!::downloadQueueStore.isInitialized) return
+        val added = try {
+            downloadQueueStore.enqueue(game)
+        } catch (error: Exception) {
+            WarpLogger.error("DownloadQueue", "Could not add game to download queue", error)
+            false
+        }
+        if (!added) {
+            android.widget.Toast.makeText(this, "Эта игра уже есть в очереди", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        android.widget.Toast.makeText(this, "Игра добавлена в очередь", android.widget.Toast.LENGTH_SHORT).show()
+        if (downloadingGameId == null && !testInstallInProgress) startNextQueuedDownload()
+        if (currentPage == "downloads") renderDownloads()
+        if (currentPage == "catalog") renderCatalogResults()
+    }
+
+    private fun startNextQueuedDownload() {
+        if (downloadingGameId != null || testInstallInProgress || !::downloadQueueStore.isInitialized) return
+        val next = downloadQueueStore.getNextPending() ?: return
+        startDownloadNow(next.game)
+    }
+
+    private fun startDownloadNow(game: CatalogGame) {
         if (downloadingGameId != null || testInstallInProgress) return
+        downloadQueueStore.update(game.gameId, DownloadQueueStore.STATUS_DOWNLOADING, 0, "Загрузка")
 
         val cancellationToken = DownloadCancellationToken()
         activeDownloadToken = cancellationToken
@@ -781,6 +821,13 @@ class MainActivity : Activity() {
                                 lastReportedPercent = percent
                                 runOnUiThread {
                                     downloadProgressPercent = percent
+                                    downloadQueueStore.update(
+                                        game.gameId,
+                                        DownloadQueueStore.STATUS_DOWNLOADING,
+                                        percent,
+                                        "Загрузка пакета"
+                                    )
+                                    if (currentPage == "downloads") renderDownloads()
                                     if (!downloadIsInstalling) {
                                         activeDownloadStatusView?.text = when {
                                             downloadAttempt > 1 ->
@@ -818,6 +865,12 @@ class MainActivity : Activity() {
                 val completedGame = installedGame
                     ?: throw IllegalStateException("Download finished without an installed game")
                 runOnUiThread {
+                    downloadQueueStore.update(
+                        game.gameId,
+                        DownloadQueueStore.STATUS_COMPLETED,
+                        100,
+                        "Установлено"
+                    )
                     activeDownloadToken = null
                     downloadingGameId = null
                     downloadProgressPercent = 0
@@ -833,6 +886,7 @@ class MainActivity : Activity() {
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
                     navigateTo("library")
+                    startNextQueuedDownload()
                 }
             } catch (error: Exception) {
                 val wasCancelled = cancellationToken.isCancelled ||
@@ -843,6 +897,12 @@ class MainActivity : Activity() {
                     error
                 )
                 runOnUiThread {
+                    downloadQueueStore.update(
+                        game.gameId,
+                        if (wasCancelled) DownloadQueueStore.STATUS_CANCELLED else DownloadQueueStore.STATUS_FAILED,
+                        0,
+                        if (wasCancelled) "Отменено" else (error.message ?: "Ошибка загрузки")
+                    )
                     activeDownloadToken = null
                     downloadingGameId = null
                     downloadProgressPercent = 0
@@ -859,6 +919,8 @@ class MainActivity : Activity() {
                         android.widget.Toast.LENGTH_LONG
                     ).show()
                     if (currentPage == "catalog") renderCatalogResults()
+                    if (currentPage == "downloads") renderDownloads()
+                    startNextQueuedDownload()
                 }
             }
         }
