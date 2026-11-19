@@ -38,6 +38,8 @@ The installer validates the exact engine version and required local library. It 
 
 The bundled development demo "Кристальный рейд" uses Phaser 3.90.0. Its complete runtime is stored under `app/src/main/assets/phaser_demo/` and packed into an offline game ZIP by `BundledPhaserDemoInstaller`. The upstream MIT license is included in the package. See [PHASER_DEMO.md](PHASER_DEMO.md).
 
+A second development package uses native WebGL 1 directly to draw a rotating 3D cube and verify touch input and SDK persistence without a third-party engine. This is a WebGL capability test, not a Babylon.js demo. Its assets are stored under `app/src/main/assets/webgl3d_demo/` and installed by `BundledWebGlDemoInstaller`. See [WEBGL_3D_DEMO.md](WEBGL_3D_DEMO.md).
+
 Babylon.js packages can be installed when they include the required `libraries/babylon.js` file. The platform registry does not yet include a bundled Babylon runtime or a verified Babylon demo package.
 
 ## 3. Runtime behavior
