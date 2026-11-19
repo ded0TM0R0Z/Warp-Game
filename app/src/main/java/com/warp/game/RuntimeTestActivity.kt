@@ -22,6 +22,7 @@ class RuntimeTestActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyImmersiveMode()
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -153,6 +154,19 @@ class RuntimeTestActivity : Activity() {
             emptyMap(),
             ByteArrayInputStream("Network access is disabled".toByteArray())
         )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun applyImmersiveMode() {
+        window.decorView.systemUiVisibility =
+            android.view.View.SYSTEM_UI_FLAG_FULLSCREEN or
+            android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+            android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applyImmersiveMode()
     }
 
     override fun onResume() {
