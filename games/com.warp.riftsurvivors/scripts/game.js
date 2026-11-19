@@ -55,6 +55,7 @@
             this.worldChunks = new Map(); this.ground = null; this.bossBar = null; this.bossLabel = null;
             this.earthClock = 0; this.windAngle = 0; this.windOrb = null; this.pauseButton = null;
             this.aimLine = null;
+            this.activeBiome=-1;this.biomeXpMultiplier=1;this.biomeCritBonus=0;
             this.lastMoveX = 1;
             this.lastMoveY = 0;
         }
@@ -450,6 +451,7 @@
             this.projectiles = 1;
             this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:115,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
+            this.activeBiome=-1;this.biomeXpMultiplier=1;this.biomeCritBonus=0;
             this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;this.runePower=1;
             this.worldChunks.forEach(items => items.forEach(obj => obj.destroy()));
             this.worldChunks.clear();
@@ -567,7 +569,7 @@
                 bolt.body.setAllowGravity(false);
                 bolt.body.setVelocity(Math.cos(a) * this.stats.bulletSpeed, Math.sin(a) * this.stats.bulletSpeed);
                 bolt.body.setMaxSpeed(this.stats.bulletSpeed);
-                bolt.isCrit=Math.random()<this.stats.critChance;
+                bolt.isCrit=Math.random()<Math.min(0.65,this.stats.critChance+(this.biomeCritBonus||0));
                 bolt.damage = this.stats.damage*(bolt.isCrit?this.stats.critMultiplier:1);
                 if(bolt.isCrit)bolt.setTint(0xffd36a).setScale(1.9);
                 bolt.life = 1600;
@@ -644,7 +646,7 @@
 
         collectXp(player, orb) {
             if (!orb.active || this.mode !== "playing") return;
-            this.xp += orb.value;
+            this.xp += orb.value*(this.biomeXpMultiplier||1);
             orb.destroy();
             if (this.xp >= this.xpNext) {
                 this.xp -= this.xpNext;
@@ -802,6 +804,13 @@
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
             this.elapsedMs+=dt; this.hud.timer.setText(this.formatTime(this.elapsedMs)); this.waveClock+=dt; this.earthClock+=dt;
+            const biomeSize=520,bgx=Math.floor(this.player.x/biomeSize),bgy=Math.floor(this.player.y/biomeSize),biome=Math.abs((bgx*31+bgy*17)%3);
+            if(biome!==this.activeBiome){
+                this.activeBiome=biome;this.biomeXpMultiplier=biome===2?1.2:1;this.biomeCritBonus=biome===1?0.07:0;
+                const names=["ЗАРОСШИЕ РУИНЫ","ПЕПЕЛЬНЫЕ ПУСТОШИ","ЗАРАЖЁННЫЙ РАЗЛОМ"],colors=[0x9fc87b,0xe0a46b,0x8ce8df];
+                const bonus=biome===1?" • +7% КРИТ. ШАНС":biome===2?" • +20% ЭССЕНЦИИ":"";
+                this.showCombatNotice(names[biome]+bonus,colors[biome]);
+            }
             this.updateWorldChunks(this.player.x,this.player.y);
             this.spawnClock += dt;
             this.fireClock += dt;
