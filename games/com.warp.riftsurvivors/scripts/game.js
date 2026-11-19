@@ -692,7 +692,7 @@
             this.bossLabel=this.add.text(W/2,78,b.name,this.style(18,0xffd38a,true)).setOrigin(.5).setScrollFactor(0).setDepth(70);
             this.bossBar=this.add.container(W/2,105).setScrollFactor(0).setDepth(70);const back=this.add.rectangle(0,0,280,10,0x2b1b18).setStrokeStyle(1,0xd0a45e),fill=this.add.rectangle(-138,0,276,6,0xb83d36).setOrigin(0,.5);
             this.bossBar.add([back,fill]);this.bossBar.fill=fill;this.bossBar.boss=boss;
-            const notice=this.add.text(W/2,H/2-125,"БОСС: "+b.name,this.style(24,0xffc66e,true)).setOrigin(.5).setDepth(75);
+            const notice=this.add.text(W/2,H/2-125,"БОСС: "+b.name,this.style(24,0xffc66e,true)).setOrigin(.5).setScrollFactor(0).setDepth(75);
             this.tweens.add({targets:notice,alpha:0,y:notice.y-45,duration:1800,onComplete:()=>notice.destroy()});this.cameras.main.shake(350,.006);if(sdk)sdk.vibrate(100);
         }
 
@@ -732,7 +732,7 @@
         }
 
         addWaveNotice() {
-            const label = this.add.text(W / 2, H / 2 - 105, "ВОЛНА " + this.wave, this.style(27, C.gold, true)).setOrigin(0.5).setDepth(60);
+            const label = this.add.text(W / 2, H / 2 - 105, "ВОЛНА " + this.wave, this.style(27, C.gold, true)).setOrigin(0.5).setScrollFactor(0).setDepth(60);
             this.tweens.add({ targets: label, alpha: 0, y: label.y - 35, duration: 1200, onComplete: () => label.destroy() });
             if (sdk) sdk.vibrate(22);
         }
