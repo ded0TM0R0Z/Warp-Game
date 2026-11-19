@@ -25,6 +25,7 @@ The platform targets modern mid-range Android phones and above, supports both 2D
 - [Phaser demo and acceptance checks](docs/PHASER_DEMO.md)
 - [WebGL 3D demo and acceptance checks](docs/WEBGL_3D_DEMO.md)
 - [Catalog search and download controls](docs/CATALOG_SEARCH_DOWNLOADS.md)
+- [Persistent download queue](docs/DOWNLOAD_QUEUE.md)
 
 ## Build
 
