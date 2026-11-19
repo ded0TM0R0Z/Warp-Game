@@ -659,11 +659,12 @@
                 all.push({title:"СИЛА ЗЕМЛИ",desc:"+35% урон волны и +12% радиус",apply:()=>{this.stats.earthDamage*=1.35;this.stats.earthRadius=(this.stats.earthRadius||145)*1.12;}});
                 all.push({title:"ДРЕВНИЙ ИМПУЛЬС",desc:"Волна земли перезаряжается на 18% быстрее",apply:()=>{this.stats.earthDelay=Math.max(3200,this.stats.earthDelay*0.82);}});
             }
-            if(!this.stats.windUnlocked) all.push({title:"ДУХ ВЕТРА",desc:"Призывает сильный шар ветра с периодическим уроном",apply:()=>{this.stats.windUnlocked=true;this.stats.windOrbCount=1;this.stats.windDamage=(38+this.level*2.5)*this.runePower;this.stats.windDelay=420;this.stats.windRadius=88;}});
+            if(!this.stats.windUnlocked) all.push({title:"ДУХ ВЕТРА",desc:"Призывает сильный шар ветра с периодическим уроном",apply:()=>{this.stats.windUnlocked=true;this.stats.windOrbCount=1;this.stats.windDamage=(38+this.level*2.5)*this.runePower;this.stats.windDelay=420;this.stats.windRadius=88;this.stats.windEvolved=false;}});
             else {
                 all.push({title:"ШТОРМОВОЙ ШАР",desc:"+55% урон ветра и быстрее повторные попадания",apply:()=>{this.stats.windDamage*=1.55;this.stats.windDelay=Math.max(220,this.stats.windDelay*0.84);}});
                 if((this.stats.windOrbCount||1)<4) all.push({title:"ВТОРОЙ ПОТОК",desc:"Добавляет ещё один шар ветра вокруг героя",apply:()=>{this.stats.windOrbCount=Math.min(4,(this.stats.windOrbCount||1)+1);this.stats.windDamage*=1.12;}});
                 all.push({title:"ВОРОНКА ВЕТРА",desc:"+20% радиус вращения и +25% урон",apply:()=>{this.stats.windRadius*=1.2;this.stats.windDamage*=1.25;}});
+                if((this.stats.windOrbCount||1)>=3&&!this.stats.windEvolved)all.push({title:"ЭВОЛЮЦИЯ: ГРОЗОВАЯ КОРОНА",desc:"Четыре сферы ветра создают ударные всплески при попадании",apply:()=>{this.stats.windEvolved=true;this.stats.windOrbCount=4;this.stats.windDamage*=1.6;this.stats.windDelay=Math.max(190,this.stats.windDelay*.82);this.stats.windRadius*=1.18;}});
             }
             if(!this.lightningUnlocked)all.push({title:"ЦЕПНАЯ МОЛНИЯ",desc:"Молния поражает двух ближайших врагов и перескакивает между ними",apply:()=>{this.lightningUnlocked=true;this.lightningClock=0;this.lightningDamage=(58+this.level*2)*this.runePower;this.lightningDelay=6200;this.lightningTargets=2;}});
             else{all.push({title:"ГРОЗОВОЙ РАЗРЯД",desc:"+45% урон молнии и -12% перезарядка",apply:()=>{this.lightningDamage*=1.45;this.lightningDelay=Math.max(2600,this.lightningDelay*0.88);}});all.push({title:"ЦЕПНАЯ РЕАКЦИЯ",desc:"Молния поражает ещё одну цель",apply:()=>{this.lightningTargets=Math.min(5,this.lightningTargets+1);this.lightningDamage*=1.12;}});}
@@ -757,7 +758,7 @@
             this.hud.level.setText("УР. " + this.level);
             this.hud.hp.width = Math.max(0, 146 * this.stats.hp / this.stats.maxHp);
             this.hud.xp.width=Math.max(1,146*this.xp/this.xpNext);
-            if(this.hud.skillCards){this.hud.skillCards.wind.setVisible(!!this.stats.windUnlocked);this.hud.skillCards.earth.setVisible(!!this.stats.earthUnlocked);this.hud.skillCards.lightning.setVisible(!!this.lightningUnlocked);}
+            if(this.hud.skillCards){this.hud.skillCards.wind.setVisible(!!this.stats.windUnlocked);this.hud.skillCards.earth.setVisible(!!this.stats.earthUnlocked);this.hud.skillCards.lightning.setVisible(!!this.lightningUnlocked);if(this.stats.windUnlocked){const t=this.hud.skillCards.wind.list[1];if(t)t.setText(this.stats.windEvolved?"КОРОНА":"ВЕТЕР");}}
             if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
             else if(this.bossBar){this.bossBar.destroy();this.bossBar=null;if(this.bossLabel){this.bossLabel.destroy();this.bossLabel=null;}}
         }
@@ -976,6 +977,11 @@
                         if(!enemy.windHitAt||this.time.now-enemy.windHitAt>=this.stats.windDelay){
                             enemy.windHitAt=this.time.now;
                             this.damageSkillEnemy(enemy,this.stats.windDamage,Math.cos(a)*55,Math.sin(a)*55);
+                            if(this.stats.windEvolved&&(!enemy.windBurstAt||this.time.now-enemy.windBurstAt>1500)){
+                                enemy.windBurstAt=this.time.now;const burst=this.add.circle(enemy.x,enemy.y,12,0x7de8f2,0.16).setStrokeStyle(3,0xbaffff,0.9).setDepth(26);
+                                this.tweens.add({targets:burst,radius:70,alpha:0,duration:360,onComplete:()=>burst.destroy()});
+                                this.enemies.getChildren().slice().forEach(other=>{if(other&&other.active&&other!==enemy&&Phaser.Math.Distance.Between(enemy.x,enemy.y,other.x,other.y)<70)this.damageSkillEnemy(other,this.stats.windDamage*.48,0,0);});
+                            }
                         }
                     }
                 });
