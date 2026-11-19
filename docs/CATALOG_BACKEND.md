@@ -1,7 +1,7 @@
 # WARP GAME — CATALOG BACKEND
 
 **Version:** 1.0.0  
-**Status:** Provisional MVP backend
+**Status:** Provisional MVP backend; catalog search and cancellable downloads implemented
 
 ## 1. Data source
 
@@ -58,6 +58,10 @@ The initial package URL must use HTTPS and a trusted GitHub host. Redirects are 
 ## 5. Current limitations
 
 - The initial catalog is public and read-only.
-- Search, accounts, ratings, reviews, payments and user submissions are not implemented.
-- Downloads do not yet support pause, resume or cancellation.
+- Catalog search is local and matches game name, description, engine, game type and game ID.
+- Downloads support user cancellation while network transfer is active.
+- Transient network errors (HTTP 408/429/5xx and selected connection failures) are retried up to two times after the initial attempt.
+- Cancellation is disabled once package verification succeeds and local installation begins.
+- Pause and resume, accounts, ratings, reviews, payments and user submissions are not implemented.
+- Retry and cancellation behavior still requires physical-device testing.
 - GitHub Releases are an MVP hosting service, not the final large-scale game distribution backend.
