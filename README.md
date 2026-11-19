@@ -6,7 +6,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Current stage:** Offline Phaser 2D and native WebGL 3D demos, catalog search and cancellable downloads implemented; physical-device validation pending.  
+**Current stage:** Offline Phaser 2D and native WebGL 3D demos are listed in the app catalog; search and cancellable downloads are implemented. Physical-device validation remains pending.  
 **Implemented:** Catalog foundation, package installer, isolated offline WebView runtime, Game SDK, engine registry and main-menu Back navigation.
 
 ## Documentation

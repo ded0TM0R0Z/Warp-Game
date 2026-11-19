@@ -296,8 +296,9 @@ class MainActivity : Activity() {
         if (catalogLoading) {
             pageContent.addView(emptyState(
                 "Загрузка каталога",
-                "Получаем список доступных игр."
+                "Получаем список доступных игр. Встроенные демо уже доступны."
             ))
+            addBuiltInDemoCards(pageContent)
             return
         }
 
@@ -315,13 +316,7 @@ class MainActivity : Activity() {
                 catalogError = null
                 renderPage(true)
             })
-            pageContent.addView(actionCard(
-                "Установить тестовую игру",
-                "Встроенная демонстрация установки и запуска",
-                "2D"
-            ) {
-                installBundledTestGame()
-            })
+            addBuiltInDemoCards(pageContent)
             return
         }
 
@@ -339,13 +334,7 @@ class MainActivity : Activity() {
                 "Каталог пока пуст",
                 "Новые игры появятся здесь после публикации пакетов."
             ))
-            pageContent.addView(actionCard(
-                "Установить тестовую игру",
-                "Встроенная демонстрация установки и запуска",
-                "2D"
-            ) {
-                installBundledTestGame()
-            })
+            addBuiltInDemoCards(pageContent)
             return
         }
 
@@ -376,6 +365,35 @@ class MainActivity : Activity() {
         }
         pageContent.addView(catalogResultsContainer)
         renderCatalogResults()
+        addBuiltInDemoCards(pageContent)
+    }
+
+    private fun addBuiltInDemoCards(container: LinearLayout) {
+        container.addView(label("ВСТРОЕННЫЕ ДЕМО", 10f, accent, true).apply {
+            letterSpacing = 0.12f
+            setPadding(0, dp(22), 0, dp(10))
+        })
+        container.addView(actionCard(
+            "Кристальный рейд · 2D",
+            "Phaser 3.90 · касания · сохранение рекорда · офлайн",
+            "2D"
+        ) {
+            installPhaserDemoGame()
+        })
+        container.addView(actionCard(
+            "3D WebGL-тест",
+            "Вращающийся 3D-объект · управление касанием · офлайн",
+            "3D"
+        ) {
+            installWebGlDemoGame()
+        })
+        container.addView(actionCard(
+            "HTML5 Runtime-тест",
+            "Проверка установки, SDK, касаний и локального запуска",
+            "HTML"
+        ) {
+            installBundledTestGame()
+        })
     }
 
     private fun renderCatalogResults() {
