@@ -12,6 +12,7 @@ import java.util.zip.ZipInputStream
 
 data class ExpectedGameMetadata(
     val gameId: String,
+    val name: String,
     val version: String,
     val engine: String,
     val engineVersion: String,
@@ -67,6 +68,7 @@ class GameInstaller(
             expectedMetadata?.let { expected ->
                 if (
                     manifest.gameId != expected.gameId ||
+                    manifest.name != expected.name ||
                     manifest.version != expected.version ||
                     manifest.engine != expected.engine ||
                     manifest.engineVersion != expected.engineVersion ||
