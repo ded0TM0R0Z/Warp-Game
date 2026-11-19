@@ -82,6 +82,7 @@ class GameDownloadManager(context: Context) {
                     connection.disconnect()
                 }
             }
+            throw IllegalStateException("Package download did not complete")
         } finally {
             database.close()
         }
