@@ -511,7 +511,7 @@
             const x=side===0?view.x-35:side===1?view.right+35:Phaser.Math.Between(view.x+25,view.right-25);
             const y=side===2?view.y-35:side===3?view.bottom+35:Phaser.Math.Between(view.y+75,view.bottom-30);
             const roll = Math.random();
-            const kind = type || (this.wave >= 8 && roll < 0.13 ? "cultist" : this.wave >= 7 && roll < 0.13 ? "beetle" : this.wave >= 5 && roll < 0.29 ? "wraith" : this.wave >= 4 && roll < 0.43 ? "brute" : this.wave >= 2 && roll < 0.70 ? "skeleton" : "slime");
+            const kind = type || (this.wave >= 12 && roll < 0.08 ? "cultist" : this.wave >= 10 && roll < 0.18 ? "beetle" : this.wave >= 8 && roll < 0.30 ? "wraith" : this.wave >= 6 && roll < 0.45 ? "brute" : this.wave >= 3 && roll < 0.72 ? "skeleton" : "slime");
             const key = kind === "brute" ? "brute" : kind === "skeleton" ? "skeleton" : kind === "wraith" ? "wraith" : kind === "beetle" ? "beetle" : kind === "cultist" ? "cultist" : "slime";
             const scale = kind === "brute" ? 1.45 : kind === "skeleton" ? 1.15 : kind === "wraith" ? 1.28 : kind === "beetle" ? 1.32 : kind === "cultist" ? 1.24 : 1.2;
             const enemy = this.add.container(x, y).setDepth(12);
