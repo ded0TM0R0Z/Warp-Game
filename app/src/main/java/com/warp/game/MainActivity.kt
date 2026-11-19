@@ -163,10 +163,10 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(0, dp(8), 0, 0)
         }
-        navHome = navItem("⌂\\nГлавная")
-        navCatalog = navItem("▦\\nКаталог")
-        navLibrary = navItem("▣\\nМои игры")
-        navSettings = navItem("⚙\\nНастройки")
+        navHome = navItem("⌂\nГлавная")
+        navCatalog = navItem("▦\nКаталог")
+        navLibrary = navItem("▣\nМои игры")
+        navSettings = navItem("⚙\nНастройки")
         navHome.setOnClickListener { navigateTo("home") }
         navCatalog.setOnClickListener { navigateTo("catalog") }
         navLibrary.setOnClickListener { navigateTo("library") }
@@ -191,6 +191,11 @@ class MainActivity : Activity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) applyImmersiveMode()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyImmersiveMode()
     }
 
     override fun onNewIntent(intent: android.content.Intent) {
