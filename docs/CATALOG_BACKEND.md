@@ -42,8 +42,6 @@ The repository workflow **Publish Game Package** automates packaging, SHA-256 ca
 
 Published game archives are remote Release assets; they are not bundled into the Android APK. The app downloads them only after the user selects Install or Update.
 
-
-
 For each game release:
 
 1. Build a ZIP that follows [GAME PACKAGE SPEC](GAME_PACKAGE_SPEC.md).
@@ -61,7 +59,7 @@ The initial package URL must use HTTPS and a trusted GitHub host. Redirects are 
 - Installed games do not depend on the catalog to launch.
 - Package checksums and manifest metadata are verified before installation.
 
-## 5. Built-in demos
+## 5. Archived prototype packages
 
 The previous Phaser, WebGL and HTML5 test packages have been moved to `dev-tools/legacy-demos/` and are no longer bundled in the Android app. The production catalog displays only remotely published games. The catalog can remain empty until the first game is published.
 
