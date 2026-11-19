@@ -12,9 +12,9 @@
 | `babylonjs` | `9.37.1` | `libraries/babylon.js` | 3D games using WebGL |
 | `custom` | Declared by package | Included by publisher | Other self-contained frameworks |
 
-Phaser 3.90.0 is the latest Phaser 3 release listed in the official Phaser archive. Phaser 4 is a separate major version and is not used by this initial Phaser 3 contract. <https://phaser.io/download/archive>
+Phaser 3.90.0 is the latest Phaser 3 release listed in the official Phaser 3 archive. Phaser 4 is a separate major version and is not used by this initial Phaser 3 contract. <https://phaser.io/download/phaser3>
 
-Babylon.js 9.37.1 is the current pinned release for the initial UMD package contract. The UMD distribution is used so games can load it through a local script tag without a bundler. <https://www.npmjs.com/package/babylonjs>
+Babylon.js 9.37.1 is pinned to the official upstream release published on 18 November 2026. The UMD distribution is used so games can load it through a local script tag without a bundler. <https://github.com/BabylonJS/Babylon.js/releases>
 
 ## 2. Offline packaging
 
@@ -46,6 +46,6 @@ All engine files, models, textures, fonts, audio and other resources must be inc
 
 ## 4. Version policy
 
-The package manifest must declare the exact engine version. The installer rejects Phaser and Babylon.js packages whose declared version does not match the registry or whose required local engine file is missing.
+The package manifest must declare the exact engine version. The installer rejects Phaser and Babylon.js packages whose declared version does not match the registry or whose required local engine file is missing. This validates package structure and version declarations; it does not by itself prove that a real Phaser or Babylon.js game renders correctly on a phone. Device-level WebGL, touch, performance and thermal tests remain required.
 
 Engine upgrades are handled by updating the registry and validating compatibility before publishing games built for the new version.
