@@ -10,13 +10,26 @@ import java.util.UUID
 import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
+data class ExpectedGameMetadata(
+    val gameId: String,
+    val version: String,
+    val engine: String,
+    val engineVersion: String,
+    val gameType: String,
+    val orientation: String,
+    val minimumPlatformVersion: String,
+    val offlineSupported: Boolean
+)
+
 class GameInstaller(
     private val storage: PlatformStorage,
     private val database: WarpDatabase
 ) {
     fun installPackage(
         packageStream: InputStream,
-        expectedSha256: String
+        expectedSha256: String,
+        expectedSizeBytes: Long? = null,
+        expectedMetadata: ExpectedGameMetadata? = null
     ): InstalledGame {
         if (!SHA256_PATTERN.matches(expectedSha256)) {
             throw GamePackageException("A trusted SHA-256 checksum is required")
@@ -32,6 +45,9 @@ class GameInstaller(
 
         try {
             val actualSha256 = copyAndHash(packageStream, packageFile)
+            if (expectedSizeBytes != null && packageFile.length() != expectedSizeBytes) {
+                throw GamePackageException("Package size does not match trusted catalog metadata")
+            }
             if (!actualSha256.equals(expectedSha256, ignoreCase = true)) {
                 throw GamePackageException("Package SHA-256 checksum does not match")
             }
@@ -43,6 +59,20 @@ class GameInstaller(
             }
 
             val manifest = extractAndValidate(packageFile, stagingDirectory)
+            expectedMetadata?.let { expected ->
+                if (
+                    manifest.gameId != expected.gameId ||
+                    manifest.version != expected.version ||
+                    manifest.engine != expected.engine ||
+                    manifest.engineVersion != expected.engineVersion ||
+                    manifest.gameType != expected.gameType ||
+                    manifest.orientation != expected.orientation ||
+                    manifest.minimumPlatformVersion != expected.minimumPlatformVersion ||
+                    manifest.offlineSupported != expected.offlineSupported
+                ) {
+                    throw GamePackageException("Package manifest does not match catalog metadata")
+                }
+            }
             val entryFile = resolveInside(stagingDirectory, manifest.entryPoint)
             if (!entryFile.isFile) {
                 throw GamePackageException("Game entry point does not exist")
