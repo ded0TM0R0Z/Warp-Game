@@ -5,7 +5,9 @@
     const context = canvas.getContext("2d");
     const scriptStatus = document.getElementById("script-status");
     const webglStatus = document.getElementById("webgl-status");
+    const sdkStatus = document.getElementById("sdk-status");
     const tapCount = document.getElementById("tap-count");
+    const sdk = window.WarpGameSDK || null;
 
     if (!context) {
         scriptStatus.textContent = "Canvas недоступен";
@@ -20,12 +22,19 @@
         ? (probeCanvas.getContext("webgl2") ? "Доступен (2)" : "Доступен (1)")
         : "Недоступен";
 
+    sdkStatus.textContent = sdk && sdk.getGameInfo().gameId
+        ? "Работает"
+        : "Не подключён";
+    const savedTaps = sdk ? Number(sdk.loadData("tap-count") || 0) : 0;
+
     const state = {
         x: 0.5,
         y: 0.5,
-        taps: 0,
+        taps: Number.isFinite(savedTaps) ? savedTaps : 0,
         pulse: 0
     };
+
+    tapCount.textContent = "Касаний: " + state.taps;
 
     function resize() {
         const rect = canvas.getBoundingClientRect();
@@ -90,6 +99,10 @@
         state.y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
         state.taps += 1;
         tapCount.textContent = "Касаний: " + state.taps;
+        if (sdk) {
+            sdk.saveData("tap-count", state.taps);
+            sdk.vibrate(20);
+        }
         draw();
     });
 
