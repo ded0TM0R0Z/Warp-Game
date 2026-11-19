@@ -148,11 +148,12 @@
                 g.fillStyle(0x1d3a29); g.fillRect(5, 26, 8, 7); g.fillRect(26, 24, 7, 7);
             });
             make("ruin", 44, 50, g => {
-                g.fillStyle(0x55534d); g.fillRect(3, 7, 38, 40);
-                g.fillStyle(0x858176); g.fillRect(7, 4, 30, 8);
-                g.fillStyle(0x393a38); g.fillRect(14, 20, 16, 27);
-                g.fillStyle(0xa29b88); g.fillRect(7, 15, 8, 5); g.fillRect(29, 15, 8, 5);
-                g.fillStyle(0x68665d); g.fillRect(3, 34, 38, 5);
+                g.fillStyle(0x55534d); g.fillRect(3, 15, 10, 32); g.fillRect(13, 21, 9, 26); g.fillRect(29, 12, 12, 35);
+                g.fillStyle(0x858176); g.fillRect(2, 12, 12, 6); g.fillRect(12, 18, 11, 5); g.fillRect(28, 9, 14, 6);
+                g.fillStyle(0x393a38); g.fillRect(31, 23, 7, 24); g.fillRect(17, 29, 8, 18);
+                g.fillStyle(0xa29b88); g.fillRect(5, 22, 5, 4); g.fillRect(31, 17, 7, 4);
+                g.fillStyle(0x68665d); g.fillRect(1, 43, 42, 5);
+                g.fillStyle(0x343532); g.fillRect(17, 34, 8, 13);
             });
             make("torch", 12, 22, g => {
                 g.fillStyle(0x62452e); g.fillRect(5, 7, 3, 15);
@@ -160,11 +161,12 @@
                 g.fillStyle(0xf3c45d); g.fillRect(4, 1, 5, 6);
                 g.fillStyle(0xffed9b); g.fillRect(5, 2, 2, 3);
             });
-            make("dirt", 48, 48, g => {
-                g.fillStyle(0x66513a); g.fillRect(0,0,48,48);
-                g.fillStyle(0x806447); g.fillRect(4,7,12,4); g.fillRect(25,5,8,3); g.fillRect(18,27,15,5);
-                g.fillStyle(0x4e402f); g.fillRect(9,20,7,4); g.fillRect(36,34,8,5); g.fillRect(2,39,10,3);
-                g.fillStyle(0x9a7950); g.fillRect(20,12,4,3); g.fillRect(39,16,3,3);
+            make("dirt", 64, 48, g => {
+                g.fillStyle(0x66513a); g.fillEllipse(32,24,62,43);
+                g.fillStyle(0x806447); g.fillEllipse(17,15,25,12); g.fillEllipse(43,32,29,13);
+                g.fillStyle(0x4e402f); g.fillEllipse(27,27,20,8); g.fillEllipse(51,13,12,7);
+                g.fillStyle(0x9a7950); g.fillRect(19,12,4,3); g.fillRect(39,29,5,3); g.fillRect(10,28,3,2);
+                g.fillStyle(0x3f392d); g.fillRect(29,8,4,2); g.fillRect(48,37,5,2);
             });
             make("rubble", 28, 22, g => {
                 g.fillStyle(0x514f49); g.fillRect(2,10,9,8); g.fillRect(12,5,10,12); g.fillRect(21,12,6,7);
@@ -217,7 +219,6 @@
             const height = key === "ruin" ? 35 : 31;
             obj.body.setSize(width, height);
             obj.body.setOffset((obj.width - width) / 2, obj.height - height);
-            obj.refreshBody();
             return obj;
         }
 
