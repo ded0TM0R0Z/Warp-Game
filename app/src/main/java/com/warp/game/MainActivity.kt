@@ -816,6 +816,13 @@ class MainActivity : Activity() {
                             onInstallStarted = {
                                 runOnUiThread {
                                     downloadIsInstalling = true
+                                    downloadQueueStore.update(
+                                        game.gameId,
+                                        DownloadQueueStore.STATUS_DOWNLOADING,
+                                        100,
+                                        "Проверка и установка…"
+                                    )
+                                    if (currentPage == "downloads") renderDownloads()
                                     activeDownloadStatusView?.text = "Проверка и установка…"
                                     activeDownloadCancelView?.visibility = View.GONE
                                 }
@@ -990,7 +997,7 @@ class MainActivity : Activity() {
             ).apply { setPadding(0, dp(5), 0, dp(8)) })
             val statusText = when (entry.status) {
                 DownloadQueueStore.STATUS_PENDING -> "Ожидает загрузки"
-                DownloadQueueStore.STATUS_DOWNLOADING -> "Загрузка: ${entry.progressPercent}%"
+                DownloadQueueStore.STATUS_DOWNLOADING -> if (downloadingGameId == entry.game.gameId && downloadIsInstalling) "Проверка и установка…" else "Загрузка: ${entry.progressPercent}%"
                 DownloadQueueStore.STATUS_COMPLETED -> "Установлено"
                 DownloadQueueStore.STATUS_FAILED -> "Ошибка загрузки"
                 DownloadQueueStore.STATUS_CANCELLED -> "Отменено"
@@ -1014,7 +1021,11 @@ class MainActivity : Activity() {
             val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
             when (entry.status) {
                 DownloadQueueStore.STATUS_DOWNLOADING -> {
-                    actions.addView(filterChip("Отменить", false) { cancelGameDownload() }, LinearLayout.LayoutParams(0, dp(38), 1f))
+                    if (downloadingGameId == entry.game.gameId && downloadIsInstalling) {
+                        actions.addView(label("Отмена недоступна во время установки", 11f, textMuted, false))
+                    } else {
+                        actions.addView(filterChip("Отменить", false) { cancelGameDownload() }, LinearLayout.LayoutParams(0, dp(38), 1f))
+                    }
                 }
                 DownloadQueueStore.STATUS_FAILED -> {
                     actions.addView(filterChip("Повторить", true) { retryQueuedDownload(entry.game.gameId) }, LinearLayout.LayoutParams(0, dp(38), 1f).apply { rightMargin = dp(6) })
