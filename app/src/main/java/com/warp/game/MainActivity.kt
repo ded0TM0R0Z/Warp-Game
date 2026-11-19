@@ -450,31 +450,46 @@ class MainActivity : Activity() {
     }
 
     private fun addBuiltInDemoCards(container: LinearLayout) {
+        val demos = listOf(
+            Triple("2d", "phaser", Triple(
+                "Кристальный рейд · 2D",
+                "Phaser 3.90 · касания · сохранение рекорда · офлайн",
+                "2D"
+            )),
+            Triple("3d", "webgl", Triple(
+                "3D WebGL-тест",
+                "Вращающийся 3D-объект · управление касанием · офлайн",
+                "3D"
+            )),
+            Triple("2d", "html5", Triple(
+                "HTML5 Runtime-тест",
+                "Проверка установки, SDK, касаний и локального запуска",
+                "HTML"
+            ))
+        )
+        val query = catalogSearchQuery.trim()
+        val visibleDemos = demos.filter { (type, engine, card) ->
+            (catalogTypeFilter == "all" || catalogTypeFilter == type) &&
+                (catalogEngineFilter == "all" || catalogEngineFilter.equals(engine, ignoreCase = true)) &&
+                (query.isEmpty() || card.first.contains(query, ignoreCase = true) ||
+                    card.second.contains(query, ignoreCase = true) ||
+                    engine.contains(query, ignoreCase = true))
+        }
+        if (visibleDemos.isEmpty()) return
+
         container.addView(label("ВСТРОЕННЫЕ ДЕМО", 10f, accent, true).apply {
             letterSpacing = 0.12f
             setPadding(0, dp(22), 0, dp(10))
         })
-        container.addView(actionCard(
-            "Кристальный рейд · 2D",
-            "Phaser 3.90 · касания · сохранение рекорда · офлайн",
-            "2D"
-        ) {
-            installPhaserDemoGame()
-        })
-        container.addView(actionCard(
-            "3D WebGL-тест",
-            "Вращающийся 3D-объект · управление касанием · офлайн",
-            "3D"
-        ) {
-            installWebGlDemoGame()
-        })
-        container.addView(actionCard(
-            "HTML5 Runtime-тест",
-            "Проверка установки, SDK, касаний и локального запуска",
-            "HTML"
-        ) {
-            installBundledTestGame()
-        })
+        visibleDemos.forEach { (_, _, card) ->
+            container.addView(actionCard(card.first, card.second, card.third) {
+                when (card.third) {
+                    "2D" -> installPhaserDemoGame()
+                    "3D" -> installWebGlDemoGame()
+                    else -> installBundledTestGame()
+                }
+            })
+        }
     }
 
     private fun renderCatalogResults() {
