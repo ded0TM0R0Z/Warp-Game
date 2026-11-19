@@ -6,8 +6,8 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Stage:** Foundation and device validation  
-**Current priority:** Install and test the first APK on the target phone.
+**Stage:** Local platform foundation and HTML5 runtime prototype  
+**Current priority:** Install the latest signed APK and test the local runtime on the target phone.
 
 ## Documentation
 
