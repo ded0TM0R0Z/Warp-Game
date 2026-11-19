@@ -674,6 +674,47 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun installWebGlDemoGame() {
+        if (testInstallInProgress) return
+        testInstallInProgress = true
+        android.widget.Toast.makeText(
+            this,
+            "Подготовка 3D WebGL…",
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+
+        backgroundExecutor.execute {
+            try {
+                val installedGame = BundledWebGlDemoInstaller(this).install()
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "3D WebGL-тест установлен",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    navigateTo("library")
+                }
+                WarpLogger.info(
+                    "Installer",
+                    "Bundled WebGL 3D demo installed: " + installedGame.gameId
+                )
+            } catch (error: Exception) {
+                WarpLogger.error("Installer", "WebGL demo installation failed", error)
+                runOnUiThread {
+                    testInstallInProgress = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Не удалось установить 3D WebGL-тест",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     private fun renderSettings() {
         pageHeading("Настройки", "Информация о приложении и его состоянии.")
         val appCard = panel()
@@ -701,6 +742,13 @@ class MainActivity : Activity() {
             "2D"
         ) {
             installPhaserDemoGame()
+        })
+        pageContent.addView(actionCard(
+            "Установить 3D WebGL-тест",
+            "Вращающийся 3D-объект, касания и проверка WebGL",
+            "3D"
+        ) {
+            installWebGlDemoGame()
         })
         pageContent.addView(actionCard(
             "Тест игрового движка",
