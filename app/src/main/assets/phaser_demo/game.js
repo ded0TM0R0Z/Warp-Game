@@ -14,6 +14,7 @@
       this.scoreText = null;
       this.bestText = null;
       this.target = null;
+      this.crystalOverlap = null;
     }
 
     create() {
@@ -52,7 +53,6 @@
       this.player.body.setCollideWorldBounds(true);
 
       this.spawnCrystal();
-      this.physics.add.overlap(this.player, this.crystal, this.collectCrystal, null, this);
 
       this.input.on("pointerdown", pointer => {
         this.movePlayer(pointer);
@@ -82,7 +82,9 @@
         yoyo: true, repeat: -1, ease: "Sine.inOut"
       });
       if (this.player) {
-        this.physics.add.overlap(this.player, this.crystal, this.collectCrystal, null, this);
+        this.crystalOverlap = this.physics.add.overlap(
+          this.player, this.crystal, this.collectCrystal, null, this
+        );
       }
     }
 
@@ -94,6 +96,7 @@
 
     collectCrystal() {
       if (!this.crystal || !this.crystal.active) return;
+      if (this.crystalOverlap) this.crystalOverlap.destroy();
       this.crystal.destroy();
       this.score += 1;
       this.best = Math.max(this.best, this.score);
