@@ -62,8 +62,19 @@ class GameDownloadManager(context: Context) {
                     )
                     progressInput.use { input ->
                         return GameInstaller(storage, database).installPackage(
-                            input,
-                            game.packageSha256
+                            packageStream = input,
+                            expectedSha256 = game.packageSha256,
+                            expectedSizeBytes = game.packageSizeBytes,
+                            expectedMetadata = ExpectedGameMetadata(
+                                gameId = game.gameId,
+                                version = game.version,
+                                engine = game.engine,
+                                engineVersion = game.engineVersion,
+                                gameType = game.gameType,
+                                orientation = game.orientation,
+                                minimumPlatformVersion = game.minimumPlatformVersion,
+                                offlineSupported = game.offlineSupported
+                            )
                         )
                     }
                 } finally {
