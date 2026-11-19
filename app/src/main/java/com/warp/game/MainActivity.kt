@@ -38,6 +38,13 @@ class MainActivity : Activity() {
     private lateinit var gameManager: GameManager
     private val backgroundExecutor = Executors.newSingleThreadExecutor()
     private var testInstallInProgress = false
+    private var catalogLoadRequested = false
+    private var catalogLoading = false
+    private var catalogFromCache = false
+    private var catalogError: String? = null
+    private var catalogEntries: List<CatalogGame> = emptyList()
+    private var downloadingGameId: String? = null
+    private var downloadProgressPercent = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -257,16 +264,217 @@ class MainActivity : Activity() {
     }
 
     private fun renderCatalog() {
-        pageHeading("Каталог игр", "Находи новые игры для своей библиотеки.")
-        val empty = emptyState(
-            "Каталог готовится",
-            "Здесь появятся карточки игр, описание, размер, версия и кнопка установки. Сейчас источник каталога ещё не подключён."
+        pageHeading("Каталог игр", "Загружай игры и запускай их без постоянного подключения к сети.")
+
+        if (!catalogLoadRequested) {
+            catalogLoadRequested = true
+            catalogLoading = true
+            requestCatalog()
+        }
+
+        if (catalogLoading) {
+            pageContent.addView(emptyState(
+                "Загрузка каталога",
+                "Получаем список доступных игр."
+            ))
+            return
+        }
+
+        if (catalogError != null && catalogEntries.isEmpty()) {
+            pageContent.addView(emptyState(
+                "Каталог недоступен",
+                catalogError ?: "Не удалось загрузить список игр."
+            ))
+            pageContent.addView(actionCard(
+                "Повторить",
+                "Попробовать загрузить каталог ещё раз",
+                "↻"
+            ) {
+                catalogLoadRequested = false
+                catalogError = null
+                renderPage(true)
+            })
+            pageContent.addView(actionCard(
+                "Установить тестовую игру",
+                "Встроенная демонстрация установки и запуска",
+                "2D"
+            ) {
+                installBundledTestGame()
+            })
+            return
+        }
+
+        if (catalogFromCache) {
+            pageContent.addView(label(
+                "Показана сохранённая версия каталога",
+                11f,
+                textMuted,
+                false
+            ).apply { setPadding(0, 0, 0, dp(12)) })
+        }
+
+        if (catalogEntries.isEmpty()) {
+            pageContent.addView(emptyState(
+                "Каталог пока пуст",
+                "Новые игры появятся здесь после публикации пакетов."
+            ))
+            pageContent.addView(actionCard(
+                "Установить тестовую игру",
+                "Встроенная демонстрация установки и запуска",
+                "2D"
+            ) {
+                installBundledTestGame()
+            })
+            return
+        }
+
+        catalogEntries.forEach { game ->
+            pageContent.addView(catalogCard(game))
+        }
+    }
+
+    private fun requestCatalog() {
+        backgroundExecutor.execute {
+            try {
+                val snapshot = CatalogRepository(this).loadCatalog()
+                runOnUiThread {
+                    catalogLoading = false
+                    catalogEntries = snapshot.games
+                    catalogFromCache = snapshot.fromCache
+                    catalogError = null
+                    if (!isFinishing && !isDestroyed && currentPage == "catalog") {
+                        renderPage(true)
+                    }
+                }
+            } catch (error: Exception) {
+                WarpLogger.error("Catalog", "Catalog loading failed", error)
+                runOnUiThread {
+                    catalogLoading = false
+                    catalogError = "Проверь подключение к интернету и повтори загрузку."
+                    if (!isFinishing && !isDestroyed && currentPage == "catalog") {
+                        renderPage(true)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun catalogCard(game: CatalogGame): LinearLayout {
+        val card = panel().apply {
+            setPadding(dp(16), dp(16), dp(16), dp(14))
+        }
+        card.addView(label(game.name, 17f, textMain, true))
+        card.addView(label(
+            game.description,
+            12f,
+            textMuted,
+            false
+        ).apply { setPadding(0, dp(7), 0, dp(10)) })
+
+        val sizeMb = String.format(
+            java.util.Locale.US,
+            "%.1f MB",
+            game.packageSizeBytes / (1024f * 1024f)
         )
-        pageContent.addView(empty)
-        pageContent.addView(label(
-            "Планируемая поддержка: 2D и 3D • загрузка • обновления • офлайн-запуск",
-            12f, textMuted, false
-        ).apply { setPadding(dp(4), dp(16), dp(4), 0) })
+        card.addView(label(
+            game.gameType.uppercase() + " • " + game.engine + " • " + game.version + " • " + sizeMb,
+            10f,
+            accent,
+            true
+        ))
+
+        val installedGame = if (::gameManager.isInitialized) {
+            gameManager.getInstalledGame(game.gameId)
+        } else {
+            null
+        }
+        val isCurrentVersionInstalled = installedGame?.version == game.version
+        val isDownloading = downloadingGameId == game.gameId
+        val anotherDownloadActive = downloadingGameId != null && !isDownloading
+
+        val buttonText = when {
+            isDownloading -> "Загрузка: " + downloadProgressPercent + "%"
+            isCurrentVersionInstalled -> "Установлено"
+            anotherDownloadActive -> "Другая загрузка"
+            installedGame != null -> "Обновить"
+            else -> "Установить"
+        }
+
+        val installButton = TextView(this).apply {
+            text = buttonText
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTextColor(if (isCurrentVersionInstalled) textMuted else textMain)
+            background = rounded(if (isCurrentVersionInstalled) surfaceAlt else accentSoft, 11)
+            setPadding(dp(14), dp(11), dp(14), dp(11))
+            isClickable = !isCurrentVersionInstalled && !anotherDownloadActive && !isDownloading
+            isFocusable = isClickable
+            setOnClickListener {
+                if (isClickable) downloadGame(game)
+            }
+        }
+        val buttonParams = LinearLayout.LayoutParams(-1, -2)
+        buttonParams.topMargin = dp(12)
+        card.addView(installButton, buttonParams)
+
+        val params = LinearLayout.LayoutParams(-1, -2)
+        params.bottomMargin = dp(10)
+        card.layoutParams = params
+        return card
+    }
+
+    private fun downloadGame(game: CatalogGame) {
+        if (downloadingGameId != null || testInstallInProgress) return
+        downloadingGameId = game.gameId
+        downloadProgressPercent = 0
+        renderPage(true)
+
+        backgroundExecutor.execute {
+            var lastReportedPercent = -5
+            try {
+                val installedGame = GameDownloadManager(this).downloadAndInstall(game) { downloaded, total ->
+                    val percent = if (total > 0L) {
+                        ((downloaded * 100L) / total).toInt().coerceIn(0, 100)
+                    } else {
+                        0
+                    }
+                    if (percent >= lastReportedPercent + 5 || percent == 100) {
+                        lastReportedPercent = percent
+                        runOnUiThread {
+                            downloadProgressPercent = percent
+                            if (!isFinishing && !isDestroyed && currentPage == "catalog") {
+                                renderPage(false)
+                            }
+                        }
+                    }
+                }
+
+                runOnUiThread {
+                    downloadingGameId = null
+                    downloadProgressPercent = 0
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Игра установлена: " + installedGame.name,
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    navigateTo("library")
+                }
+            } catch (error: Exception) {
+                WarpLogger.error("Download", "Game download or installation failed", error)
+                runOnUiThread {
+                    downloadingGameId = null
+                    downloadProgressPercent = 0
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    android.widget.Toast.makeText(
+                        this,
+                        "Не удалось скачать или установить игру",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    if (currentPage == "catalog") renderPage(true)
+                }
+            }
+        }
     }
 
     private fun renderLibrary() {

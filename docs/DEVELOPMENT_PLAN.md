@@ -1,6 +1,6 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.5  
+**Version:** 1.1.6  
 **Current stage:** 0 — Foundation and device validation
 
 ## Stage 0 — Foundation and validation
@@ -57,11 +57,13 @@
 
 ## Stage 4 — Catalog and downloads
 
-- [ ] Define catalog data format and API.
-- [ ] Implement catalog browsing and search.
-- [ ] Implement download progress, retry and cancellation.
-- [ ] Handle offline and server errors.
-- [ ] Verify package integrity before installation.
+- [x] Define versioned static catalog data format and HTTPS source.
+- [x] Implement catalog browsing.
+- [ ] Implement catalog search.
+- [x] Implement package download progress.
+- [ ] Implement download retry and cancellation.
+- [x] Handle offline catalog access through a local cache and show server errors.
+- [x] Verify package size, SHA-256 and manifest metadata before installation.
 
 **Exit condition:** A catalog game can be downloaded and installed reliably.
 

@@ -6,8 +6,8 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Project status
 
-**Stage:** Local runtime and game package manager implemented  
-**Current priority:** Validate test-game installation, launch and removal on the target phone.
+**Stage:** Catalog, verified downloads and local game manager implemented  
+**Current priority:** Validate catalog loading, test-game installation and offline launch on the target phone.
 
 ## Documentation
 
@@ -18,6 +18,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 - [Build environment](docs/BUILD_ENVIRONMENT.md)
 - [Development plan](docs/DEVELOPMENT_PLAN.md)
 - [Game package specification](docs/GAME_PACKAGE_SPEC.md)
+- [Catalog backend](docs/CATALOG_BACKEND.md)
 
 ## Build
 
