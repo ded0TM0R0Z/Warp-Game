@@ -607,7 +607,7 @@
             this.hud.score.setText(this.score.toLocaleString("ru-RU"));
             const orb = this.add.image(x, y, "orb").setDepth(14).setScale(1.25);
             this.physics.add.existing(orb);
-            orb.body.setCircle(7);
+            orb.body.setCircle(10);
             orb.body.setAllowGravity(false);
             orb.value = value;
             this.orbs.add(orb);
@@ -883,7 +883,7 @@
                 const d = Phaser.Math.Distance.Between(orb.x, orb.y, this.player.x, this.player.y);
                 if (d < this.stats.magnet) {
                     const angle = Phaser.Math.Angle.Between(orb.x, orb.y, this.player.x, this.player.y);
-                    orb.body.setVelocity(Math.cos(angle) * 250, Math.sin(angle) * 250);
+                    const pullSpeed = Phaser.Math.Clamp(720 - d * 0.55, 360, 720); orb.body.setVelocity(Math.cos(angle) * pullSpeed, Math.sin(angle) * pullSpeed);
                 } else orb.body.setVelocity(0, 0);
             });
             this.bullets.children.iterate(bolt => {
