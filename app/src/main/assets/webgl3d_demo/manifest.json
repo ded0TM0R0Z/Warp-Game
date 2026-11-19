@@ -1,0 +1,12 @@
+{
+  "game_id": "com.warp.demo.webgl3d",
+  "name": "3D WebGL тест",
+  "version": "1.0.0",
+  "engine": "html5",
+  "engine_version": "1.0.0",
+  "game_type": "3d",
+  "entry_point": "index.html",
+  "orientation": "landscape",
+  "offline_supported": true,
+  "minimum_platform_version": "0.2.0"
+}
