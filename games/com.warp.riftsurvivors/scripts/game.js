@@ -568,7 +568,7 @@
         update(_, delta) {
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
-            this.elapsedMs+=dt; this.waveClock+=dt; this.magicClock+=dt; this.lightningClock+=dt;
+            this.elapsedMs+=dt; this.hud.timer.setText(this.formatTime(this.elapsedMs)); this.waveClock+=dt; this.magicClock+=dt; this.lightningClock+=dt;
             this.updateWorldChunks(this.player.x,this.player.y);
             this.spawnClock += dt;
             this.fireClock += dt;
@@ -615,6 +615,7 @@
                 const angle=Phaser.Math.Angle.Between(enemy.x,enemy.y,this.player.x,this.player.y);
                 enemy.body.setVelocity(Math.cos(angle)*enemy.speed,Math.sin(angle)*enemy.speed);
                 if(enemy.sprite)enemy.sprite.setFlipX(this.player.x<enemy.x);
+                if(enemy.isBoss){enemy.attackClock-=dt;if(enemy.attackClock<=0)this.bossAttack(enemy);}
             });
             this.orbs.children.iterate(orb => {
                 if (!orb || !orb.active) return;
@@ -685,7 +686,7 @@
             const y=side===2?v.y-50:side===3?v.bottom+50:Phaser.Math.Between(v.y+80,v.bottom-50);
             const boss=this.add.container(x,y).setDepth(24);boss.sprite=this.add.image(0,0,b.kind==="skeleton"?"skeleton":"brute").setScale(b.scale).setTint(b.tint);boss.add(boss.sprite);
             this.physics.add.existing(boss);boss.body.setCircle(25,-25,-25);boss.body.setAllowGravity(false);
-            boss.kind=b.kind;boss.isBoss=true;boss.bossName=b.name;boss.hp=Math.round(b.hp*factor);boss.maxHp=boss.hp;boss.speed=b.speed+stage*2.4;boss.damage=Math.round(b.damage*factor);boss.xpValue=16+stage*3;boss.radius=25;
+            boss.kind=b.kind;boss.isBoss=true;boss.bossName=b.name;boss.bossStage=stage;boss.attackClock=4300;boss.hp=Math.round(b.hp*factor);boss.maxHp=boss.hp;boss.speed=b.speed+stage*2.4;boss.damage=Math.round(b.damage*factor);boss.xpValue=16+stage*3;boss.radius=25;
             boss.healthBack=this.add.rectangle(0,-43,64,6,0x241a18).setOrigin(.5).setVisible(false);boss.healthBar=this.add.rectangle(-32,-43,64,4,0xd94b3e).setOrigin(0,.5).setVisible(false);boss.add([boss.healthBack,boss.healthBar]);
             boss.animTween=this.tweens.add({targets:boss.sprite,y:4,duration:310,yoyo:true,repeat:-1});this.enemies.add(boss);
             this.bossLabel=this.add.text(W/2,78,b.name,this.style(18,0xffd38a,true)).setOrigin(.5).setScrollFactor(0).setDepth(70);
@@ -694,6 +695,31 @@
             const notice=this.add.text(W/2,H/2-125,"БОСС: "+b.name,this.style(24,0xffc66e,true)).setOrigin(.5).setDepth(75);
             this.tweens.add({targets:notice,alpha:0,y:notice.y-45,duration:1800,onComplete:()=>notice.destroy()});this.cameras.main.shake(350,.006);if(sdk)sdk.vibrate(100);
         }
+
+        bossAttack(boss){
+            if(!boss.active)return;const stage=boss.bossStage%3;
+            if(stage===1){
+                boss.attackClock=5200;
+                const ring=this.add.circle(boss.x,boss.y,24,0xd94b3e,.18).setStrokeStyle(3,0xff8b61,.95).setDepth(26);
+                this.tweens.add({targets:ring,radius:155,alpha:0,duration:650,onComplete:()=>{
+                    if(this.mode==="playing"&&Phaser.Math.Distance.Between(this.player.x,this.player.y,boss.x,boss.y)<155&&this.invulnerable<=0){
+                        this.stats.hp-=Math.round(boss.damage*1.25);this.invulnerable=700;this.cameras.main.shake(180,.006);
+                        if(this.stats.hp<=0)this.endRun();this.refreshHud();
+                    }ring.destroy();
+                }});
+            }else if(stage===2){
+                boss.attackClock=6100;const a=Phaser.Math.Angle.Between(boss.x,boss.y,this.player.x,this.player.y);
+                boss.body.setVelocity(Math.cos(a)*330,Math.sin(a)*330);boss.sprite.setTint(0xffb05a);
+                this.time.delayedCall(780,()=>{if(boss.active){boss.body.setVelocity(0,0);boss.sprite.setTint(0xc8c0a9);}});
+            }else{
+                boss.attackClock=6900;this.spawnEnemy("skeleton");this.spawnEnemy("slime");
+                boss.hp=Math.min(boss.maxHp,boss.hp+Math.round(boss.maxHp*.07));
+                if(this.bossBar&&this.bossBar.active)this.bossBar.fill.width=Math.max(1,276*boss.hp/boss.maxHp);
+                const pulse=this.add.circle(boss.x,boss.y,20,0x9c70c9,.4).setStrokeStyle(3,0xd9b8ff).setDepth(25);
+                this.tweens.add({targets:pulse,radius:100,alpha:0,duration:450,onComplete:()=>pulse.destroy()});
+            }
+        }
+
         pauseRun(){
             if(this.mode!=="playing")return;this.mode="paused";this.physics.pause();this.playerWalkTween.pause();
             this.joy.active=false;this.joy.dx=0;this.joy.dy=0;this.hud.joyKnob.setPosition(0,0);
