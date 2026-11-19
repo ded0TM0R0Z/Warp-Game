@@ -388,22 +388,22 @@
             this.mode = "menu";
             this.physics.pause();
             this.panel("RIFT SURVIVORS", "ПРОКЛЯТЫЕ РУИНЫ");
-            const halo=this.add.circle(W/2,H/2-91,70,0x8f48d4,0.08).setStrokeStyle(3,0x9c70d0,0.75);
+            const halo=this.add.circle(W/2,H/2-84,64,0x8f48d4,0.08).setStrokeStyle(3,0x9c70d0,0.75);
             this.addOverlay(halo);
             this.tweens.add({targets:halo,scale:1.13,alpha:0.55,duration:1800,yoyo:true,repeat:-1,ease:"Sine.InOut"});
-            this.addOverlay(this.add.image(W/2,H/2-91,"gameIcon").setDisplaySize(116,116).setDepth(101));
-            this.addOverlay(this.add.text(W / 2, H / 2 - 25,
+            this.addOverlay(this.add.image(W/2,H/2-84,"gameIcon").setDisplaySize(116,116).setDepth(101));
+            this.addOverlay(this.add.text(W / 2, H / 2 - 15,
                 "СОБИРАЙ РЕЛИКВИИ • ОСВАИВАЙ МАГИЮ • УБИВАЙ БОССОВ\nКаждый забег — новая сборка и новые угрозы.",
                 this.style(13, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(7));
-            const statsY = H / 2 + 20;
+            const statsY = H / 2 + 30;
             [["РЕКОРД", this.best.toLocaleString("ru-RU")], ["БОССЫ", "КАЖДЫЕ 3 МИН."], ["АТАКА", "АВТОМАТИЧЕСКАЯ"]].forEach((item, i) => {
                 const x = W / 2 - 205 + i * 205;
                 this.addOverlay(this.add.rectangle(x, statsY, 184, 52, 0x393326, 0.98).setStrokeStyle(1, 0x806c48, 0.9));
                 this.addOverlay(this.add.text(x, statsY - 10, item[0], this.style(10, C.muted, true)).setOrigin(0.5));
                 this.addOverlay(this.add.text(x, statsY + 10, String(item[1]), this.style(13, C.gold, true)).setOrigin(0.5));
             });
-            this.makeButton(W / 2, H / 2 + 111, "НАЧАТЬ ЗАБЕГ", () => this.startRun(), 290);
-            this.makeButton(W / 2, H / 2 + 171, "КАК ИГРАТЬ", () => this.showControls(), 220);
+            this.makeButton(W / 2, H / 2 + 121, "НАЧАТЬ ЗАБЕГ", () => this.startRun(), 290);
+            this.makeButton(W / 2, H / 2 + 181, "КАК ИГРАТЬ", () => this.showControls(), 220);
             this.addOverlay(this.add.text(W / 2, H - 22,
                 "ЛЕВЫЙ СТИК — ДВИЖЕНИЕ     •     РЫЦАРЬ САМ ВЫБИРАЕТ ЦЕЛЬ",
                 this.style(10, C.muted, false)).setOrigin(0.5));
