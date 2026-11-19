@@ -22,7 +22,9 @@
         ? (probeCanvas.getContext("webgl2") ? "Доступен (2)" : "Доступен (1)")
         : "Недоступен";
 
-    sdkStatus.textContent = sdk ? "Работает" : "Не подключён";
+    sdkStatus.textContent = sdk && sdk.getGameInfo().gameId
+        ? "Работает"
+        : "Не подключён";
     const savedTaps = sdk ? Number(sdk.loadData("tap-count") || 0) : 0;
 
     const state = {
@@ -31,6 +33,8 @@
         taps: Number.isFinite(savedTaps) ? savedTaps : 0,
         pulse: 0
     };
+
+    tapCount.textContent = "Касаний: " + state.taps;
 
     function resize() {
         const rect = canvas.getBoundingClientRect();
