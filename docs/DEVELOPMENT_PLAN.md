@@ -1,18 +1,15 @@
 # WARP GAME — DEVELOPMENT PLAN
 
-**Version:** 1.1.9  
-**Current stage:** 0 — Foundation and device validation
+**Version:** 1.2.0  
+**Current stage:** 6 — First 2D game and runtime validation
 
 ## Stage 0 — Foundation and validation
 
-- [x] Create repository documentation structure.
-- [x] Establish project rules and task handoff format.
-- [x] Record initial technical architecture.
-- [x] Add Android project skeleton.
-- [x] Add GitHub Actions debug build workflow.
+- [x] Create repository documentation structure and project rules.
+- [x] Record technical architecture and task handoff format.
+- [x] Add Android project skeleton and GitHub Actions build workflow.
 - [x] Pin prototype build toolchain.
-- [x] Complete a successful cloud build.
-- [x] Upload the debug APK artifact.
+- [x] Complete successful cloud builds and upload APK artifacts.
 - [ ] Download and install the APK on the target phone.
 - [ ] Confirm the app launches without crashing.
 - [ ] Record baseline device performance.
@@ -21,13 +18,13 @@
 
 ## Stage 1 — Android application shell
 
-- [x] Create the main navigation structure.
-- [x] Add initial catalog screen.
-- [x] Add settings screen.
+- [x] Create the main navigation structure, catalog and settings screens.
 - [x] Add persistent SQLite database foundation for installed games.
 - [x] Add structured logging and initialization error handling.
 - [x] Create isolated internal storage directories for games, saves, cache and database.
-- [ ] Verify lifecycle and basic offline startup.
+- [x] Make the in-app Back control return to the main menu.
+- [x] Make Android Back close the game runtime instead of navigating WebView history.
+- [ ] Verify lifecycle and basic offline startup on the target phone.
 
 **Exit condition:** A stable minimal app launches offline and navigates between initial screens.
 
@@ -35,9 +32,10 @@
 
 - [x] Add pinned AndroidX WebKit 1.18.0 and use WebViewAssetLoader for local content.
 - [x] Add a local HTML5 canvas test game in a restricted WebView.
+- [x] Disable runtime network access and isolate each game's local HTTPS origin.
 - [ ] Verify touch input, screen adaptation and lifecycle behavior on the target phone.
-- [ ] Test SDK bridge restrictions.
-- [ ] Measure memory, frame rate and heat on target devices.
+- [ ] Test SDK bridge restrictions on-device.
+- [ ] Measure memory, frame rate and heat on target and weaker devices.
 
 **Exit condition:** A local test game launches offline with controlled host communication.
 
@@ -50,7 +48,7 @@
 - [x] Register installed games in local storage.
 - [x] Implement launch and removal.
 - [x] Keep saves separate from installation files.
-- [x] Add a bundled test package that exercises installation and runtime launch.
+- [x] Add a bundled HTML5 test package that exercises installation and runtime launch.
 - [ ] Verify install, update, launch, removal and save preservation on the target phone.
 
 **Exit condition:** A test package can be safely installed, launched, removed and reinstalled without accidental save deletion.
@@ -58,42 +56,46 @@
 ## Stage 4 — Catalog and downloads
 
 - [x] Define versioned static catalog data format and HTTPS source.
-- [x] Implement catalog browsing.
-- [ ] Implement catalog search.
-- [x] Implement package download progress.
-- [ ] Implement download retry and cancellation.
+- [x] Implement catalog browsing and package download progress.
 - [x] Handle offline catalog access through a local cache and show server errors.
 - [x] Verify package size, SHA-256 and manifest metadata before installation.
+- [ ] Implement catalog search.
+- [ ] Implement download retry and cancellation.
 
 **Exit condition:** A catalog game can be downloaded and installed reliably.
 
 ## Stage 5 — SDK and save manager
 
-- [ ] Implement the versioned WarpGameSDK.
-- [ ] Implement save and load operations.
-- [ ] Implement game settings access.
-- [ ] Implement vibration, fullscreen and exit requests.
-- [ ] Test isolation between games.
+- [x] Implement versioned WarpGameSDK and native bridge.
+- [x] Implement per-game save and load operations with quotas and atomic writes.
+- [x] Implement per-game settings access.
+- [x] Implement vibration, fullscreen and exit requests.
+- [x] Keep saves separate from game package files.
+- [ ] Verify save persistence, game isolation, vibration, fullscreen and exit behavior on the target phone.
 
 **Exit condition:** A game can save and restore progress through the documented SDK.
 
 ## Stage 6 — First 2D game
 
-- [ ] Pin Phaser version after runtime validation.
-- [ ] Create a small complete game.
-- [ ] Package all dependencies locally.
-- [ ] Test touch, save/load and offline launch.
-- [ ] Measure performance on target and weaker devices.
+- [x] Pin Phaser 3.90.0 and register the engine in the installer.
+- [x] Include the official Phaser minified runtime locally; no CDN is required.
+- [x] Create the small playable "Кристальный рейд" demo.
+- [x] Package the manifest, game code, styles, engine and MIT license into an offline ZIP.
+- [x] Add an in-app action to install the Phaser demo.
+- [ ] Verify Phaser rendering, touch movement, save/load and offline launch on the target phone.
+- [ ] Measure performance on the target phone and weaker devices.
 
-**Exit condition:** First 2D game passes the platform acceptance tests.
+**Exit condition:** The Phaser demo passes the platform acceptance tests on real Android devices.
 
 ## Stage 7 — 3D runtime validation and first 3D game
 
+- [x] Register Babylon.js 9.37.1 and require its local offline runtime library in packages.
+- [x] Add a small native WebGL 1 3D test package for device-level WebGL proof of concept.
+- [ ] Add and validate a local Babylon.js 3D demo package.
 - [ ] Compare Babylon.js/WebGL performance on target devices.
 - [ ] Test graphics limits, memory, heat and device compatibility.
 - [ ] Decide whether the selected runtime meets platform requirements.
-- [ ] Pin versions and document limitations.
-- [ ] Build a small 3D test game.
+- [ ] Document device-tested limitations.
 
 **Exit condition:** 3D support is demonstrated on real devices, not assumed from desktop tests.
 
@@ -108,4 +110,4 @@
 
 ## Working rule
 
-Complete and verify each stage before treating the next stage as unblocked. MAIN CONTROL may split a stage into dedicated task chats.
+Complete and verify each stage before treating the next stage as unblocked. A successful cloud build does not replace testing on a physical Android device.

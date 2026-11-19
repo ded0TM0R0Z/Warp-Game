@@ -129,7 +129,7 @@ class GameRuntimeActivity : Activity() {
                     "GameRuntime",
                     "Game renderer stopped; crashed=" + detail.didCrash()
                 )
-                finish()
+                WarpNavigation.returnToHome(this@GameRuntimeActivity)
                 return true
             }
         }
@@ -193,8 +193,7 @@ class GameRuntimeActivity : Activity() {
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
         // Never navigate through a game's internal WebView history.
-        // Closing the runtime returns the user to Warp Game's main menu.
-        finish()
+        WarpNavigation.returnToHome(this)
     }
 
     override fun onDestroy() {

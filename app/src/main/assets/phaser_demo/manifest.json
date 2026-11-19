@@ -1,0 +1,12 @@
+{
+  "game_id": "com.warp.demo.phaser",
+  "name": "Кристальный рейд",
+  "version": "1.0.0",
+  "engine": "phaser",
+  "engine_version": "3.90.0",
+  "game_type": "2d",
+  "entry_point": "index.html",
+  "orientation": "landscape",
+  "offline_supported": true,
+  "minimum_platform_version": "0.2.0"
+}

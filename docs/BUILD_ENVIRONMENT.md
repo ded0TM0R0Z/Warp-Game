@@ -1,6 +1,6 @@
 # WARP GAME — BUILD ENVIRONMENT
 
-**Version:** 1.0.5  
+**Version:** 1.0.6  
 **Status:** Stable signing key verified; local HTML5 runtime APK builds successfully. Physical-device runtime validation remains pending.
 
 ## 1. Decision
@@ -91,7 +91,21 @@ The workflow validated the permanent PKCS12 keystore. The APK v2 signing certifi
 
 If the phone still has an APK signed with the old temporary debug key, uninstall that version once before installing this stable-key build. Later builds signed with the same key can update it normally.
 
-## 6. Downloading the APK on Android
+## 6. Latest main-branch build
+
+- Workflow run: [Android Build #47](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44578040115)
+- Commit: `1458bf9688880e039cea805adaaf7f4390ace40b`
+- App version: `0.2.0` (`versionCode 2`).
+- Result: successful; stable signing key preparation and validation passed.
+- Artifact: `warp-game-debug-apk`
+- Artifact ID: `14556892992`
+- Artifact archive size: 1,384,698 bytes.
+- Artifact ZIP SHA-256: `fce56c787eaf5c4a04114438c580187053af229d425428daea0c3f3f81b6c637`
+- Artifact expiry: 2026-11-26.
+
+This build includes the engine registry, local package validation and return-to-home navigation. It predates the Phaser and WebGL demo packages currently under review in [PR #7](https://github.com/ded0TM0R0Z/Warp-Game/pull/7).
+
+## 7. Downloading the APK on Android
 
 1. Open the repository on GitHub.
 2. Open the **Actions** tab.
@@ -103,7 +117,7 @@ If the phone still has an APK signed with the old temporary debug key, uninstall
 
 Do not install an artifact from a failed or untrusted workflow run.
 
-## 7. Required validation
+## 8. Required validation
 
 The cloud build is confirmed. The build environment is not fully validated until:
 - [x] GitHub Actions completes successfully.
@@ -112,7 +126,7 @@ The cloud build is confirmed. The build environment is not fully validated until
 - [ ] The app launches without crashing.
 - [ ] Device model and Android version are recorded.
 
-## 8. Limitations
+## 9. Limitations
 
 - A successful cloud build does not prove correct behavior on the physical phone.
 - Device performance, WebView behavior, thermal load and offline behavior require real-device tests.
