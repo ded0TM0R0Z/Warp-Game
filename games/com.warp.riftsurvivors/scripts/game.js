@@ -51,12 +51,10 @@
             this.hud = {};
             this.overlay = [];
             this.target = null;
-            this.targetMark = null;
             this.elapsedMs = 0; this.lastBossMinute = 0; this.selectedUpgrades = [];
             this.worldChunks = new Map(); this.ground = null; this.bossBar = null; this.bossLabel = null;
             this.earthClock = 0; this.windAngle = 0; this.windOrb = null; this.pauseButton = null;
             this.aimLine = null;
-            this.dashButton = null;
             this.lastMoveX = 1;
             this.lastMoveY = 0;
         }
@@ -64,6 +62,7 @@
         create() {
             this.physics.world.setBounds(-100000, -100000, 200000, 200000);
             this.createTextures();
+            this.obstacles = this.physics.add.staticGroup();
             this.createWorld();
             this.enemies = this.physics.add.group({ runChildUpdate: true });
             this.bullets = this.physics.add.group();
@@ -98,11 +97,14 @@
                 g.fillStyle(0xc6c6bb); g.fillRect(5, 6, 14, 12); g.fillRect(7, 4, 10, 3);
                 g.fillStyle(0x596b78); g.fillRect(7, 9, 10, 8);
                 g.fillStyle(0xd9b98a); g.fillRect(9, 7, 6, 5);
-                g.fillStyle(0x443a32); g.fillRect(5, 18, 6, 8); g.fillRect(13, 18, 6, 8);
-                g.fillStyle(0x8a5838); g.fillRect(4, 25, 8, 3); g.fillRect(12, 25, 8, 3);
                 g.fillStyle(0xe3c36d); g.fillRect(10, 13, 4, 3);
                 g.fillStyle(0xddd7c6); g.fillRect(18, 10, 3, 13);
                 g.fillStyle(0x8e9699); g.fillRect(19, 5, 2, 7);
+            });
+            make("heroLeg", 10, 15, g => {
+                g.fillStyle(0x443a32); g.fillRect(2, 0, 6, 10);
+                g.fillStyle(0x8a5838); g.fillRect(1, 9, 8, 5);
+                g.fillStyle(0xc59a60); g.fillRect(2, 9, 5, 1);
             });
             make("slime", 22, 20, g => {
                 g.fillStyle(0x253b2c); g.fillRect(4, 16, 14, 3);
@@ -184,8 +186,10 @@
 
         createPlayer() {
             this.player = this.add.container(W / 2, H / 2).setDepth(15);
-            this.playerSprite = this.add.image(0, 0, "hero").setOrigin(0.5);
-            this.player.add(this.playerSprite);
+            this.playerLegLeft = this.add.image(-4, 10, "heroLeg").setOrigin(0.5, 0.15);
+            this.playerLegRight = this.add.image(4, 10, "heroLeg").setOrigin(0.5, 0.15);
+            this.playerSprite = this.add.image(0, -2, "hero").setOrigin(0.5);
+            this.player.add([this.playerLegLeft, this.playerLegRight, this.playerSprite]);
             this.physics.add.existing(this.player);
             this.player.body.setSize(16, 20).setOffset(-8, -10);
             this.player.body.setCollideWorldBounds(true);
@@ -195,7 +199,7 @@
             this.cameras.main.setBounds(-100000,-100000,200000,200000);
             this.cameras.main.startFollow(this.player,true,0.085,0.085);
             this.cameras.main.setDeadzone(170,100);
-            this.playerWalkTween=this.tweens.add({targets:this.playerSprite,y:1.5,duration:150,yoyo:true,repeat:-1,paused:true});
+            this.playerWalkTween=this.tweens.add({targets:this.playerSprite,y:0,duration:150,yoyo:true,repeat:-1,paused:true});
         }
 
         createHud() {
