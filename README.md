@@ -23,7 +23,7 @@ The platform is designed to support both 2D and 3D games, with development and t
 
 ## Build
 
-Android debug builds run through GitHub Actions. The first build succeeded and produced an APK artifact. See [Build environment](docs/BUILD_ENVIRONMENT.md) for pinned versions and download instructions.
+Current app version: **0.2.0**. Android debug builds run through GitHub Actions and use a verified permanent signing key. The latest APK is available from [Android Build #45](https://github.com/ded0TM0R0Z/Warp-Game/actions/runs/44571054178). See [Build environment](docs/BUILD_ENVIRONMENT.md) for verification details and installation instructions.
 
 ## Core principles
 
