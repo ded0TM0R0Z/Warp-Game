@@ -170,7 +170,7 @@
                 [24, 425, "tree"], [150, 490, "tree"], [795, 490, "tree"],
                 [920, 420, "tree"], [310, 25, "tree"], [650, 20, "tree"]
             ];
-            placements.forEach(p => this.add.image(p[0], p[1], p[2]).setDepth(p[1] + 1));
+            placements.forEach(p => this.add.image(p[0], p[1], p[2]).setDepth(2 + p[1] / 100));
             this.add.image(72, 220, "torch").setDepth(5);
             this.add.image(888, 260, "torch").setDepth(5);
             const vignette = this.add.graphics().setDepth(10);
@@ -549,6 +549,9 @@
             this.dashCooldown = Math.max(0, this.dashCooldown - dt);
             this.invulnerable = Math.max(0, this.invulnerable - dt);
             this.player.setAlpha(this.invulnerable > 0 && Math.floor(this.time.now / 75) % 2 ? 0.48 : 1);
+
+            if (this.target && this.target.active) this.showTarget(this.target);
+            else if (this.targetMark) { this.target = null; this.targetMark.clear(); }
 
             const moving = Math.hypot(this.joy.dx, this.joy.dy) > 0.08;
             if (moving) {
