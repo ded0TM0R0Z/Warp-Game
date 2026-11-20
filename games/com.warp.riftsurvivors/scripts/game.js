@@ -34,7 +34,7 @@
             this.orbs = null;
             this.player = null;
             this.playerSprite = null;
-            this.joy = { active: false, pointerId: null, baseX: 100, baseY: 420, dx: 0, dy: 0, radius: 66 };
+            this.joy = { active: false, pointerId: null, baseX: 100, baseY: H - 155, dx: 0, dy: 0, radius: 66 };
             this.stats = null;
             this.wave = 1;
             this.waveClock = 0;
@@ -306,40 +306,32 @@
         }
 
         createHud() {
-            this.hud.top = this.add.container(0, 0).setDepth(40).setScrollFactor(0);
+            this.hud.top = this.add.container(0, 48).setDepth(40).setScrollFactor(0);
             const plate = this.add.rectangle(W / 2, 28, 360, 48, 0x29251f, 0.94).setStrokeStyle(2, 0xb79a5e, 0.95);
             this.hud.wave = this.add.text(28, 16, "ВОЛНА 1", this.style(16, C.parchment, true));
             this.hud.level = this.add.text(28, 39, "УР. 1", this.style(11, C.gold, true));
-            this.hud.score = this.add.text(W - 78, 17, "0", this.style(17, C.gold, true)).setOrigin(1, 0);
+            this.hud.score = this.add.text(W - 130, 17, "0", this.style(17, C.gold, true)).setOrigin(1, 0);
             this.hud.hpBack = this.add.rectangle(W / 2, 19, 150, 9, 0x4b302a);
             this.hud.hp = this.add.rectangle(W / 2 - 73, 19, 146, 5, 0x9c3935).setOrigin(0, 0.5);
             this.hud.xpBack = this.add.rectangle(W / 2, 37, 150, 5, 0x51452f);
             this.hud.xp = this.add.rectangle(W / 2 - 73, 37, 1, 3, 0xd7b65f).setOrigin(0, 0.5);
             this.hud.timer=this.add.text(W/2,48,"00:00",this.style(10,C.gold,true)).setOrigin(0.5,0);
-            this.hud.biome=this.add.container(W/2,H-42).setDepth(44).setScrollFactor(0);
+            this.hud.biome=this.add.container(W/2,H-84).setDepth(44).setScrollFactor(0);
             this.hud.biomePlate=this.add.rectangle(0,0,430,27,0x171d18,0.88).setStrokeStyle(1,0x9c946b,0.75);
             this.hud.biomeText=this.add.text(0,0,"БИОМ: ЗАРОСШИЕ РУИНЫ",this.style(11,0x9fc87b,true)).setOrigin(0.5);
             this.hud.biome.add([this.hud.biomePlate,this.hud.biomeText]); this.hud.biome.setVisible(false);
-            this.hud.pauseBg=this.add.circle(W-34,30,27,0x493b2a,0.98).setStrokeStyle(2,C.gold,1).setInteractive({useHandCursor:true});
-            this.hud.pauseText=this.add.text(W-34,30,"Ⅱ",this.style(19,C.parchment,true)).setOrigin(0.5);
+            this.hud.pauseBg=this.add.circle(W-52,30,32,0x493b2a,0.98).setStrokeStyle(2,C.gold,1).setInteractive(new Phaser.Geom.Circle(0,0,48),Phaser.Geom.Circle.Contains);
+            this.hud.pauseText=this.add.text(W-52,30,"Ⅱ",this.style(22,C.parchment,true)).setOrigin(0.5);
             this.hud.pauseBg.on("pointerdown",()=>this.pauseRun()); this.pauseButton=this.hud.pauseBg;
             this.hud.top.add([plate,this.hud.wave,this.hud.level,this.hud.score,this.hud.hpBack,this.hud.hp,this.hud.xpBack,this.hud.xp,this.hud.timer,this.hud.pauseBg,this.hud.pauseText]);
 
-            this.hud.joy = this.add.container(100, 420).setDepth(50).setScrollFactor(0);
+            this.hud.joy = this.add.container(this.joy.baseX, this.joy.baseY).setDepth(50).setScrollFactor(0);
             this.hud.joyBase = this.add.circle(0, 0, 66, 0x242d20, 0.55).setStrokeStyle(3, 0xcab77f, 0.78);
             this.hud.joyInner = this.add.circle(0, 0, 43, 0x536344, 0.28).setStrokeStyle(1, 0xe3d4a9, 0.35);
             this.hud.joyKnob = this.add.circle(0, 0, 25, 0xc3ad78, 0.8).setStrokeStyle(3, 0xf1e2bb, 0.95);
             this.hud.joy.add([this.hud.joyBase, this.hud.joyInner, this.hud.joyKnob]);
 
              this.hud.help = this.add.text(W / 2, H - 12, "ДВИЖЕНИЕ — ЛЕВЫЙ СТИК     •     АТАКА — АВТОМАТИЧЕСКИ ПО БЛИЖАЙШЕМУ ВРАГУ", this.style(10, 0xf0dfb3, true)).setOrigin(0.5, 1).setDepth(40).setScrollFactor(0);
-            this.hud.skills=this.add.container(W-105,H-70).setDepth(42).setScrollFactor(0);
-            this.hud.skillCards={};
-            [["wind","ВЕТЕР",0x65cbd0],["earth","ЗЕМЛЯ",0xc59a5d],["lightning","МОЛНИЯ",0x76dfff]].forEach((spec,i)=>{
-                const x=-154+i*77,card=this.add.container(x,0);const bg=this.add.rectangle(0,0,70,40,0x171d25,0.9).setStrokeStyle(2,spec[2],0.8);
-                const text=this.add.text(0,0,spec[1],this.style(9,spec[2],true)).setOrigin(0.5);card.add([bg,text]);card.setVisible(false);
-                this.hud.skills.add(card);this.hud.skillCards[spec[0]]=card;
-            });
-            this.hud.skills.setVisible(false);
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
             if(this.hud.biome)this.hud.biome.setVisible(false);
@@ -454,7 +446,7 @@
             this.fireClock = 250; this.invulnerable = 0;
             this.level = 1; this.xp = 0; this.xpNext = 7; this.kills = 0; this.score = 0;
             this.projectiles = 1;
-            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:260,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
+            this.stats = { hp:100,maxHp:100,damage:20,fireDelay:900,moveSpeed:145,bulletSpeed:590,magnet:800,critChance:0.08,critMultiplier:2,earthUnlocked:false,earthDamage:48,earthDelay:8000,windUnlocked:false,windDamage:30,windDelay:430,windRadius:88,windOrbCount:0 };
             this.elapsedMs=0; this.lastBossMinute=0; this.earthClock=0; this.windAngle=0; this.windOrb=null; this.selectedUpgrades=[];
             this.activeBiome=-1;this.biomeXpMultiplier=1;this.biomeCritBonus=0;
             this.lightningClock=0;this.lightningUnlocked=false;this.lightningDamage=58;this.lightningDelay=6200;this.lightningTargets=2;this.runePower=1;
@@ -466,23 +458,24 @@
             this.playerLegLeft.setPosition(-4,10).setAngle(0);
             this.playerLegRight.setPosition(4,10).setAngle(0);
             this.joy.active = false; this.joy.pointerId = null; this.joy.dx = 0; this.joy.dy = 0;
-            this.joy.baseX = 100; this.joy.baseY = H - 120;
+            this.joy.baseX = 100; this.joy.baseY = H - 155;
             this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             this.hud.joyKnob.setPosition(0, 0);
             this.hud.top.setVisible(true); this.hud.joy.setVisible(true); this.hud.biome.setVisible(true);
-            this.hud.skills.setVisible(true);
             this.hud.help.setVisible(true);
             this.refreshHud();
             this.spawnEnemy("slime"); this.spawnEnemy("slime");
         }
 
         pointerDown(pointer) {
-            if (this.mode !== "playing" || this.joy.active) return;
+            if (this.mode !== "playing") return;
+            if (pointer.x >= W - 120 && pointer.y <= 130) { this.pauseRun(); return; }
+            if (this.joy.active) return;
             if (pointer.x < W * 0.56 && pointer.y > 58) {
                 this.joy.active = true;
                 this.joy.pointerId = pointer.id;
                 this.joy.baseX = Phaser.Math.Clamp(pointer.x, 76, 250);
-                this.joy.baseY = Phaser.Math.Clamp(pointer.y, 95, H - 85);
+                this.joy.baseY = Phaser.Math.Clamp(pointer.y, 95, H - 155);
                 this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
                 this.updateJoystick(pointer);
             }
@@ -495,7 +488,7 @@
                 this.joy.active = false; this.joy.pointerId = null;
                 this.joy.dx = 0; this.joy.dy = 0;
                 this.hud.joyKnob.setPosition(0, 0);
-                this.joy.baseX = 100; this.joy.baseY = H - 120;
+                this.joy.baseX = 100; this.joy.baseY = H - 155;
                 this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
             }
         }
@@ -610,13 +603,18 @@
             this.kills++;
             this.score += 10 * this.wave;
             this.hud.score.setText(this.score.toLocaleString("ru-RU"));
-            const orb = this.add.image(x, y, "orb").setDepth(14).setScale(1.25);
+            const orb = this.add.image(x, y, "orb").setDepth(24).setScale(1.35);
             this.physics.add.existing(orb);
-            orb.body.setCircle(10);
+            orb.body.setCircle(5);
             orb.body.setAllowGravity(false);
+            orb.body.setBounce(0);
+            orb.body.setDrag(0,0);
+            orb.body.setMaxVelocity(950);
+            const scatter=Phaser.Math.FloatBetween(0,Math.PI*2),scatterSpeed=Phaser.Math.Between(65,125);
+            orb.body.setVelocity(Math.cos(scatter)*scatterSpeed,Math.sin(scatter)*scatterSpeed);
+            orb.magnetDelay=120;
             orb.value = value;
             this.orbs.add(orb);
-            this.tweens.add({ targets: orb, y: y - 5, duration: 350, yoyo: true, repeat: -1 });
             this.cameras.main.shake(45, 0.0012);
         }
 
@@ -777,7 +775,6 @@
             this.hud.level.setText("УР. " + this.level);
             this.hud.hp.width = Math.max(0, 146 * this.stats.hp / this.stats.maxHp);
             this.hud.xp.width=Math.max(1,146*this.xp/this.xpNext);
-            if(this.hud.skillCards){this.hud.skillCards.wind.setVisible(!!this.stats.windUnlocked);this.hud.skillCards.earth.setVisible(!!this.stats.earthUnlocked);this.hud.skillCards.lightning.setVisible(!!this.lightningUnlocked);if(this.stats.windUnlocked){const t=this.hud.skillCards.wind.list[1];if(t)t.setText(this.stats.windEvolved?"КОРОНА":"ВЕТЕР");}}
             if(this.bossBar&&this.bossBar.active&&this.bossBar.boss&&this.bossBar.boss.active)this.bossBar.fill.width=Math.max(1,276*this.bossBar.boss.hp/this.bossBar.boss.maxHp);
             else if(this.bossBar){this.bossBar.destroy();this.bossBar=null;if(this.bossLabel){this.bossLabel.destroy();this.bossLabel=null;}}
         }
@@ -801,7 +798,6 @@
         hideHud() {
             this.hud.top.setVisible(false);
             this.hud.joy.setVisible(false);
-            if(this.hud.skills)this.hud.skills.setVisible(false);
             this.hud.help.setVisible(false);
         }
 
@@ -885,12 +881,15 @@
                 }
             });
             this.orbs.children.iterate(orb => {
-                if (!orb || !orb.active) return;
-                const d = Phaser.Math.Distance.Between(orb.x, orb.y, this.player.x, this.player.y);
-                if (d < this.stats.magnet) {
-                    const angle = Phaser.Math.Angle.Between(orb.x, orb.y, this.player.x, this.player.y);
-                    const pullSpeed = Phaser.Math.Clamp(720 - d * 0.55, 360, 720); orb.body.setVelocity(Math.cos(angle) * pullSpeed, Math.sin(angle) * pullSpeed);
-                } else orb.body.setVelocity(0, 0);
+                if (!orb || !orb.active || !orb.body) return;
+                orb.magnetDelay=Math.max(0,(orb.magnetDelay||0)-dt);
+                const d=Phaser.Math.Distance.Between(orb.x,orb.y,this.player.x,this.player.y);
+                if(orb.magnetDelay<=0 && d<this.stats.magnet){
+                    const angle=Phaser.Math.Angle.Between(orb.x,orb.y,this.player.x,this.player.y);
+                    const speed=Phaser.Math.Clamp(1200-d*0.35,700,1200);
+                    orb.body.setVelocity(Math.cos(angle)*speed,Math.sin(angle)*speed);
+                    if(d<24)this.collectXp(this.player,orb);
+                }else if(orb.magnetDelay<=0)orb.body.setVelocity(0,0);
             });
             this.bullets.children.iterate(bolt => {
                 if (!bolt || !bolt.active) return;
@@ -908,7 +907,7 @@
         formatTime(ms){const n=Math.floor(ms/1000);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");}
         getBiomeAt(x,y){
             const px=Math.floor(x/24)*24,py=Math.floor(y/24)*24;
-            const field=Math.sin(px/1450)+Math.cos(py/1320)+0.42*Math.sin((px+py)/760)+0.28*Math.cos((px-py)/510);
+            const field=Math.sin(px/1450)+Math.cos(py/1320)+0.42*Math.sin((px+py)/760)+0.28*Math.cos((px-py)/510)-1.5;
             if(field<-0.48)return 1;
             if(field>0.58)return 2;
             return 0;
@@ -924,8 +923,8 @@
                 const biomePaint=this.add.graphics().setDepth(-19),cell=24;
                 for(let ox=0;ox<size;ox+=cell)for(let oy=0;oy<size;oy+=cell){
                     const localBiome=this.getBiomeAt(gx*size+ox+cell/2,gy*size+oy+cell/2);
-                    if(localBiome===1){biomePaint.fillStyle(0x514b47,0.88);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell,cell);}
-                    else if(localBiome===2){biomePaint.fillStyle(0x263c3d,0.9);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell,cell);}
+                    if(localBiome===1){biomePaint.fillStyle(0x514b47,1);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell+2,cell+2);}
+                    else if(localBiome===2){biomePaint.fillStyle(0x263c3d,1);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell+2,cell+2);}
                 }
                 objs.push(biomePaint);
                 let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
@@ -1070,7 +1069,7 @@
 
         pauseRun(){
             if(this.mode!=="playing")return;this.mode="paused";this.physics.pause();this.playerWalkTween.pause();
-            this.joy.active=false;this.joy.pointerId=null;this.joy.dx=0;this.joy.dy=0;this.joy.baseX=100;this.joy.baseY=H-120;this.hud.joy.setPosition(this.joy.baseX,this.joy.baseY);this.hud.joyKnob.setPosition(0,0);this.player.body.setVelocity(0,0);
+            this.joy.active=false;this.joy.pointerId=null;this.joy.dx=0;this.joy.dy=0;this.joy.baseX=100;this.joy.baseY=H-155;this.hud.joy.setPosition(this.joy.baseX,this.joy.baseY);this.hud.joyKnob.setPosition(0,0);this.player.body.setVelocity(0,0);
             this.panel("ПАУЗА","ЗАБЕГ ПРИОСТАНОВЛЕН");
             this.addOverlay(this.add.text(W/2,H/2-111,"ВРЕМЯ  "+this.formatTime(this.elapsedMs)+"     УРОВЕНЬ  "+this.level+
                 "     СЛЕДУЮЩИЙ БОСС  "+this.formatTime(Math.max(0,(Math.floor(this.elapsedMs/240000)+1)*240000-this.elapsedMs)),this.style(12,C.parchment,true)).setOrigin(.5).setAlign("center"));
@@ -1085,8 +1084,8 @@
                     this.addOverlay(this.add.text(x,y,(this.selectedUpgrades.length-recent.length+i+1)+".  "+name,this.style(11,C.parchment,true)).setOrigin(.5));
                 });
             }
-            this.makeButton(W/2,H/2+153,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},250);
-            this.makeButton(W/2,H/2+207,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},250);
+            this.makeButton(W/2,H/2+118,"ПРОДОЛЖИТЬ",()=>{this.clearOverlay();this.mode="playing";this.physics.resume();},250);
+            this.makeButton(W/2,H/2+172,"В ГЛАВНОЕ МЕНЮ",()=>{this.clearOverlay();this.hideHud();this.showMenu();},250);
         }
 
         addWaveNotice() {
@@ -1102,7 +1101,7 @@
         width: W,
         height: H,
         backgroundColor: "#426b3e",
-        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+        scale: { mode: Phaser.Scale.ENVELOP, autoCenter: Phaser.Scale.CENTER_BOTH },
         physics: { default: "arcade", arcade: { debug: false } },
         input: { activePointers: 3 },
         render: { antialias: false, pixelArt: true, roundPixels: true, powerPreference: "low-power" },
