@@ -97,8 +97,7 @@
             };
             make("ground", 48, 48, g => {
                 g.fillStyle(0x426b3e); g.fillRect(0, 0, 48, 48);
-                g.fillStyle(0x4e7946); g.fillRect(2, 3, 5, 3); g.fillRect(18, 8, 4, 3); g.fillRect(34, 29, 5, 3);
-                g.fillStyle(0x365d38); g.fillRect(10, 17, 5, 2); g.fillRect(25, 25, 4, 3); g.fillRect(4,38,7,3);
+                g.fillStyle(0x4e7946); g.fillRect(2, 3, 5, 3); g.fillRect(18, 8, 4, 3); g.fillRect(34, 29, 5, 3);                g.fillStyle(0x365d38); g.fillRect(10, 17, 5, 2); g.fillRect(25, 25, 4, 3); g.fillRect(4,38,7,3);
                 g.fillStyle(0x6b8a4b); g.fillRect(24, 2, 2, 2); g.fillRect(5, 25, 2, 2); g.fillRect(41,8,3,2);
                 g.fillStyle(0x557b43); g.fillRect(29,39,4,2); g.fillRect(13,31,3,2);
             });
@@ -197,8 +196,7 @@
                 g.fillStyle(0x9a7950); g.fillRect(24,16,8,4); g.fillRect(56,32,8,4); g.fillRect(88,48,8,4); g.fillRect(16,48,4,4);
                 g.fillStyle(0x3f392d); g.fillRect(40,8,8,4); g.fillRect(80,16,8,4); g.fillRect(56,56,8,4);
             });
-            make("wraith", 28, 32, g => {
-                g.fillStyle(0x18333b); g.fillRect(8,4,12,19); g.fillRect(4,12,20,12); g.fillRect(6,22,5,8); g.fillRect(17,22,5,8);
+            make("wraith", 28, 32, g => {                g.fillStyle(0x18333b); g.fillRect(8,4,12,19); g.fillRect(4,12,20,12); g.fillRect(6,22,5,8); g.fillRect(17,22,5,8);
                 g.fillStyle(0x397f83); g.fillRect(7,7,14,15); g.fillRect(3,13,22,7); g.fillRect(9,22,10,6);
                 g.fillStyle(0x9bf5df); g.fillRect(9,10,4,4); g.fillRect(17,10,4,4); g.fillStyle(0x14272d); g.fillRect(10,11,2,2); g.fillRect(18,11,2,2);
                 g.fillStyle(0x65b5a7);g.fillRect(8,5,12,2);g.fillRect(7,20,14,2);g.fillStyle(0x14292f);g.fillRect(12,24,4,5);g.fillStyle(0xb6fff0);g.fillRect(4,14,2,5);g.fillRect(22,14,2,5);
@@ -297,8 +295,7 @@
             this.player.body.setSize(16, 20).setOffset(-8, -10);
             this.player.body.setCollideWorldBounds(true);
             this.player.body.setDamping(true);
-            this.player.body.setDrag(1150);
-            this.player.body.setMaxVelocity(180);
+            this.player.body.setDrag(1150);            this.player.body.setMaxVelocity(180);
             this.cameras.main.setBounds(-100000,-100000,200000,200000);
             this.cameras.main.startFollow(this.player,true,0.085,0.085);
             this.cameras.main.setDeadzone(170,100);
@@ -397,8 +394,7 @@
             this.addOverlay(this.add.text(W / 2, H / 2 - 15,
                 "СОБИРАЙ РЕЛИКВИИ • ОСВАИВАЙ МАГИЮ • УБИВАЙ БОССОВ\nКаждый забег — новая сборка и новые угрозы.",
                 this.style(13, C.parchment, false)).setOrigin(0.5).setAlign("center").setLineSpacing(7));
-            const statsY = H / 2 + 30;
-            [["РЕКОРД", this.best.toLocaleString("ru-RU")], ["БОССЫ", "КАЖДЫЕ 3 МИН."], ["АТАКА", "АВТОМАТИЧЕСКАЯ"]].forEach((item, i) => {
+            const statsY = H / 2 + 30;            [["РЕКОРД", this.best.toLocaleString("ru-RU")], ["БОССЫ", "КАЖДЫЕ 3 МИН."], ["АТАКА", "АВТОМАТИЧЕСКАЯ"]].forEach((item, i) => {
                 const x = W / 2 - 205 + i * 205;
                 this.addOverlay(this.add.rectangle(x, statsY, 184, 52, 0x393326, 0.98).setStrokeStyle(1, 0x806c48, 0.9));
                 this.addOverlay(this.add.text(x, statsY - 10, item[0], this.style(10, C.muted, true)).setOrigin(0.5));
@@ -497,8 +493,7 @@
             const dy = pointer.y - this.joy.baseY;
             const length = Math.max(1, Math.hypot(dx, dy));
             const amount = Math.min(1, length / this.joy.radius);
-            this.joy.dx = dx / length * amount;
-            this.joy.dy = dy / length * amount;
+            this.joy.dx = dx / length * amount;            this.joy.dy = dy / length * amount;
             this.hud.joyKnob.setPosition(this.joy.dx * 39, this.joy.dy * 39);
         }
 
@@ -597,8 +592,7 @@
             if(enemy.isBoss){if(this.bossBar){this.bossBar.destroy();this.bossBar=null;}if(this.bossLabel){this.bossLabel.destroy();this.bossLabel=null;}this.score+=250*this.wave;this.stats.hp=Math.min(this.stats.maxHp,this.stats.hp+35);this.cameras.main.flash(220,255,205,110);this.dropLoot(x,y,"rune");this.dropLoot(x+22,y,"potion");}
             else if(enemy.kind==="brute"||enemy.kind==="beetle"||Math.random()<0.035)this.dropLoot(x,y,"potion");
             const burst=this.add.circle(x,y,enemy.isBoss?18:8,enemy.isBoss?0xc58cff:enemy.kind==="wraith"?0x83fff0:0xffd58a,0.72).setDepth(30);
-            this.tweens.add({targets:burst,scale:enemy.isBoss?5:2.8,alpha:0,duration:enemy.isBoss?520:260,onComplete:()=>burst.destroy()});
-            for(let i=0;i<(enemy.isBoss?12:5);i++){const spark=this.add.rectangle(x,y,enemy.isBoss?5:3,enemy.isBoss?5:3,enemy.isBoss?0xdab6ff:0xffdf9b).setDepth(30);const a=(Math.PI*2*i/(enemy.isBoss?12:5))+Math.random()*0.3;this.tweens.add({targets:spark,x:x+Math.cos(a)*(enemy.isBoss?65:24),y:y+Math.sin(a)*(enemy.isBoss?65:24),alpha:0,duration:enemy.isBoss?500:280,onComplete:()=>spark.destroy()});}
+            this.tweens.add({targets:burst,scale:enemy.isBoss?5:2.8,alpha:0,duration:enemy.isBoss?520:260,onComplete:()=>burst.destroy()});            for(let i=0;i<(enemy.isBoss?12:5);i++){const spark=this.add.rectangle(x,y,enemy.isBoss?5:3,enemy.isBoss?5:3,enemy.isBoss?0xdab6ff:0xffdf9b).setDepth(30);const a=(Math.PI*2*i/(enemy.isBoss?12:5))+Math.random()*0.3;this.tweens.add({targets:spark,x:x+Math.cos(a)*(enemy.isBoss?65:24),y:y+Math.sin(a)*(enemy.isBoss?65:24),alpha:0,duration:enemy.isBoss?500:280,onComplete:()=>spark.destroy()});}
             enemy.destroy();
             this.kills++;
             this.score += 10 * this.wave;
@@ -610,9 +604,9 @@
             orb.body.setBounce(0);
             orb.body.setDrag(0,0);
             orb.body.setMaxVelocity(950);
-            const scatter=Phaser.Math.FloatBetween(0,Math.PI*2),scatterSpeed=Phaser.Math.Between(65,125);
-            orb.body.setVelocity(Math.cos(scatter)*scatterSpeed,Math.sin(scatter)*scatterSpeed);
-            orb.magnetDelay=120;
+            const magnetAngle=Phaser.Math.Angle.Between(orb.x,orb.y,this.player.x,this.player.y);
+            orb.body.setVelocity(Math.cos(magnetAngle)*1450,Math.sin(magnetAngle)*1450);
+            orb.magnetDelay=0;
             orb.value = value;
             this.orbs.add(orb);
             this.cameras.main.shake(45, 0.0012);
@@ -697,8 +691,7 @@
             this.upgradeOptions().forEach((option, index) => {
                 const y = H / 2 - 48 + index * 72;
                 const bg = this.add.rectangle(W / 2, y, 520, 58, 0x493a29).setStrokeStyle(2, 0xb99a62, 0.95).setInteractive();
-                const title = this.add.text(W / 2 - 235, y - 9, option.title, this.style(13, C.parchment, true));
-                const desc = this.add.text(W / 2 - 235, y + 12, option.desc, this.style(11, C.muted, false));
+                const title = this.add.text(W / 2 - 235, y - 9, option.title, this.style(13, C.parchment, true));                const desc = this.add.text(W / 2 - 235, y + 12, option.desc, this.style(11, C.muted, false));
                 bg.on("pointerdown", () => {
                     option.apply(); this.selectedUpgrades.push(option.title);
                     this.mode = "playing";
@@ -797,8 +790,7 @@
 
         hideHud() {
             this.hud.top.setVisible(false);
-            this.hud.joy.setVisible(false);
-            this.hud.help.setVisible(false);
+            this.hud.joy.setVisible(false);            this.hud.help.setVisible(false);
         }
 
         update(_, delta) {
@@ -882,14 +874,11 @@
             });
             this.orbs.children.iterate(orb => {
                 if (!orb || !orb.active || !orb.body) return;
-                orb.magnetDelay=Math.max(0,(orb.magnetDelay||0)-dt);
                 const d=Phaser.Math.Distance.Between(orb.x,orb.y,this.player.x,this.player.y);
-                if(orb.magnetDelay<=0 && d<this.stats.magnet){
-                    const angle=Phaser.Math.Angle.Between(orb.x,orb.y,this.player.x,this.player.y);
-                    const speed=Phaser.Math.Clamp(1200-d*0.35,700,1200);
-                    orb.body.setVelocity(Math.cos(angle)*speed,Math.sin(angle)*speed);
-                    if(d<24)this.collectXp(this.player,orb);
-                }else if(orb.magnetDelay<=0)orb.body.setVelocity(0,0);
+                const angle=Phaser.Math.Angle.Between(orb.x,orb.y,this.player.x,this.player.y);
+                const speed=Phaser.Math.Clamp(1550-d*0.12,1050,1550);
+                orb.body.setVelocity(Math.cos(angle)*speed,Math.sin(angle)*speed);
+                if(d<22)this.collectXp(this.player,orb);
             });
             this.bullets.children.iterate(bolt => {
                 if (!bolt || !bolt.active) return;
@@ -897,8 +886,7 @@
                 if (bolt.body && bolt.body.enable) {
                     bolt.body.moves = true;
                     if (bolt.body.speed < 1) bolt.body.setVelocity(bolt.getData("velocityX"), bolt.getData("velocityY"));
-                }
-                const v=this.cameras.main.worldView;
+                }                const v=this.cameras.main.worldView;
                 if(bolt.life<=0||bolt.x<v.x-100||bolt.x>v.right+100||bolt.y<v.y-100||bolt.y>v.bottom+100)bolt.destroy();
             });
          }
@@ -906,10 +894,14 @@
 
         formatTime(ms){const n=Math.floor(ms/1000);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");}
         getBiomeAt(x,y){
-            const px=Math.floor(x/24)*24,py=Math.floor(y/24)*24;
-            const field=Math.sin(px/1450)+Math.cos(py/1320)+0.42*Math.sin((px+py)/760)+0.28*Math.cos((px-py)/510)-1.5;
-            if(field<-0.48)return 1;
-            if(field>0.58)return 2;
+            const field=
+                Math.sin(x/300)+
+                Math.cos(y/330)+
+                0.45*Math.sin((x+y)/220)+
+                0.30*Math.cos((x-y)/250)+
+                0.18*Math.sin(x/91)*Math.cos(y/107)-1.8;
+            if(field<-0.24)return 1;
+            if(field>0.24)return 2;
             return 0;
         }
 
@@ -920,11 +912,17 @@
                 const objs=[];
                 const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,"ground").setDepth(-20).setTilePosition(gx*size,gy*size);
                 objs.push(ground);
-                const biomePaint=this.add.graphics().setDepth(-19),cell=24;
-                for(let ox=0;ox<size;ox+=cell)for(let oy=0;oy<size;oy+=cell){
-                    const localBiome=this.getBiomeAt(gx*size+ox+cell/2,gy*size+oy+cell/2);
-                    if(localBiome===1){biomePaint.fillStyle(0x514b47,1);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell+2,cell+2);}
-                    else if(localBiome===2){biomePaint.fillStyle(0x263c3d,1);biomePaint.fillRect(gx*size+ox,gy*size+oy,cell+2,cell+2);}
+                const biomePaint=this.add.graphics().setDepth(-19),cell=48;
+                let biomeSeed=(Math.imul(gx+8192,73856093)^Math.imul(gy+8192,19349663))>>>0;
+                const biomeRand=()=>{biomeSeed=(Math.imul(biomeSeed,1664525)+1013904223)>>>0;return biomeSeed/4294967296;};
+                for(let ox=-cell;ox<size+cell;ox+=cell)for(let oy=-cell;oy<size+cell;oy+=cell){
+                    const px=gx*size+ox+cell/2+(biomeRand()-0.5)*13;
+                    const py=gy*size+oy+cell/2+(biomeRand()-0.5)*13;
+                    const localBiome=this.getBiomeAt(px,py);
+                    if(localBiome===0)continue;
+                    const radius=31+biomeRand()*9;
+                    biomePaint.fillStyle(localBiome===1?0x514b47:0x263c3d,1);
+                    biomePaint.fillCircle(px,py,radius);
                 }
                 objs.push(biomePaint);
                 let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
@@ -997,8 +995,7 @@
             if(!this.windOrb||!this.windOrb.active){
                 this.windOrb=this.add.container(this.player.x,this.player.y).setDepth(23);
                 this.windOrb.items=[];
-                for(let i=0;i<count;i++){
-                    const orb=this.add.image(0,0,"windorb").setScale(1.45);
+                for(let i=0;i<count;i++){                    const orb=this.add.image(0,0,"windorb").setScale(1.45);
                     this.windOrb.add(orb);this.windOrb.items.push(orb);
                     this.tweens.add({targets:orb,scale:1.72,duration:420,yoyo:true,repeat:-1,ease:"Sine.InOut"});
                 }
@@ -1097,8 +1094,7 @@
 
     const game = new Phaser.Game({
         type: Phaser.AUTO,
-        parent: "game",
-        width: W,
+        parent: "game",        width: W,
         height: H,
         backgroundColor: "#426b3e",
         scale: { mode: Phaser.Scale.ENVELOP, autoCenter: Phaser.Scale.CENTER_BOTH },
