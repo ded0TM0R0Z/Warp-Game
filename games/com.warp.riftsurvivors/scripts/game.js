@@ -479,14 +479,20 @@
         pointerMove(pointer) {
             if (this.mode === "playing" && this.joy.active && pointer.id === this.joy.pointerId) this.updateJoystick(pointer);
         }
+        releaseJoystick() {
+            this.joy.active = false;
+            this.joy.pointerId = null;
+            this.joy.dx = 0;
+            this.joy.dy = 0;
+            if (this.hud.joyKnob) this.hud.joyKnob.setPosition(0, 0);
+            this.joy.baseX = 100;
+            this.joy.baseY = H - 155;
+            if (this.hud.joy) this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
+            if (this.player && this.player.body) this.player.body.setVelocity(0, 0);
+        }
+
         pointerUp(pointer) {
-            if (this.joy.active && pointer.id === this.joy.pointerId) {
-                this.joy.active = false; this.joy.pointerId = null;
-                this.joy.dx = 0; this.joy.dy = 0;
-                this.hud.joyKnob.setPosition(0, 0);
-                this.joy.baseX = 100; this.joy.baseY = H - 155;
-                this.hud.joy.setPosition(this.joy.baseX, this.joy.baseY);
-            }
+            if (this.joy.active && pointer.id === this.joy.pointerId) this.releaseJoystick();
         }
         updateJoystick(pointer) {
             const dx = pointer.x - this.joy.baseX;
@@ -796,6 +802,11 @@
         update(_, delta) {
             if (this.mode !== "playing" || !this.stats) return;
             const dt = Math.min(delta, 40);
+            if (this.joy.active) {
+                const pointers = this.input && this.input.manager ? this.input.manager.pointers : [];
+                const activePointer = pointers.find(pointer => pointer && pointer.id === this.joy.pointerId);
+                if (!activePointer || !activePointer.isDown) this.releaseJoystick();
+            }
             this.elapsedMs+=dt; this.hud.timer.setText(this.formatTime(this.elapsedMs)); this.waveClock+=dt; this.earthClock+=dt;
             const biome=this.getBiomeAt(this.player.x,this.player.y);
             if(biome!==this.activeBiome){
@@ -833,7 +844,7 @@
                 this.playerSprite.angle = 0;
                 this.playerLegLeft.setAngle(0).setY(10);
                 this.playerLegRight.setAngle(0).setY(10);
-                this.player.body.setVelocity(this.player.body.velocity.x * 0.82, this.player.body.velocity.y * 0.82);
+                this.player.body.setVelocity(0, 0);
             }
 
             if (this.spawnClock > Math.max(850, 2100 - this.wave * 22)) {
@@ -907,12 +918,12 @@
 
         updateWorldChunks(x,y){
             const size=520,cx=Math.floor(x/size),cy=Math.floor(y/size);
-            for(let gx=cx-2;gx<=cx+2;gx++)for(let gy=cy-2;gy<=cy+2;gy++){
+            for(let gx=cx-1;gx<=cx+1;gx++)for(let gy=cy-1;gy<=cy+1;gy++){
                 const key=gx+":"+gy;if(this.worldChunks.has(key))continue;
                 const objs=[];
                 const ground=this.add.tileSprite((gx+0.5)*size,(gy+0.5)*size,size,size,"ground").setDepth(-20).setTilePosition(gx*size,gy*size);
                 objs.push(ground);
-                const biomePaint=this.add.graphics().setDepth(-19),cell=48;
+                const biomePaint=this.add.graphics().setDepth(-19),cell=92;
                 let biomeSeed=(Math.imul(gx+8192,73856093)^Math.imul(gy+8192,19349663))>>>0;
                 const biomeRand=()=>{biomeSeed=(Math.imul(biomeSeed,1664525)+1013904223)>>>0;return biomeSeed/4294967296;};
                 for(let ox=-cell;ox<size+cell;ox+=cell)for(let oy=-cell;oy<size+cell;oy+=cell){
@@ -920,14 +931,14 @@
                     const py=gy*size+oy+cell/2+(biomeRand()-0.5)*13;
                     const localBiome=this.getBiomeAt(px,py);
                     if(localBiome===0)continue;
-                    const radius=31+biomeRand()*9;
+                    const radius=54+biomeRand()*22;
                     biomePaint.fillStyle(localBiome===1?0x514b47:0x263c3d,1);
                     biomePaint.fillCircle(px,py,radius);
                 }
                 objs.push(biomePaint);
                 let seed=Math.abs((gx*73856093)^(gy*19349663))>>>0;
                 const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
-                for(let i=0,n=3+Math.floor(rand()*3);i<n;i++){
+                for(let i=0,n=2+Math.floor(rand()*2);i<n;i++){
                     const px=gx*size+25+rand()*(size-50),py=gy*size+25+rand()*(size-50);
                     if(Phaser.Math.Distance.Between(px,py,x,y)<155)continue;
                     const roll=rand(),localBiome=this.getBiomeAt(px,py);
@@ -949,7 +960,7 @@
                 }
                 this.worldChunks.set(key,objs);
             }
-            for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>2||Math.abs(gy-cy)>2){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
+            for(const [key,objs] of this.worldChunks.entries()){const [gx,gy]=key.split(":").map(Number);if(Math.abs(gx-cx)>1||Math.abs(gy-cy)>1){objs.forEach(o=>o.destroy());this.worldChunks.delete(key);}}
         }
         damageSkillEnemy(enemy,damage,knockbackX,knockbackY) {
             if(!enemy||!enemy.active)return;
